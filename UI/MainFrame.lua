@@ -1346,16 +1346,17 @@ end
 -- buttons - плитки в один ряд под текстом (куда идти дальше): значок в
 -- кольце и название, что это - в подсказке:
 -- { { text =, icon =, onClick =, tip =, enabled = } }.
-local HEAD_TILE_H, HEAD_TILE_GAP = 44, 8
+local HEAD_TILE_H, HEAD_TILE_GAP, HEAD_TILE_MIN = 44, 8, 160
+local ceil = math.ceil
 function UI:PageHeader(title, text, buttons)
   local c = self:Card("flat")
   c:Text(title, "huge", { x = PAD, gap = 8 })
   if text and text ~= "" then c:Text(text, "body", { x = PAD, gap = 4, color = INK_HEAD_TEXT }) end
   if buttons and #buttons > 0 then
     c:Space(8)
-    -- до пяти плиток в ряд; одна-две плитки не растягиваются на всю ширину
-    local cols = min(5, max(3, #buttons))
-    local tw = floor((CARD_W - PAD * 2 - HEAD_TILE_GAP * (cols - 1)) / cols)
+    -- плитки в ряд; надпись в одну строку, ширина плитки - по надписи
+    -- (не уже HEAD_TILE_MIN); не влезла в ряд - на следующий
+    local x, row = PAD, 0
     for i, d in ipairs(buttons) do
       local t = c:Take("headtile", function()
         local b = CreateFrame("Button", nil, c, BackdropTemplateMixin and "BackdropTemplate" or nil)
@@ -1367,13 +1368,9 @@ function UI:PageHeader(title, text, buttons)
         hl:SetColorTexture(1, 0.82, 0, 0.12)
         b.ring = W.RingIcon(b, 24)
         b.ring:SetPoint("LEFT", 10, 0)
-        b.title = W.Text(b, "head")
+        b.title = W.Text(b, "head", false)
         b.title:SetTextColor(W.GOLD[1], W.GOLD[2], W.GOLD[3], 1)
-        b.title:SetJustifyV("MIDDLE")
         b.title:SetPoint("LEFT", b.ring, "RIGHT", 9, 0)
-        b.title:SetPoint("RIGHT", b, "RIGHT", -8, 0)
-        b.title:SetHeight(HEAD_TILE_H - 8)
-        if b.title.SetMaxLines then b.title:SetMaxLines(2) end
         b:SetScript("OnEnter", function(s)
           if not s.tip then return end
           GameTooltip:SetOwner(s, "ANCHOR_BOTTOM")
@@ -1395,11 +1392,13 @@ function UI:PageHeader(title, text, buttons)
         W.Sound("IG_MAINMENU_OPTION_CHECKBOX_ON")
         if fn then fn(s) end
       end)
-      local col, row = (i - 1) % cols, floor((i - 1) / cols)
+      local tw = max(HEAD_TILE_MIN, 10 + 24 + 9 + ceil(t.title:GetStringWidth() or 80) + 16)
+      if x > PAD and x + tw > CARD_W - PAD then x, row = PAD, row + 1 end
       t:SetWidth(tw)
-      t:SetPoint("TOPLEFT", c, "TOPLEFT", PAD + col * (tw + HEAD_TILE_GAP), -(c.y + row * (HEAD_TILE_H + HEAD_TILE_GAP)))
+      t:SetPoint("TOPLEFT", c, "TOPLEFT", x, -(c.y + row * (HEAD_TILE_H + HEAD_TILE_GAP)))
+      x = x + tw + HEAD_TILE_GAP
     end
-    c.y = c.y + math.ceil(#buttons / cols) * (HEAD_TILE_H + HEAD_TILE_GAP)
+    c.y = c.y + (row + 1) * (HEAD_TILE_H + HEAD_TILE_GAP)
   end
   self:End(c)
   self.y = self.y - 4
