@@ -291,32 +291,51 @@ local function build()
   -- низ: изучена ли, крупная кнопка учителя, листание
   f.state = W.Text(f, "title", false)
   f.state:SetJustifyH("CENTER")
-  f.trainer = W.Button(f, "", 300, 40)
-  f.trainer:SetPoint("BOTTOM", 0, 22)
-  local tfs = f.trainer:GetFontString()
-  if tfs then
-    local tf, _, tfl = tfs:GetFont()
-    if tf then tfs:SetFont(tf, 16, tfl) end
+  -- две крупные кнопки рядом: учитель на карте и переход к окну аддона
+  local function bigFont(b)
+    local fs = b:GetFontString()
+    if fs then
+      local tf, _, tfl = fs:GetFont()
+      if tf then fs:SetFont(tf, 16, tfl) end
+    end
   end
+  f.trainer = W.Button(f, "", 270, 40)
+  f.trainer:SetPoint("BOTTOM", -141, 22)
+  bigFont(f.trainer)
+  f.go = W.Button(f, "", 270, 40)
+  f.go:SetPoint("BOTTOM", 141, 22)
+  bigFont(f.go)
+  f.go:SetScript("OnClick", function()
+    W.Sound("IG_MAINMENU_OPTION_CHECKBOX_ON")
+    -- при первом открытии окно аддона откроется само, когда это закроется
+    local chained = f.after ~= nil
+    f:Hide()
+    local UI = TJ.UI
+    if not chained and not (UI.frame and UI.frame:IsShown()) then
+      TJ.skipIntro = true
+      TJ:ToggleFrame()
+    end
+  end)
   f.trainer.pin = f.trainer:CreateTexture(nil, "OVERLAY")
   f.trainer.pin:SetSize(24, 24)
   f.trainer.pin:SetPoint("LEFT", 14, 0)
   f.trainer.pin:SetTexture("Interface\\Icons\\INV_Misc_Map_01")
   f.trainer.pin:SetTexCoord(0.08, 0.92, 0.08, 0.92)
   tipButton(f.trainer)
-  f.state:SetPoint("BOTTOM", f.trainer, "TOP", 0, 10)
-  local function nav(text, point, x, delta, arrow)
-    local b = W.Button(f, text, 140, 30)
-    b:SetPoint(point, x, 27)
-    local a = b:CreateTexture(nil, "OVERLAY")
-    a:SetSize(26, 26)
-    a:SetTexture("Interface\\Buttons\\UI-SpellbookIcon-" .. arrow .. "Page-Up")
-    a:SetPoint(delta < 0 and "LEFT" or "RIGHT", delta < 0 and 4 or -4, 0)
+  f.state:SetPoint("BOTTOM", f, "BOTTOM", 0, 22 + 40 + 10)
+  -- листать профессии - просто стрелки по углам (и колесо мыши)
+  local function nav(point, x, delta, arrow)
+    local b = CreateFrame("Button", nil, f)
+    b:SetSize(36, 36)
+    b:SetPoint(point, x, 24)
+    b:SetNormalTexture("Interface\\Buttons\\UI-SpellbookIcon-" .. arrow .. "Page-Up")
+    b:SetPushedTexture("Interface\\Buttons\\UI-SpellbookIcon-" .. arrow .. "Page-Down")
+    b:SetHighlightTexture("Interface\\Buttons\\UI-Common-MouseHilight", "ADD")
     b:SetScript("OnClick", function() turn(f, delta) end)
     return b
   end
-  f.prev = nav(T("Назад"), "BOTTOMLEFT", SIDE, -1, "Prev")
-  f.next = nav(T("Дальше"), "BOTTOMRIGHT", -SIDE, 1, "Next")
+  f.prev = nav("BOTTOMLEFT", SIDE, -1, "Prev")
+  f.next = nav("BOTTOMRIGHT", -SIDE, 1, "Next")
   f:EnableMouseWheel(true)
   f:SetScript("OnMouseWheel", function(s, delta) turn(s, -delta) end)
 
@@ -481,6 +500,7 @@ local function fill(f, key)
   f.trainer.tip = npc and (TJ:NpcName(npc) .. "\n" .. (TJ:NpcZone(npc) or "") .. "\n" .. T("Щелчок поставит метку и откроет карту."))
     or T("Учителя этой профессии аддон не знает.")
   f.trainer:SetScript("OnClick", function() if npc then TJ:Waypoint(npc, true) end end)
+  f.go:SetText(T("Перейти к аддону"))
   f:SetHeight(y + f.state:GetStringHeight() + 10 + 40 + 22)
 
   for _, b in ipairs(f.tabs) do
