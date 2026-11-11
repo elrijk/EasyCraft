@@ -29,7 +29,7 @@ function C:XpCard(UI)
   c:Head({ ring = ICON .. "Spell_Holy_BlessingOfStrength" }, T("Опыт: максимум в час"),
     { { T("Бонусы складываются."), "small" } }, 32)
   -- источники блоками по два в ряд: значок, название и бонус зелёным,
-  -- ниже одна строка - что сделать (подробности - в подсказке бафа в игре)
+  -- ниже - что сделать и подробности
   local rp = W.RingPad(XP_RING)
   local outer = XP_RING + rp * 2
   local blockW = floor((CW - PAD * 2 - XP_GAP * (XP_COLS - 1)) / XP_COLS)
@@ -48,6 +48,9 @@ function C:XpCard(UI)
       })
       by = by + outer + 6
       local fs = c:Text(T(s[4]), "small", { x = x, y = by, w = colW, color = W.LIGHT })
+      by = by + (fs and fs:GetStringHeight() or 14) + 6
+      -- подробности: сколько даёт, как часто, когда пропадает
+      fs = c:Text(T(s[5]), "small", { x = x, y = by, w = colW })
       by = by + (fs and fs:GetStringHeight() or 14)
       rowH = max(rowH, by - rowTop)
       xs[#xs + 1] = x
