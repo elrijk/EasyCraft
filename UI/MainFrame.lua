@@ -1468,7 +1468,8 @@ function UI:Create()
     b:SetScript("OnClick", function()
       if b.selected then return end
       W.Sound("IG_CHARACTER_INFO_TAB")
-      UI.tab[UI.view] = i
+      -- у профессии вкладки - режимы маршрута, на главной - разделы
+      if b.mode then ns:SetRouteMode(b.mode) else UI.tab[UI.view] = i end
       UI:Render()
     end)
     b:Hide()
@@ -1476,14 +1477,12 @@ function UI:Create()
   end
 
   -- Шапка профессии в полосе под заголовком (на месте вкладок):
-  -- полоса навыка, ссылка в чат и окно профессии.
+  -- слева вкладки режима маршрута, за ними полоса навыка, справа ссылка в чат.
   local head = CreateFrame("Frame", nil, f)
   head:SetPoint("TOPLEFT", f, "TOPLEFT", 66, -26)
   head:SetPoint("BOTTOMRIGHT", f, "TOPRIGHT", -10, -ATTIC + 2)
-  head.open = W.Button(head, ns.T("Окно профессии"), 140, 24)
-  head.open:SetPoint("RIGHT", head, "RIGHT", 0, 0)
   head.link = W.Button(head, ns.T("Ссылка в чат"), 130, 24)
-  head.link:SetPoint("RIGHT", head.open, "LEFT", -6, 0)
+  head.link:SetPoint("RIGHT", head, "RIGHT", 0, 0)
   head.bar = W.Bar(head)
   head.bar:SetHeight(18)
   head.bar:SetPoint("LEFT", head, "LEFT", 6, 0)
@@ -1545,6 +1544,7 @@ function UI:SetTopTabs(list, sel)
     if t then
       b.icon:SetTexture(t[2])
       b.text:SetText(t[1])
+      b.tip, b.mode = t[3], t[4]
       b:Fit()
       b:SetSelected(i == sel)
       b:Show()
@@ -1589,12 +1589,17 @@ function UI:Render(keepScroll)
     head.bar.right:SetText("")
     ns:MarkNextRank(head.bar, key, rank, cap)
     head.link:SetScript("OnClick", function(b) W.Sound("IG_MAINMENU_OPTION_CHECKBOX_ON"); ns:LinkMenu(key, b) end)
-    head.open:SetScript("OnClick", function() W.Sound("IG_MAINMENU_OPTION_CHECKBOX_ON"); ns:OpenProfession(key) end)
     head:Show()
     SetPortrait(f, ns.ICON) -- в портрете всегда значок аддона, профессия - в шапке
     local tabs = C:ProfTabs(key)
-    local sel = min(self.tab[key] or 1, #tabs)
+    local sel, mode = 1, ns:RouteMode()
+    for i, t in ipairs(tabs) do if t[4] == mode then sel = i end end
     self:SetTopTabs(tabs, sel)
+    -- полоса навыка - от последней вкладки до кнопки «Ссылка в чат»
+    head.bar:ClearAllPoints()
+    if #tabs > 0 then head.bar:SetPoint("LEFT", self.topTabs[#tabs], "RIGHT", 14, -3)
+    else head.bar:SetPoint("LEFT", head, "LEFT", 6, 0) end
+    head.bar:SetPoint("RIGHT", head.link, "LEFT", -14, 0)
     ns:Safe(C.BuildProfession, C, self, key, sel)
   end
 

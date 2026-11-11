@@ -284,10 +284,12 @@ function W.TopTab(parent)
     self.text:SetWidth(w + 1)
     self:SetWidth(9 + TAB_ICON + 5 + w + 12)
   end
+  -- подсказка: полное название, если оно обрезано, и b.tip - что это
   b:SetScript("OnEnter", function(self)
-    if not self.full then return end
+    if not (self.full or self.tip) then return end
     GameTooltip:SetOwner(self, "ANCHOR_TOP")
-    GameTooltip:SetText(self.full)
+    GameTooltip:SetText(self.full or self.text:GetText() or "", 1, 0.82, 0)
+    if self.tip then GameTooltip:AddLine(self.tip, 1, 1, 1, true) end
     GameTooltip:Show()
   end)
   b:SetScript("OnLeave", function() GameTooltip:Hide() end)
