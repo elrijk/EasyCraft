@@ -11,15 +11,6 @@ Russian names and map coordinates of items, zones, NPCs and gathering nodes.
 - License: MIT
 - Copyright (c) 2017-2021 Eric Mauser (Shagu)
 
-## GatherLite
-
-Known herb and ore node positions (`Data/Spawns.lua`). Only the node data,
-which GatherLite publishes under MIT, is used. No GatherLite code is included.
-
-- Source: https://github.com/wuild/gatherlite
-- License: MIT
-- Copyright (c) 2019 Wuild
-
 ## Other sources
 
 Trainer and vendor positions on WoW Forever were cross-checked by hand against
@@ -27,8 +18,7 @@ publicly available game databases.
 
 ## MIT License text
 
-The permission notice below applies to both projects listed above, each under
-its own copyright line.
+The permission notice below applies to pfQuest under its copyright line above.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal

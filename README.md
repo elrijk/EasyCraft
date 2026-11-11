@@ -33,8 +33,7 @@ please open an issue with the correct text.
 
 ## Credits
 
-Map and name data: pfQuest by Shagu (MIT). Node positions: GatherLite by Wuild
-(MIT). See `THIRD-PARTY.md`.
+Map and name data: pfQuest by Shagu (MIT). See `THIRD-PARTY.md`.
 
 ---
 
