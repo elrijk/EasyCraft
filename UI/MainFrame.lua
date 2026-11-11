@@ -966,17 +966,17 @@ local function MakeTile(parent, mode, wide)
   b.badgeText:SetPoint("CENTER", 0, 0)
   b.slot = W.Slot(b, m.icon)
   if wide then
-    -- значок слева по центру высоты, табличка навыка - над ним, справа три
-    -- строки блоком по центру значка (ставит Set: высота строк известна там)
+    -- слева направо по центру высоты: табличка навыка, значок, название и
+    -- «что нужно» (значок и строки ставит Set: ширина таблички известна там)
     local sx = 12
-    b.slot:SetPoint("LEFT", sx, -2)
-    b.badge:SetPoint("CENTER", b, "TOPLEFT", sx + m.icon / 2, 0)
+    b.badge:SetHeight(24)
+    b.badge:SetPoint("LEFT", sx, 0)
     b.tx = sx + m.icon + 10
     -- справа табличка «Текущий шаг» со стрелкой внутри (плитку можно
     -- открыть): по центру значка, от правого края - как значок от левого
     b.plate = GoldPlate(b)
     b.plate:SetHeight(28)
-    b.plate:SetPoint("RIGHT", b, "RIGHT", -sx, -2)
+    b.plate:SetPoint("RIGHT", b, "RIGHT", -sx, 0)
     b.plate:SetFrameLevel(b:GetFrameLevel() + 3)
     b.label = b.plate:CreateFontString(nil, "OVERLAY")
     b.label:SetFontObject(_G.SystemFont_Med3 or GameFontNormal)
@@ -1066,6 +1066,16 @@ local function MakeTile(parent, mode, wide)
     self.badgeText:SetText(t.badge or "")
     self.badge:SetWidth(max(30, (self.badgeText:GetStringWidth() or 18) + 14))
     if self.plate then
+      -- значок - сразу за табличкой навыка (нет таблички - у левого края)
+      local sx = 12
+      self.slot:ClearAllPoints()
+      if self.badge:IsShown() then
+        self.slot:SetPoint("LEFT", self.badge, "RIGHT", 10, 0)
+        sx = sx + self.badge:GetWidth() + 10
+      else
+        self.slot:SetPoint("LEFT", sx, 0)
+      end
+      self.tx = sx + m.icon + 10
       self.label:SetText(t.label or "")
       self.plate:SetShown((t.label or "") ~= "")
       self.plate:SetWidth(12 + (self.label:GetStringWidth() or 90) + 8 + 14 + 8)
@@ -1077,7 +1087,7 @@ local function MakeTile(parent, mode, wide)
       self.wfoot:SetShown(list[2] ~= nil)
       local total = 0
       for i, fs in ipairs(list) do total = total + (fs:GetStringHeight() or 13) + (i > 1 and 3 or 0) end
-      local y = -floor((self:GetHeight() - total) / 2 + 0.5) - 2
+      local y = -floor((self:GetHeight() - total) / 2 + 0.5)
       -- справа место под табличку
       local right = 12 + (self.plate:IsShown() and (self.plate:GetWidth() + 12) or 0)
       for _, fs in ipairs(list) do
