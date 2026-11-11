@@ -187,3 +187,13 @@ askEv:SetScript("OnEvent", function(_, e)
     askPanel:Hide()
   end
 end)
+
+-- Запасной путь: если события открытия окна в клиенте нет, просьбу покажет
+-- само чтение окна профессии.
+local noteColors = TJ.NoteColors
+function TJ:NoteColors(key, colors, rank)
+  noteColors(self, key, colors, rank)
+  if not self.askedShare and C_Timer and C_Timer.After then
+    C_Timer.After(2, function() pcall(TJ.AskShare, TJ) end)
+  end
+end
