@@ -5,7 +5,7 @@ TJ.version = "1.2.0"
 TJ.ICON = "Interface\\AddOns\\" .. ADDON .. "\\Media\\Icon"
 
 ---------------------------------------------------------------------------
--- Small helpers
+-- Мелкие помощники
 ---------------------------------------------------------------------------
 local floor, ceil, max, min = math.floor, math.ceil, math.max, math.min
 local format = string.format
@@ -109,7 +109,7 @@ function TJ:ItemQualityColor(id)
 end
 
 ---------------------------------------------------------------------------
--- Static lookups
+-- Таблицы для быстрого поиска
 ---------------------------------------------------------------------------
 -- переводятся при обращении: язык из настроек известен только на ADDON_LOADED
 local RANK_RU = { [75] = "Ученик", [150] = "Подмастерье", [225] = "Умелец", [300] = "Искусник" }
@@ -126,7 +126,7 @@ function TJ:BuildLookups()
     self.NameToKey[p.en] = key
     self.NameToKey[self.Lower(p.ru)] = key
   end
-  -- a few extra spellings the Russian client has used over the years
+  -- другие написания, которые встречались в русском клиенте
   self.NameToKey["Горное дело"] = "mining"
   -- окно плавки в старом виде называется по-своему - это тоже горное дело
   for _, n in ipairs({ "Выплавка металлов", "Выплавка", "Smelting" }) do self.NameToKey[n] = "mining"; self.NameToKey[self.Lower(n)] = "mining" end
@@ -150,7 +150,7 @@ function TJ:BuildLookups()
   end
 end
 
--- Map zones (AreaTable IDs in the data) to the client's uiMapIDs, verifying by name.
+-- Зоны из данных (номера AreaTable) -> uiMapID клиента, с проверкой по названию.
 function TJ:ResolveMaps()
   wipe(self.UiToArea)
   local byName
@@ -212,7 +212,7 @@ function TJ:FactionFor()
   return me == "A" and self.T("для Альянса") or (me == "H" and self.T("для Орды") or nil)
 end
 
--- hide the enemy faction's home zones
+-- домашние зоны чужой фракции не показываем
 function TJ:ZoneAllowed(area)
   local z = self.Zones[area]
   if not z then return false end
@@ -221,7 +221,7 @@ function TJ:ZoneAllowed(area)
 end
 
 ---------------------------------------------------------------------------
--- Saved variables
+-- Сохранённые данные
 ---------------------------------------------------------------------------
 local DEFAULTS = {
   hideDone = false, mapMine = true, mapShow = true, mapAreaAlpha = 0.5, minimap = true, miniGuide = true, itemTips = true, trainerStars = true,
@@ -307,7 +307,7 @@ function TJ:ScanSkills()
     v.t = time()
     self.char.profs[key] = v
   end
-  -- unlearned professions disappear from the skill list
+  -- забытые профессии пропадают из списка навыков
   if next(found) then
     for key in pairs(self.char.profs) do
       if not found[key] then self.char.profs[key] = nil; changed = true end
@@ -337,7 +337,7 @@ end
 function TJ:OnSkillChanged(key, oldRank, newRank, newMax, firstSeen)
   -- навык пришёл после создания: рисуем сразу и вместе с сумками
   if self.craftHold then self.craftHold, self.skillNow = nil, true end
-  -- history for the journal
+  -- история для журнала
   local h = self.char.hist[key] or {}
   self.char.hist[key] = h
   if not firstSeen and newRank > oldRank then
@@ -346,7 +346,7 @@ function TJ:OnSkillChanged(key, oldRank, newRank, newMax, firstSeen)
   end
   if firstSeen or not self.ready then return end
   local p = self.Profs[key]
-  -- completed steps
+  -- выполненные шаги
   for _, s in ipairs(p.steps) do
     if s.t and oldRank < s.t and newRank >= s.t then
       self:Print(format(TJ.T("%s: |cff33dd33шаг выполнен|r - %s"), TJ:N(p), self:StepTitle(s)))
@@ -426,7 +426,7 @@ end
 function TJ:CurrentStep(key, rank, maxRank)
   local p = self.Profs[key]
   if not rank then rank, maxRank = self:GetSkill(key) end
-  -- returns the step to work on, plus a rank that can already be learned (not urgent yet)
+  -- возвращает шаг, над которым работать, и ранг, который уже можно выучить (пока не срочно)
   local firstTodo, train
   for i = 1, #p.steps do
     local s = p.steps[i]
@@ -448,7 +448,7 @@ end
 function TJ:ToggleManual(key, i)
   local m = self.char.manual[key] or {}
   self.char.manual[key] = m
-  local auto = self:StepState(key, i) -- with current manual applied
+  local auto = self:StepState(key, i) -- с учётом ручной отметки
   if m[i] == nil then
     m[i] = (auto ~= "done")
   else
@@ -802,7 +802,7 @@ function TJ:MaterialAreas(id, limit)
 end
 
 ---------------------------------------------------------------------------
--- Refresh fan-out (UI modules register here)
+-- Рассылка обновлений (сюда подписываются части окна)
 ---------------------------------------------------------------------------
 TJ.refreshers = {}
 function TJ:RegisterRefresh(fn) tinsert(self.refreshers, fn) end
@@ -837,7 +837,7 @@ function TJ:HoldForSkill()
 end
 
 ---------------------------------------------------------------------------
--- Recipe colour at a skill (Forever skill-up data: orange, yellow, green, grey)
+-- Цвет рецепта на навыке (пороги Forever: оранжевый, жёлтый, зелёный, серый)
 ---------------------------------------------------------------------------
 function TJ:RecipeColor(s, rank)
   local sk = s.sk
@@ -915,7 +915,7 @@ function TJ:NextRank(key)
 end
 
 ---------------------------------------------------------------------------
--- NPCs (trainers, recipe vendors): faction filter, distance, waypoints
+-- НИПы (учителя, торговцы рецептами): отбор по фракции, расстояние, метки
 ---------------------------------------------------------------------------
 function TJ:NpcName(id)
   local n = self.NPCs[id]
@@ -948,7 +948,7 @@ end
 
 local npcWorld = {} -- id -> { континент, x, y } или false
 
--- NPC ids for the player's faction (and neutral ones), nearest first when the client can tell
+-- НИПы фракции игрока (и нейтральные); ближайшие первыми, если клиент знает расстояние
 function TJ:NpcsFor(npcs, limit)
   if not npcs then return {} end
   local me = self:PlayerFaction()

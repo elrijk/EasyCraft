@@ -27,7 +27,7 @@ W.GREY = { 0.62, 0.62, 0.62 }
 W.GREEN = { 0.2, 0.87, 0.2 }
 W.RED = { 1, 0.33, 0.33 }
 
--- Create a frame with the first template that exists in this client.
+-- Создать рамку по первому шаблону, который есть в клиенте.
 function W.Create(ftype, name, parent, templates)
   for _, t in ipairs(templates or {}) do
     local ok, f = pcall(CreateFrame, ftype, name, parent, t)

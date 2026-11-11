@@ -16,7 +16,7 @@ end)
 
 local after = C_Timer.After
 
--- throttled helpers
+-- помощники с задержкой
 local scheduled = {}
 local function throttle(name, sec, fn)
   if scheduled[name] then return end
@@ -112,7 +112,7 @@ on("GET_ITEM_INFO_RECEIVED", function(id, ok)
 end)
 
 ---------------------------------------------------------------------------
--- Profession window scan: which recipes currently give skill
+-- Чтение окна профессии: какие рецепты сейчас дают навык
 ---------------------------------------------------------------------------
 local DIFF = { optimal = 0, medium = 1, easy = 2, trivial = 3, difficult = 0 }
 local function normDiff(d)
@@ -232,8 +232,8 @@ on("TRADE_SKILL_CLOSE", function()
 end)
 
 ---------------------------------------------------------------------------
--- Gathering journal (idea from Gather Together): what you loot from nodes,
--- skinning and fishing, per zone, plus node positions for the world map.
+-- Журнал сбора (идея из Gather Together): что добыто с жил и трав,
+-- со шкур и рыбалки по зонам, и где стояли точки - для карты мира.
 ---------------------------------------------------------------------------
 function TJ:PlayerPosition()
   local mapID = C_Map.GetBestMapForUnit("player")
@@ -339,7 +339,7 @@ on("LOOT_OPENED", onLoot)
 on("LOOT_READY", onLoot)
 
 ---------------------------------------------------------------------------
--- Slash commands
+-- Команды чата
 ---------------------------------------------------------------------------
 SLASH_EASYCRAFT1 = "/ec"
 SLASH_EASYCRAFT2 = "/easycraft"
