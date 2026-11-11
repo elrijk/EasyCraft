@@ -111,6 +111,11 @@ function TJ:BuildSettings()
     TJ.UI.frame:Raise()
   end)
 
+  -- отправить автору наблюдения цветов рецептов (Seen.lua)
+  local share = TJ.W.Button(body, TJ.T("Отправить данные"), 200, 26)
+  share:SetPoint("LEFT", intro, "RIGHT", 10, 0)
+  share:SetScript("OnClick", function() if TJ.ShareColors then TJ:ShareColors() end end)
+
   panel.checks = {}
   local prev = open
   for i, o in ipairs(OPTIONS) do

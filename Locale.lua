@@ -1688,3 +1688,6 @@ for k, v in pairs({
   ["Отправить данные"] = "Send data",
   ["Напоминать поделиться данными о рецептах"] = "Remind me to share recipe data",
 }) do if TJ.EN[k] == nil then TJ.EN[k] = v end end
+
+-- 1.2: больше не напоминать
+if TJ.EN["Больше не напоминать"] == nil then TJ.EN["Больше не напоминать"] = "Don't remind me again" end

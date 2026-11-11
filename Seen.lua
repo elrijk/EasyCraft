@@ -165,7 +165,22 @@ function TJ:AskShare()
     TJ:ShareColors()
   end)
   f.btn:Show()
-  f:SetHeight(y + 22 + 14)
+  y = y + 22 + 6
+  -- «больше не напоминать»: выключает просьбу навсегда (вернуть - в настройках)
+  if not f.never then
+    f.never = W.Check(f, T("Больше не напоминать"))
+    f.never.label:SetTextColor(0.25, 0.18, 0.1)
+    f.never:SetScript("OnClick", function(self)
+      TJ.settings.askShare = not self:GetChecked()
+      if TJ.RefreshOptions then TJ:RefreshOptions() end
+      if self:GetChecked() then f:Hide() end
+    end)
+  end
+  f.never:SetChecked(false)
+  f.never:ClearAllPoints()
+  f.never:SetPoint("TOPLEFT", f, "TOPLEFT", W.HINT_PAD - 4, -y)
+  f.never:Show()
+  f:SetHeight(y + 24 + 12)
   f:ClearAllPoints()
   local mini = self.Tracker and self.Tracker.f
   if type(mini) == "table" and mini.IsShown and mini:IsShown() then
