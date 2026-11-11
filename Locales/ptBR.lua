@@ -1500,4 +1500,7 @@ ns.LOCALES.ptBR = function() return {
   ["1. Copy the link (Ctrl+C) and open it in your browser."] = "1. Copie o link (Ctrl+C) e abra no navegador.",
   ["2. Copy the code, paste it into the issue text and press Submit."] = "2. Copie o código, cole no texto do relato e clique em Submit.",
   ["The game cannot open a browser, so the link has to be copied. A GitHub account is needed; the page is public. The code holds recipes and skill values only."] = "O jogo não consegue abrir o navegador, por isso o link precisa ser copiado. É preciso uma conta do GitHub; a página é pública. O código contém apenas receitas e perícia.",
+  ["Copy the link"] = "Copiar o link",
+  ["link copied: paste it into your browser's address bar."] = "link copiado: cole na barra de endereços do navegador.",
+  ["link selected: press Ctrl+C."] = "link selecionado: pressione Ctrl+C.",
 } end

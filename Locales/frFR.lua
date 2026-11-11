@@ -1497,4 +1497,7 @@ ns.LOCALES.frFR = function() return {
   ["1. Copy the link (Ctrl+C) and open it in your browser."] = "1. Copiez le lien (Ctrl+C) et ouvrez-le dans le navigateur.",
   ["2. Copy the code, paste it into the issue text and press Submit."] = "2. Copiez le code, collez-le dans le texte du ticket et cliquez sur Submit.",
   ["The game cannot open a browser, so the link has to be copied. A GitHub account is needed; the page is public. The code holds recipes and skill values only."] = "Le jeu ne peut pas ouvrir de navigateur, il faut donc copier le lien. Un compte GitHub est nécessaire ; la page est publique. Le code ne contient que des recettes et la compétence.",
+  ["Copy the link"] = "Copier le lien",
+  ["link copied: paste it into your browser's address bar."] = "lien copié : collez-le dans la barre d'adresse du navigateur.",
+  ["link selected: press Ctrl+C."] = "lien sélectionné : appuyez sur Ctrl+C.",
 } end

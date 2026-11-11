@@ -1513,4 +1513,7 @@ ns.LOCALES.zhCN = function() return {
   ["1. Copy the link (Ctrl+C) and open it in your browser."] = "1. 复制链接（Ctrl+C）并在浏览器中打开。",
   ["2. Copy the code, paste it into the issue text and press Submit."] = "2. 复制代码，粘贴到问题正文里，然后点击 Submit。",
   ["The game cannot open a browser, so the link has to be copied. A GitHub account is needed; the page is public. The code holds recipes and skill values only."] = "游戏无法打开浏览器，所以需要手动复制链接。需要 GitHub 账号；页面是公开的。代码里只有配方和技能值。",
+  ["Copy the link"] = "复制链接",
+  ["link copied: paste it into your browser's address bar."] = "链接已复制：粘贴到浏览器地址栏。",
+  ["link selected: press Ctrl+C."] = "链接已选中：按 Ctrl+C。",
 } end

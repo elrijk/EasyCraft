@@ -114,6 +114,33 @@ end
 --  ссылку не помещается (у адреса есть предел длины), даём ссылку и код
 --  отдельно, двумя шагами.
 -------------------------------------------------------------------------------
+-- Положить текст в буфер обмена. В части клиентов функция CopyToClipboard
+-- разрешена только интерфейсу игры: тогда игра сообщает о запрете событием
+-- ADDON_ACTION_FORBIDDEN. Запоминаем это и больше не пробуем - текст
+-- выделяется, копирует игрок по Ctrl+C. Вернёт true, если скопировано.
+local copyWatch = CreateFrame("Frame")
+local copyBlocked
+copyWatch:SetScript("OnEvent", function() copyBlocked = true end)
+function ns.TryCopy(text)
+  local db = ns.db
+  if not db or db.noClipboard or type(CopyToClipboard) ~= "function" or type(text) ~= "string" or text == "" then return false end
+  copyBlocked = false
+  copyWatch:RegisterEvent("ADDON_ACTION_FORBIDDEN")
+  copyWatch:RegisterEvent("ADDON_ACTION_BLOCKED")
+  local ok = pcall(CopyToClipboard, text)
+  copyWatch:UnregisterAllEvents()
+  if copyBlocked or not ok then
+    db.noClipboard = true
+    -- окно игры «аддон заблокирован» про эту попытку не нужно
+    if StaticPopup_Hide then
+      StaticPopup_Hide("ADDON_ACTION_FORBIDDEN")
+      StaticPopup_Hide("ADDON_ACTION_BLOCKED")
+    end
+    return false
+  end
+  return true
+end
+
 local SHARE_URL = "https://github.com/elrijk/EasyCraft/issues/new"
 local SHARE_MAX = 7000 -- длиннее адрес браузеры и GitHub могут не принять
 local shareWin
@@ -176,6 +203,17 @@ function ns:ShowShareWindow(code, n)
     f.code = copyBox(f, inner - 6)
     f.note = W.Text(f, "small")
     f.note:SetWidth(inner)
+    f.copy = W.Button(f, T("Скопировать ссылку"), 200, 26)
+    f.copy:SetScript("OnClick", function()
+      if ns.TryCopy(f.link.value) then
+        ns:Print(T("ссылка скопирована: вставь её в адресную строку браузера."))
+      else
+        -- игра не дала скопировать самому аддону: выделяем под Ctrl+C
+        f.link:SetFocus()
+        f.link:HighlightText()
+        ns:Print(T("ссылка выделена: нажми Ctrl+C."))
+      end
+    end)
     f.close = W.Button(f, CLOSE or "Close", 160, 26)
     f.close:SetScript("OnClick", function() f:Hide() end)
   end
@@ -208,8 +246,10 @@ function ns:ShowShareWindow(code, n)
   f.note:ClearAllPoints()
   f.note:SetPoint("TOPLEFT", PAD, -y)
   y = y + f.note:GetStringHeight() + 14
+  f.copy:ClearAllPoints()
+  f.copy:SetPoint("TOPRIGHT", f, "TOP", -5, -y)
   f.close:ClearAllPoints()
-  f.close:SetPoint("TOP", f, "TOP", 0, -y)
+  f.close:SetPoint("TOPLEFT", f, "TOP", 5, -y)
   f:SetHeight(y + 26 + 16)
   f:Show()
   f:Raise()

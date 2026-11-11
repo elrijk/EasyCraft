@@ -1721,3 +1721,10 @@ for k, v in pairs({
   ["2. Скопируй код, вставь его в текст обращения и нажми Submit."] = "2. Copy the code, paste it into the issue text and press Submit.",
   ["Игра не умеет открывать браузер, поэтому ссылку нужно скопировать. Нужна учётная запись GitHub; страница видна всем. В коде только рецепты и навык."] = "The game cannot open a browser, so the link has to be copied. A GitHub account is needed; the page is public. The code holds recipes and skill values only.",
 }) do if ns.EN[k] == nil then ns.EN[k] = v end end
+
+-- 1.2: кнопка «Скопировать ссылку»
+for k, v in pairs({
+  ["Скопировать ссылку"] = "Copy the link",
+  ["ссылка скопирована: вставь её в адресную строку браузера."] = "link copied: paste it into your browser's address bar.",
+  ["ссылка выделена: нажми Ctrl+C."] = "link selected: press Ctrl+C.",
+}) do if ns.EN[k] == nil then ns.EN[k] = v end end

@@ -1512,4 +1512,7 @@ ns.LOCALES.koKR = function() return {
   ["1. Copy the link (Ctrl+C) and open it in your browser."] = "1. 링크를 복사(Ctrl+C)해 브라우저에서 여세요.",
   ["2. Copy the code, paste it into the issue text and press Submit."] = "2. 코드를 복사해 이슈 내용에 붙여 넣고 Submit을 누르세요.",
   ["The game cannot open a browser, so the link has to be copied. A GitHub account is needed; the page is public. The code holds recipes and skill values only."] = "게임은 브라우저를 열 수 없어서 링크를 직접 복사해야 합니다. GitHub 계정이 필요하며 페이지는 공개됩니다. 코드에는 제조법과 숙련도만 들어 있습니다.",
+  ["Copy the link"] = "링크 복사",
+  ["link copied: paste it into your browser's address bar."] = "링크를 복사했습니다. 브라우저 주소창에 붙여 넣으세요.",
+  ["link selected: press Ctrl+C."] = "링크가 선택되었습니다. Ctrl+C를 누르세요.",
 } end
