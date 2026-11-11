@@ -22,7 +22,7 @@ goes up. No guide in a second window, no counting materials by hand.
 ## Optional addons
 
 - **Auctionator** or **TradeSkillMaster**: auction prices and search.
-- **BagBrother (Bagnon)**: reagents on your other characters.
+- **Syndicator (Baganator)** or **BagBrother (Bagnon)**: reagents on your other characters.
 - **TomTom**: arrow to trainers and vendors.
 
 ## Languages

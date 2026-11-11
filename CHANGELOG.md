@@ -9,6 +9,13 @@
 - "Dungeons", "Raids" and "PvP" filters: what is considered the best to craft and for which classes. Starter list, not yet checked against WoW Forever.
 - New strings are in English and Russian only; other languages show them in English.
 
+## 1.1.0
+
+- Reagents on alts are read from Syndicator (Baganator) when it is installed; BagBrother still works.
+- A character with no professions sees a short guide on which profession to pick.
+- Shopping tab shows the cost of the whole remaining route to 300 for each profession.
+- Camp tab: "Share finds" gives a code with blueprint drop spots you discovered, to send to the author.
+
 ## 1.0.0
 
 First public release.

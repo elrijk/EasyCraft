@@ -14,9 +14,7 @@ ev:SetScript("OnEvent", function(_, event, ...)
   if fn then TJ:Safe(fn, ...) end
 end)
 
-local function after(sec, fn)
-  if C_Timer and C_Timer.After then C_Timer.After(sec, fn) else fn() end
-end
+local after = C_Timer.After
 
 -- throttled helpers
 local scheduled = {}
@@ -97,16 +95,12 @@ end)
 
 -- Своё создание предмета прошло (окно профессии открыто): сумки сейчас
 -- уменьшатся раньше, чем вырастет навык - подержать перерисовку.
-on("UNIT_SPELLCAST_SUCCEEDED", function(unit)
-  if unit == "player" and TJ.openKey then TJ:HoldForSkill() end
-end)
 -- только свои заклинания, а не каждого вокруг (в городе - сотни в секунду)
-if ev.RegisterUnitEvent then
-  pcall(ev.UnregisterEvent, ev, "UNIT_SPELLCAST_SUCCEEDED")
-  if not pcall(ev.RegisterUnitEvent, ev, "UNIT_SPELLCAST_SUCCEEDED", "player") then
-    pcall(ev.RegisterEvent, ev, "UNIT_SPELLCAST_SUCCEEDED")
-  end
+handlers["UNIT_SPELLCAST_SUCCEEDED"] = function()
+  if TJ.openKey then TJ:HoldForSkill() end
 end
+-- через pcall: если игра уберёт это событие, загрузка файла не должна оборваться
+pcall(ev.RegisterUnitEvent, ev, "UNIT_SPELLCAST_SUCCEEDED", "player")
 on("BAG_UPDATE_DELAYED", function() throttle("bags", 0.5, function() TJ:RefreshAll() end) end)
 -- Сервер прислал сведения о предмете: перерисовать, только если это
 -- предмет, который аддон сам ждал (а не любой из поиска на аукционе).
@@ -334,10 +328,9 @@ end
 -- никому не известен - так он станет известен хотя бы тебе).
 local function rememberBlueprint(id, slot)
   local who
-  if UnitExists and UnitExists("target") and UnitIsDead and UnitIsDead("target") then who = UnitName("target") end
-  local where = GetInstanceInfo and select(1, GetInstanceInfo()) or nil
-  local zone = GetRealZoneText and GetRealZoneText() or nil
-  if not where or where == "" or (IsInInstance and not IsInInstance()) then where = zone end
+  if UnitExists("target") and UnitIsDead("target") then who = UnitName("target") end
+  local where = GetInstanceInfo()
+  if not where or where == "" or not IsInInstance() then where = GetRealZoneText() end
   local mapID, x, y = TJ:PlayerPosition()
   TJ.db.bpFound = TJ.db.bpFound or {}
   TJ.db.bpFound[id] = { who = who, where = where, map = mapID, x = x and x * 100, y = y and y * 100, t = time() }
@@ -345,14 +338,14 @@ end
 
 local function onLoot()
   if lootDone then return end
-  local numItems = GetNumLootItems and GetNumLootItems() or 0
+  local numItems = GetNumLootItems() or 0
   if numItems == 0 then return end
   lootDone = true
-  local fishing = IsFishingLoot and IsFishingLoot()
+  local fishing = IsFishingLoot()
   local mapID, x, y = TJ:PlayerPosition()
   local nodeKey, any
   for slot = 1, numItems do
-    local link = GetLootSlotLink and GetLootSlotLink(slot)
+    local link = GetLootSlotLink(slot)
     local itemID = link and tonumber(link:match("item:(%d+)"))
     if itemID then
       local _, _, qty = GetLootSlotInfo(slot)
@@ -374,7 +367,7 @@ local function onLoot()
             TJ.char.zones[mapID] = TJ.char.zones[mapID] or {}
             bump(TJ.char.zones[mapID], itemID, qty)
           end
-          if cat ~= "skinning" and GetLootSourceInfo then
+          if cat ~= "skinning" then
             local guid = GetLootSourceInfo(slot)
             if type(guid) == "string" then
               local kind, _, _, _, _, objID = strsplit("-", guid)
@@ -401,7 +394,7 @@ SLASH_EASYCRAFT1 = "/ec"
 SLASH_EASYCRAFT2 = "/easycraft"
 SLASH_EASYCRAFT3 = "/ремесла"
 SlashCmdList.EASYCRAFT = function(msg)
-  msg = TJ.Lower(strtrim and strtrim(msg or "") or (msg or ""))
+  msg = TJ.Lower(strtrim(msg or ""))
   if msg == "reset" then
     TJ:Print(TJ.T("это сотрёт данные этого персонажа: отметки шагов, журнал сбора, историю навыка. Подтвердить: /ec reset confirm"))
   elseif msg == "reset confirm" then
