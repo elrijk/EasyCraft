@@ -40,12 +40,15 @@ local ART = { alchemy = "Alchemy", blacksmithing = "Blacksmithing", enchanting =
 local ART_KINDS = { "Professions-Specializations-Background-%s", "Professions-Recipe-Background-%s" }
 local MAKE_ICON, PAIR_ICON, WHO_ICON = "Interface\\Icons\\INV_Misc_Gear_01", "Interface\\Icons\\INV_Misc_Bag_08", "Interface\\Icons\\Achievement_Character_Human_Male"
 
+-- У первой помощи название в клиенте может писаться по-разному.
+local ART_ALT = { firstaid = { "FirstAid", "First-Aid", "Firstaid", "First Aid" } }
 local function artAtlas(key)
-  local n = ART[key]
-  if not n then return nil end
-  for _, k in ipairs(ART_KINDS) do
-    local name = format(k, n)
-    if W.HasAtlas(name) then return name end
+  local names = ART_ALT[key] or { ART[key] }
+  for _, n in ipairs(names) do
+    for _, k in ipairs(ART_KINDS) do
+      local name = format(k, n)
+      if W.HasAtlas(name) then return name end
+    end
   end
 end
 
@@ -120,6 +123,12 @@ local function build()
   f.art = f:CreateTexture(nil, "BORDER", nil, 1)
   f.art:SetPoint("TOPLEFT", 4, -4)
   f.art:SetPoint("BOTTOMRIGHT", -4, 4)
+  -- та же картинка вторым слоем со сложением цветов: рисунок в клиенте
+  -- бледный, так он заметнее
+  f.artGlow = f:CreateTexture(nil, "BORDER", nil, 2)
+  f.artGlow:SetAllPoints(f.art)
+  f.artGlow:SetBlendMode("ADD")
+  f.artGlow:SetAlpha(0.6)
   f.emblem = f:CreateTexture(nil, "BORDER", nil, 2)
   f.emblem:SetSize(360, 360)
   f.emblem:SetPoint("RIGHT", -70, 10)
@@ -307,9 +316,13 @@ local function fill(f, key)
     end
     f.art:SetAlpha(1)
     f.art:Show()
+    f.artGlow:SetAtlas(atlas)
+    if l and r and t and b then f.artGlow:SetTexCoord(l, r, t, b) end
+    f.artGlow:Show()
     f.emblem:Hide()
   else
     f.art:Hide()
+    f.artGlow:Hide()
     f.emblem:SetTexture(TJ.Icon(p.icon))
     f.emblem:SetAlpha(0.5)
     f.emblem:Show()
