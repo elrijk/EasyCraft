@@ -1797,7 +1797,6 @@ function Mini:Create()
   self:ApplyStyle(f)
   -- подсказку можно перетащить (место запомнится), замочек - в углу
   W.Movable(f, "mini", "TOPRIGHT")
-  W.Brand(f) -- «EasyCraft» на верхнем крае
   self:ApplyStyle(f) -- кнопка закрепления в углу, значки шапки - слева от неё
 end
 

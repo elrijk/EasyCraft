@@ -607,46 +607,6 @@ local INK_T, INK_B = { 0.16, 0.08, 0 }, { 0.24, 0.14, 0.04 }
 W.INK_T, W.INK_B = INK_T, INK_B
 W.HINT_PAD, W.HINT_ROW = 12, 34
 
--- Шапка с названием аддона над подсказкой: полоса во всю ширину на
--- верхнем крае, по центру - значок аддона и «EasyCraft». Чья подсказка,
--- видно сразу; раскладку самой подсказки не трогает.
-function W.Brand(f)
-  local b = CreateFrame("Frame", nil, f, BackdropTemplateMixin and "BackdropTemplate" or nil)
-  if b.SetBackdrop then
-    b:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8X8", edgeFile = "Interface\\Tooltips\\UI-Tooltip-Border",
-      edgeSize = 12, insets = { left = 3, right = 3, top = 3, bottom = 3 } })
-    b:SetBackdropColor(0.07, 0.05, 0.03, 0.97)
-    b:SetBackdropBorderColor(0.6, 0.48, 0.25, 1)
-  end
-  b:SetHeight(30)
-  -- нижний край полосы заходит на рамку подсказки
-  b:SetPoint("BOTTOMLEFT", f, "TOPLEFT", 0, -4)
-  b:SetPoint("BOTTOMRIGHT", f, "TOPRIGHT", 0, -4)
-  b:SetFrameLevel(f:GetFrameLevel() + 20)
-  -- значок и название блоком по центру полосы
-  local box = CreateFrame("Frame", nil, b)
-  box:SetHeight(20)
-  local icon = box:CreateTexture(nil, "ARTWORK")
-  icon:SetSize(20, 20)
-  icon:SetPoint("LEFT", 0, 0)
-  icon:SetTexture(ns.ICON)
-  if box.CreateMaskTexture and icon.AddMaskTexture then
-    -- круглый, как значок у миникарты
-    local mask = box:CreateMaskTexture()
-    mask:SetTexture("Interface\\CHARACTERFRAME\\TempPortraitAlphaMask", "CLAMPTOBLACKADDITIVE", "CLAMPTOBLACKADDITIVE")
-    mask:SetAllPoints(icon)
-    icon:AddMaskTexture(mask)
-  end
-  local text = box:CreateFontString(nil, "OVERLAY")
-  text:SetFontObject(_G.SystemFont_Med3 or _G.GameFontNormalMed2 or GameFontNormal)
-  text:SetPoint("LEFT", icon, "RIGHT", 6, -1)
-  text:SetText("|cff33ff99Easy|r|cffffd100Craft|r")
-  box:SetWidth(20 + 6 + math.ceil(text:GetStringWidth() or 60))
-  box:SetPoint("CENTER", b, "CENTER", 0, 0)
-  f.brand = b
-  return b
-end
-
 function W.HintPanel(name, width, title, key)
   local f = CreateFrame("Frame", name, UIParent, BackdropTemplateMixin and "BackdropTemplate" or nil)
   f:SetWidth(width)
@@ -675,7 +635,6 @@ function W.HintPanel(name, width, title, key)
   f.note:SetWidth(width - W.HINT_PAD * 2)
   f.btn = W.Button(f, "", width - W.HINT_PAD * 2, 22)
   if key then W.Movable(f, key, "TOPRIGHT") end
-  W.Brand(f)
   function f:Reset()
     for _, h in ipairs(self.heads) do h:Hide() end
     for _, r in ipairs(self.rows) do r:Hide() end
