@@ -355,6 +355,8 @@ SlashCmdList.EASYCRAFT = function(msg)
   elseif msg == "minimap" or msg == "миникарта" then
     TJ:SetMinimapHidden(TJ.settings.minimap)
     TJ:Print(TJ.settings.minimap and TJ.T("кнопка у миникарты показана.") or TJ.T("кнопка у миникарты скрыта (вернуть: /ec minimap)."))
+  elseif msg == "scan" or msg == "цены" then
+    TJ:ScanAuction(true)
   elseif msg == "check" or msg == "сверка" then
     TJ:PrintRouteCheck()
   elseif msg == "options" or msg == "config" or msg == "настройки" then

@@ -1581,3 +1581,24 @@ TJ.EN["Какую профессию выбрать"] = "Which profession to pic
 
 -- 1.2: окно выбора профессии - кнопка перехода
 TJ.EN["Перейти к аддону"] = "Go to the addon"
+
+-- 1.2: свои цены аукциона, свой учёт альтов, цена пути и просмотр маршрута
+for k, v in pairs({
+  ["Цен нет: открой аукцион - EasyCraft прочитает их сам."] = "No prices: open the auction house - EasyCraft reads them itself.",
+  ["Цен нет: открой аукцион - EasyCraft прочитает их сам"] = "No prices: open the auction house - EasyCraft reads them itself",
+  ["Цены из %s. Открой аукцион, чтобы обновить: без цены %d, старше %d дн. - %d."] = "Prices from %s. Open the auction house to refresh: no price %d, older than %d days - %d.",
+  ["Нужен аддон Auctionator: через него EasyCraft ищет сразу весь список."] = "Needs the Auctionator addon: EasyCraft uses it to search the whole list at once.",
+  ["Аукцион: читать цены самому при открытии"] = "Auction house: read prices on opening",
+  ["цены аукциона прочитаны, предметов: %d."] = "auction prices read, items: %d.",
+  ["этот клиент не даёт читать аукцион."] = "this client does not let addons read the auction house.",
+  ["открой аукцион: цены читаются там."] = "open the auction house: prices are read there.",
+  ["читаю цены аукциона..."] = "reading auction prices...",
+  ["Осталось до 300: "] = "Left to 300: ",
+  ["Путь до 300: "] = "Path to 300: ",
+  ["покупать нечего"] = "nothing to buy",
+  ["цен пока нет - открой аукцион"] = "no prices yet - open the auction house",
+  ["Смотреть маршрут"] = "Preview route",
+  ["Все шаги до 300 и цена пути - до того, как учить профессию."] = "Every step to 300 and the cost of the path - before you learn the profession.",
+  ["Маршрут: %s"] = "Route: %s",
+  ["Маршрута пока нет."] = "No route yet.",
+}) do if TJ.EN[k] == nil then TJ.EN[k] = v end end

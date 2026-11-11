@@ -41,3 +41,114 @@ function TJ:AltCounts()
   self.altCache = out
   return out
 end
+
+-------------------------------------------------------------------------------
+--  Свой учёт альтов: работает без других аддонов. Каждый персонаж при входе,
+--  выходе и у банка записывает, что у него лежит, в общий EasyCraftDB.alts:
+--  alts[сервер][имя] = { bags = { id -> шт }, bank = { ... }, mail = { ... } }.
+--  Syndicator и BagBrother, если стоят, остаются главнее: они знают и тех
+--  персонажей, на которых EasyCraft ещё не заходил.
+-------------------------------------------------------------------------------
+local function ownStore()
+  local db = TJ.db
+  if not db then return nil end
+  db.alts = db.alts or {}
+  local realm = (GetRealmName and GetRealmName()) or "?"
+  db.alts[realm] = db.alts[realm] or {}
+  return db.alts[realm]
+end
+
+local function countBags(list)
+  local out = {}
+  local CC = C_Container
+  if not (CC and CC.GetContainerNumSlots and CC.GetContainerItemInfo) then return out end
+  for _, bag in ipairs(list) do
+    local ok, n = pcall(CC.GetContainerNumSlots, bag)
+    for slot = 1, ok and tonumber(n) or 0 do
+      local ok2, info = pcall(CC.GetContainerItemInfo, bag, slot)
+      if ok2 and type(info) == "table" and info.itemID then
+        out[info.itemID] = (out[info.itemID] or 0) + (info.stackCount or 1)
+      end
+    end
+  end
+  return out
+end
+
+-- Номера сумок: свои (с сумкой реагентов) и банка (старый банк или вкладки).
+local function bagLists()
+  local bags, bank, seen = { 0, 1, 2, 3, 4 }, { -1 }, { [-1] = true }
+  local idx = type(Enum) == "table" and Enum.BagIndex
+  if type(idx) == "table" then
+    if type(idx.ReagentBag) == "number" then bags[#bags + 1] = idx.ReagentBag end
+    for k, v in pairs(idx) do
+      if type(k) == "string" and type(v) == "number" and k:find("Bank") and not k:find("Account")
+        and not seen[v] then
+        seen[v] = true
+        bank[#bank + 1] = v
+      end
+    end
+  else
+    for b = 5, 11 do bank[#bank + 1] = b end
+  end
+  return bags, bank
+end
+
+function TJ:SaveOwnItems(withBank)
+  local s, me = ownStore(), UnitName and UnitName("player")
+  if not (s and me) then return end
+  local rec = s[me] or {}
+  s[me] = rec
+  local bags, bank = bagLists()
+  rec.bags = countBags(bags)
+  if withBank then rec.bank = countBags(bank) end
+  rec.mail = self.char and self.char.mail or rec.mail
+  rec.t = time()
+end
+
+local function ownCounts()
+  local out = {}
+  local s, me = ownStore(), UnitName and UnitName("player")
+  if not s then return out end
+  for name, rec in pairs(s) do
+    if name ~= me and type(rec) == "table" then
+      for _, part in ipairs({ "bags", "bank", "mail" }) do
+        if type(rec[part]) == "table" then
+          for id, n in pairs(rec[part]) do
+            if type(n) == "number" then out[id] = (out[id] or 0) + n end
+          end
+        end
+      end
+    end
+  end
+  return out
+end
+
+local viaAddons, addonSource = TJ.AltCounts, TJ.AltSource
+
+function TJ:AltSource() return addonSource(self) or "EasyCraft" end
+
+function TJ:AltCounts()
+  if addonSource(self) then return viaAddons(self) end
+  if self.altCache then return self.altCache end
+  self.altCache = ownCounts()
+  return self.altCache
+end
+
+local ownEv = CreateFrame("Frame")
+for _, e in ipairs({ "PLAYER_ENTERING_WORLD", "PLAYER_LOGOUT", "BANKFRAME_OPENED", "BANKFRAME_CLOSED", "BAG_UPDATE_DELAYED" }) do
+  pcall(ownEv.RegisterEvent, ownEv, e)
+end
+local bankOpen
+local function later(sec, withBank)
+  local function run() pcall(TJ.SaveOwnItems, TJ, withBank and bankOpen) end
+  if C_Timer and C_Timer.After then C_Timer.After(sec, run) else run() end
+end
+-- Банк читается, только пока он открыт: записываем при открытии и при
+-- перекладывании, а при закрытии - уже нет.
+ownEv:SetScript("OnEvent", function(_, e)
+  if e == "PLAYER_ENTERING_WORLD" then later(5)
+  elseif e == "BANKFRAME_OPENED" then bankOpen = true later(0.5, true)
+  elseif e == "BANKFRAME_CLOSED" then bankOpen = nil
+  elseif e == "BAG_UPDATE_DELAYED" then if bankOpen then later(0.2, true) end
+  else pcall(TJ.SaveOwnItems, TJ) end
+end)

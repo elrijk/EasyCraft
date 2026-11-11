@@ -44,6 +44,7 @@ Alts.lua
 RouteCost.lua
 Tracking.lua
 Crafting.lua
+Prices.lua
 Data\Best.lua
 Book.lua
 UI\Widgets.lua

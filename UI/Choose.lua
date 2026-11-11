@@ -382,6 +382,93 @@ local function coverArt(f, atlas)
   return true
 end
 
+-------------------------------------------------------------------------------
+--  Просмотр маршрута до изучения профессии: все шаги до 300 списком и
+--  цена всего пути по ценам аукциона.
+-------------------------------------------------------------------------------
+-- Строка «сколько стоит путь»: для окна выбора и для просмотра маршрута.
+local function costLine(key)
+  local p = TJ.Profs[key]
+  if not (p and p.steps and TJ.RouteCost) then return nil end
+  local ok, total, noPrice = pcall(TJ.RouteCost, TJ, key)
+  if not ok or type(total) ~= "number" then return nil end
+  local _, _, learned = TJ:GetSkill(key)
+  local head = learned and T("Осталось до 300: ") or T("Путь до 300: ")
+  if total <= 0 and (noPrice or 0) == 0 then
+    return head .. "|cff33dd33" .. T("покупать нечего") .. "|r"
+  end
+  if total <= 0 then return head .. "|cffb0aca0" .. T("цен пока нет - открой аукцион") .. "|r" end
+  local s = head .. "|cffffffff~" .. W.Money(total) .. "|r"
+  if (noPrice or 0) > 0 then s = s .. " |cffb0aca0" .. format(T("(и ещё %d без цены)"), noPrice) .. "|r" end
+  return s
+end
+
+local preview
+local function showPreview(key)
+  local p = TJ.Profs[key]
+  if not p then return end
+  local f = preview
+  if not f then
+    f = CreateFrame("Frame", "EasyCraftRoutePreview", UIParent, BackdropTemplateMixin and "BackdropTemplate" or nil)
+    preview = f
+    f:SetSize(440, 540)
+    f:SetPoint("CENTER", 40, 0)
+    f:SetFrameStrata("DIALOG")
+    f:SetToplevel(true)
+    f:SetClampedToScreen(true)
+    f:EnableMouse(true)
+    f:SetMovable(true)
+    f:RegisterForDrag("LeftButton")
+    f:SetScript("OnDragStart", f.StartMoving)
+    f:SetScript("OnDragStop", f.StopMovingOrSizing)
+    f:SetScale(TJ.settings.scale or 1)
+    W.Backdrop(f, "Interface\\Buttons\\WHITE8X8", nil, 16, 0.07, 0.05, 0.03, 0.97, 0.75, 0.6, 0.3, 1)
+    tinsert(UISpecialFrames, "EasyCraftRoutePreview")
+    f.title = W.Text(f, "title", false)
+    f.title:SetPoint("TOPLEFT", 20, -18)
+    f.cost = W.Text(f, "body", false)
+    f.cost:SetPoint("TOPLEFT", f.title, "BOTTOMLEFT", 0, -6)
+    local x = CreateFrame("Button", nil, f, "UIPanelCloseButton")
+    x:SetPoint("TOPRIGHT", -2, -2)
+    f.scroll = CreateFrame("ScrollFrame", nil, f)
+    f.scroll:SetPoint("TOPLEFT", 20, -70)
+    f.scroll:SetPoint("BOTTOMRIGHT", -20, 18)
+    f.body = CreateFrame("Frame", nil, f.scroll)
+    f.body:SetSize(400, 10)
+    f.scroll:SetScrollChild(f.body)
+    f.text = W.Text(f.body, "body", true)
+    f.text:SetPoint("TOPLEFT")
+    f.text:SetWidth(400)
+    f.text:SetJustifyH("LEFT")
+    f.text:SetSpacing(5)
+    f.scroll:EnableMouseWheel(true)
+    f.scroll:SetScript("OnMouseWheel", function(sf, d)
+      local top = math.max(0, f.body:GetHeight() - sf:GetHeight())
+      sf:SetVerticalScroll(math.max(0, math.min(top, sf:GetVerticalScroll() - d * 60)))
+    end)
+  end
+  f.title:SetText(format(T("Маршрут: %s"), TJ:N(p)))
+  f.cost:SetText(costLine(key) or "")
+  local lines = {}
+  for _, s in ipairs(p.steps or {}) do
+    local ok, title = pcall(TJ.StepTitle, TJ, s)
+    if ok and title then
+      if s.k == "craft" and s.n then
+        title = title .. "  |cffb0aca0x" .. s.n .. "|r"
+      elseif s.k == "train" or s.k == "book" or s.k == "quest" then
+        title = "|cffffd100" .. title .. "|r"
+      end
+      lines[#lines + 1] = title
+    end
+  end
+  if #lines == 0 then lines[1] = T("Маршрута пока нет.") end
+  f.text:SetText(table.concat(lines, "\n"))
+  f.body:SetHeight(f.text:GetStringHeight() + 10)
+  f.scroll:SetVerticalScroll(0)
+  f:Show()
+  f:Raise()
+end
+
 local function fill(f, key)
   local p = TJ.Profs[key]
   local info = INFO[key] or { "", "", ALL, { 0.3, 0.3, 0.3 } }
@@ -407,6 +494,8 @@ local function fill(f, key)
   f.name:SetText(TJ:N(p))
   f.state:SetText(learned and ("|cff33dd33" .. format(T("Изучена: %d/%d"), rank, maxRank) .. "|r")
     or ("|cffb0aca0" .. T("Не изучена") .. "|r"))
+  local cost = costLine(key)
+  if cost then f.state:SetText(f.state:GetText() .. "     " .. cost) end
   f.why:SetText(T(info[1]))
   -- где кончается полоса «зачем» (от верха окна)
   local stripEnd = TOP + 26 + 64 + 12 + f.state:GetStringHeight() + 14 + 1 + 12 + f.why:GetStringHeight() + 12 + 1
@@ -475,14 +564,14 @@ local function fill(f, key)
     or T("Учителя этой профессии аддон не знает.")
   f.trainer:SetScript("OnClick", function() if npc then TJ:Waypoint(npc, true) end end)
   f.go:SetText(T("Перейти к аддону"))
-  f.route:SetText(T("Открыть маршрут"))
-  f.route:SetShown(learned)
-  f.route.tip = T("Маршрут прокачки этой профессии в окне EasyCraft.")
-  f.route:SetScript("OnClick", function() f:Hide(); TJ.UI:Open(key) end)
+  f.route:SetText(learned and T("Открыть маршрут") or T("Смотреть маршрут"))
+  f.route:SetShown(true)
+  f.route.tip = learned and T("Маршрут прокачки этой профессии в окне EasyCraft.") or T("Все шаги до 300 и цена пути - до того, как учить профессию.")
+  f.route:SetScript("OnClick", function() if learned then f:Hide(); TJ.UI:Open(key) else showPreview(key) end end)
   f.trainer:ClearAllPoints()
   f.go:ClearAllPoints()
   f.route:ClearAllPoints()
-  if learned then
+  if true then
     f.route:SetPoint("BOTTOM", 0, 29)
     f.trainer:SetPoint("RIGHT", f.route, "LEFT", -10, 0)
     f.go:SetPoint("LEFT", f.route, "RIGHT", 10, 0)

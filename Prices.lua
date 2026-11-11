@@ -1,0 +1,205 @@
+local _, TJ = ...
+
+-------------------------------------------------------------------------------
+--  Свои цены аукциона. EasyCraft читает их сам, когда игрок открывает
+--  аукцион: листает общий список (минимальная цена каждого предмета) и
+--  заодно запоминает цены из любых поисков игрока.
+--  Хранится в EasyCraftDB.ah[сервер] = { p = { id -> медь за штуку },
+--  d = { id -> день, когда видели }, t = время последнего полного обхода }.
+--  Auctionator и TSM остаются запасным источником: берётся более свежая цена.
+--  Если Auctionator стоит, свой обход не запускается (два обхода мешали бы
+--  друг другу) - цены подбираются из его обхода, события у них общие.
+-------------------------------------------------------------------------------
+local AH = C_AuctionHouse
+local floor, min, time = math.floor, math.min, time
+
+local RESCAN = 15 * 60 -- полный обход не чаще, чем раз в столько секунд
+local scan = {}        -- active, n (сколько цен за обход), wait (ждём очередь)
+local batch = {}       -- предметы, уже встреченные в текущем списке
+local dirty
+
+local function today() return floor(time() / 86400) end
+
+local function store()
+  local db = TJ.db
+  if not db then return nil end
+  db.ah = db.ah or {}
+  local realm = (GetRealmName and GetRealmName()) or "?"
+  local s = db.ah[realm]
+  if not s then s = { p = {}, d = {} } db.ah[realm] = s end
+  s.p, s.d = s.p or {}, s.d or {}
+  return s
+end
+
+function TJ:CanScanAuction()
+  return type(AH) == "table" and type(AH.SendBrowseQuery) == "function"
+    and type(AH.GetBrowseResults) == "function" or false
+end
+
+-- Есть ли хоть одна своя цена.
+function TJ:HasOwnPrices()
+  local s = store()
+  return s and next(s.p) ~= nil or false
+end
+
+local function refreshSoon()
+  if dirty then return end
+  dirty = true
+  local function run() dirty = nil TJ:Safe(TJ.RefreshAll, TJ) end
+  if C_Timer and C_Timer.After then C_Timer.After(0.5, run) else run() end
+end
+
+-- Запомнить цену. exact - точная (поиск одного предмета), иначе в пределах
+-- одного списка берём меньшую: у предмета бывает несколько строк (суффиксы).
+local function note(id, price, exact)
+  if type(id) ~= "number" or type(price) ~= "number" or price <= 0 then return end
+  local s = store()
+  if not s then return end
+  if not exact and batch[id] and s.p[id] then s.p[id] = min(s.p[id], price) else s.p[id] = price end
+  batch[id] = true
+  s.d[id] = today()
+  scan.n = (scan.n or 0) + 1
+end
+
+local function harvest(list)
+  if type(list) ~= "table" then return end
+  for _, r in ipairs(list) do
+    if type(r) == "table" and type(r.itemKey) == "table" and (r.totalQuantity or 1) > 0 then
+      note(r.itemKey.itemID, r.minPrice)
+    end
+  end
+  refreshSoon()
+end
+
+local function ready()
+  if type(AH.IsThrottledMessageSystemReady) ~= "function" then return true end
+  local ok, r = pcall(AH.IsThrottledMessageSystemReady)
+  return not ok or r
+end
+
+local function finish(done)
+  if not scan.active then return end
+  scan.active, scan.wait = nil, nil
+  local s = store()
+  if done and s then s.t = time() end
+  if (scan.n or 0) > 0 then
+    TJ:Print(format(TJ.T("цены аукциона прочитаны, предметов: %d."), scan.n))
+  end
+  refreshSoon()
+end
+
+-- Следующий шаг обхода: отправить запрос или попросить следующую страницу.
+local function step()
+  if not scan.active then return end
+  if not ready() then scan.wait = true return end
+  scan.wait = nil
+  if not scan.sent then
+    scan.sent = true
+    local ok = pcall(AH.SendBrowseQuery, { searchString = "", sorts = {}, filters = {}, itemClassFilters = {} })
+    if not ok then finish(false) end
+    return
+  end
+  local okFull, full = pcall(AH.HasFullBrowseResults)
+  if not okFull or full or type(AH.RequestMoreBrowseResults) ~= "function" then return finish(true) end
+  if not pcall(AH.RequestMoreBrowseResults) then finish(true) end
+end
+
+-- Начать обход. force - по команде игрока, не глядя на паузу и Auctionator.
+function TJ:ScanAuction(force)
+  if not self:CanScanAuction() then
+    if force then self:Print(TJ.T("этот клиент не даёт читать аукцион.")) end
+    return false
+  end
+  if not self.ahOpen then
+    if force then self:Print(TJ.T("открой аукцион: цены читаются там.")) end
+    return false
+  end
+  if scan.active then return true end
+  if not force then
+    if self.settings and self.settings.ahScan == false then return false end
+    if type(Auctionator) == "table" then return false end
+    local s = store()
+    if s and s.t and time() - s.t < RESCAN then return false end
+  end
+  scan = { active = true, n = 0 }
+  batch = {}
+  if force then self:Print(TJ.T("читаю цены аукциона...")) end
+  step()
+  return true
+end
+
+-- Идёт ли обход и сколько цен уже прочитано.
+function TJ:AuctionScanState() return scan.active or false, scan.n or 0 end
+
+local ev = CreateFrame("Frame")
+for _, e in ipairs({
+  "AUCTION_HOUSE_SHOW", "AUCTION_HOUSE_CLOSED", "AUCTION_HOUSE_THROTTLED_SYSTEM_READY",
+  "AUCTION_HOUSE_BROWSE_RESULTS_UPDATED", "AUCTION_HOUSE_BROWSE_RESULTS_ADDED", "AUCTION_HOUSE_BROWSE_FAILURE",
+  "COMMODITY_SEARCH_RESULTS_UPDATED", "ITEM_SEARCH_RESULTS_UPDATED",
+}) do pcall(ev.RegisterEvent, ev, e) end
+
+local function onEvent(e, a)
+  if e == "AUCTION_HOUSE_SHOW" then
+    TJ.ahOpen = true
+    local function go() if TJ.ahOpen then TJ:ScanAuction() end end
+    if C_Timer and C_Timer.After then C_Timer.After(1, go) else go() end
+  elseif e == "AUCTION_HOUSE_CLOSED" then
+    TJ.ahOpen = nil
+    finish(false)
+  elseif e == "AUCTION_HOUSE_THROTTLED_SYSTEM_READY" then
+    if scan.active and scan.wait then step() end
+  elseif e == "AUCTION_HOUSE_BROWSE_RESULTS_UPDATED" then
+    if not scan.active then batch = {} end
+    local ok, list = pcall(AH.GetBrowseResults)
+    if ok then harvest(list) end
+    step()
+  elseif e == "AUCTION_HOUSE_BROWSE_RESULTS_ADDED" then
+    harvest(a)
+    step()
+  elseif e == "AUCTION_HOUSE_BROWSE_FAILURE" then
+    finish(false)
+  elseif e == "COMMODITY_SEARCH_RESULTS_UPDATED" then
+    if type(a) == "number" and AH.GetCommoditySearchResultInfo then
+      local ok, r = pcall(AH.GetCommoditySearchResultInfo, a, 1)
+      if ok and type(r) == "table" then note(a, r.unitPrice, true) refreshSoon() end
+    end
+  elseif e == "ITEM_SEARCH_RESULTS_UPDATED" then
+    if type(a) == "table" and a.itemID and AH.GetNumItemSearchResults and AH.GetItemSearchResultInfo then
+      local ok, n = pcall(AH.GetNumItemSearchResults, a)
+      local best
+      for i = 1, min(ok and tonumber(n) or 0, 50) do
+        local ok2, r = pcall(AH.GetItemSearchResultInfo, a, i)
+        local price = ok2 and type(r) == "table" and r.buyoutAmount
+        if type(price) == "number" and price > 0 and (not best or price < best) then best = price end
+      end
+      if best then note(a.itemID, best, true) refreshSoon() end
+    end
+  end
+end
+ev:SetScript("OnEvent", function(_, e, a) if type(AH) == "table" then TJ:Safe(onEvent, e, a) end end)
+
+-------------------------------------------------------------------------------
+--  Источник цен для остального аддона.
+-------------------------------------------------------------------------------
+local baseSource, basePrice = TJ.PriceSource, TJ.AuctionPrice
+
+-- Откуда цены: "EasyCraft" (свои), "Auctionator", "TSM" или nil.
+function TJ:PriceSource()
+  if self:HasOwnPrices() or self:CanScanAuction() then return "EasyCraft" end
+  return baseSource(self)
+end
+
+-- Цена одной штуки в меди и сколько дней назад её видели. Из своей цены и
+-- цены Auctionator берётся более свежая.
+function TJ:AuctionPrice(id)
+  if type(id) ~= "number" then return nil end
+  local otherPrice, otherAge = basePrice(self, id)
+  local s = store()
+  local own = s and s.p[id]
+  if own then
+    local age = today() - (s.d[id] or 0)
+    if age < 0 then age = 0 end
+    if not otherPrice or not otherAge or age <= otherAge then return own, age end
+  end
+  return otherPrice, otherAge
+end

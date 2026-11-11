@@ -56,7 +56,7 @@ local function priceLines(e)
     lines[#lines + 1] = { T("Выгода за создание"), profitText(e.profit) }
     lines[#lines + 1] = T("Без комиссии аукциона.")
   else
-    lines[#lines + 1] = TJ:PriceSource() and T("Цены на аукционе пока нет") or T("Цен нет: поставь аддон Auctionator")
+    lines[#lines + 1] = TJ:PriceSource() and T("Цены на аукционе пока нет") or T("Цен нет: открой аукцион - EasyCraft прочитает их сам")
   end
   if e.best then
     lines[#lines + 1] = { T("Лучшее: ") .. bestWhere(e), color = W.GOLD }
@@ -144,7 +144,7 @@ function C:QueueCard(UI)
     { text = open and T("Найти на аукционе") or T("В список Auctionator"), w = 190, enabled = has and #needs.auction > 0,
       tip = has and (open and T("Найдёт недостающие реагенты на аукционе.")
         or T("Добавит недостающие реагенты в список «EasyCraft» в Auctionator: на аукционе останется нажать «Искать»."))
-        or T("Нужен аддон Auctionator: через него EasyCraft ищет реагенты и знает цены."),
+        or T("Нужен аддон Auctionator: через него EasyCraft ищет сразу весь список."),
       onClick = function() TJ:SendToAuction(needs.auction) end },
     { text = T("Очистить"), w = 110, onClick = function() TJ:QueueClear(); UI:Render(true) end,
       tip = T("Уберёт из очереди всё.") },

@@ -478,7 +478,7 @@ function TJ:OwnGather(id)
 end
 
 function TJ:IsAuctionOpen()
-  return (AuctionHouseFrame and AuctionHouseFrame:IsShown()) or (AuctionFrame and AuctionFrame:IsShown()) or false
+  return self.ahOpen or (AuctionHouseFrame and AuctionHouseFrame:IsShown()) or (AuctionFrame and AuctionFrame:IsShown()) or false
 end
 
 -- Название на языке клиента: по нему ищет аукцион.
@@ -722,9 +722,9 @@ function TJ:StepBuyLines(b)
   end
   if b.noPrice > 0 then
     if not self:PriceSource() then
-      tinsert(lines, "|cffff5555" .. T("Цен нет: поставь аддон Auctionator") .. "|r")
+      tinsert(lines, "|cffff5555" .. T("Цен нет: открой аукцион - EasyCraft прочитает их сам") .. "|r")
     elseif b.total == 0 then
-      tinsert(lines, "|cff9d9d9d" .. T("Цен нет: отсканируй аукцион в Auctionator") .. "|r")
+      tinsert(lines, "|cff9d9d9d" .. T("Цен нет: открой аукцион - EasyCraft прочитает их сам") .. "|r")
     end
   end
   if b.mail then tinsert(lines, self.MAIL_COLOR .. T("Часть ждёт на почте") .. "|r") end
@@ -1552,7 +1552,7 @@ function TJ:UpdateAuctionPanel()
   if hidden > 0 then y = f:Head("|cff9d9d9d" .. format(T("и ещё %d"), hidden) .. "|r", y) end
   -- 3. Итог и «Найти всё»
   local sum
-  if not self:PriceSource() then sum = "|cffa03000" .. T("Цен нет: поставь аддон Auctionator") .. "|r"
+  if not self:PriceSource() then sum = "|cffa03000" .. T("Цен нет: открой аукцион - EasyCraft прочитает их сам") .. "|r"
   elseif total > 0 then
     sum = T("Всего: ") .. W.Money(total) .. (noPrice > 0 and ("  " .. format(T("(и ещё %d без цены)"), noPrice)) or "")
   end

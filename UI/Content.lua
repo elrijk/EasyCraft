@@ -548,7 +548,7 @@ local function headButtons(UI, tab, data)
     return {
       { text = open and T("Найти на аукционе") or T("В список Auctionator"), enabled = #list > 0 and has,
         tip = has and (open and T("Найдёт всё нужное на аукционе.") or T("Добавит всё нужное в список «EasyCraft» в Auctionator."))
-          or T("Нужен аддон Auctionator: через него EasyCraft ищет реагенты и знает цены."),
+          or T("Нужен аддон Auctionator: через него EasyCraft ищет сразу весь список."),
         onClick = function() TJ:SendToAuction(list) end },
     }
   end
@@ -1007,9 +1007,9 @@ function C:BuildShopping(UI, d)
     c:Text(T("На аукционе: ") .. (grand > 0 and W.Money(grand) or "-")
       .. (noPrice > 0 and ("  |cff9d9d9d" .. format(T("(и ещё %d без цены)"), noPrice) .. "|r") or ""), "title", { gap = 6, color = W.LIGHT, w = topW })
     if not source then
-      c:Text(RED .. T("Цен нет: поставь Auctionator и отсканируй аукцион.") .. "|r", "small")
+      c:Text(RED .. T("Цен нет: открой аукцион - EasyCraft прочитает их сам.") .. "|r", "small")
     elseif noPrice > 0 or oldPrices > 0 then
-      c:Text(format(T("Цены из %s. Отсканируй аукцион: без цены %d, старше %d дн. - %d."), source, noPrice, TJ.PRICE_OLD_DAYS, oldPrices), "small")
+      c:Text(format(T("Цены из %s. Открой аукцион, чтобы обновить: без цены %d, старше %d дн. - %d."), source, noPrice, TJ.PRICE_OLD_DAYS, oldPrices), "small")
     else
       c:Text(format(T("Цены из %s."), source), "small")
     end
@@ -1533,7 +1533,7 @@ function C:AuctionButton(UI, c, y)
   c:Button({ text = open and T("Найти на аукционе") or T("В список Auctionator"), w = 190, enabled = has,
     tip = has and (open and T("Найдёт недостающие реагенты на аукционе.")
       or T("Добавит недостающие реагенты в список «EasyCraft» в Auctionator: на аукционе останется нажать «Искать»."))
-      or T("Нужен аддон Auctionator: через него EasyCraft ищет реагенты и знает цены."),
+      or T("Нужен аддон Auctionator: через него EasyCraft ищет сразу весь список."),
     onClick = function() TJ:SendToAuction(b.auction) end }, UI.PAD, y, true)
   return true
 end
