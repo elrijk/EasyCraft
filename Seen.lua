@@ -182,13 +182,11 @@ function ns:AskShare()
   f.never:Show()
   f:SetHeight(y + 24 + 12)
   f:ClearAllPoints()
-  local mini = self.Tracker and self.Tracker.f
-  if type(mini) == "table" and mini.IsShown and mini:IsShown() then
-    f:SetPoint("TOPLEFT", mini, "BOTTOMLEFT", 0, -6)
-  else
-    f:SetPoint("TOPLEFT", win, "BOTTOMLEFT", 0, -6)
-  end
+  -- всегда по центру экрана, поверх остальных окон аддона
+  f:SetPoint("CENTER", UIParent, "CENTER", 0, 0)
+  f:SetFrameStrata("DIALOG")
   f:Show()
+  f:Raise()
 end
 
 -- Окно профессии закрыли - подсказка уходит вместе с ним.
