@@ -537,7 +537,7 @@ end
 -- внутри карточки (центр таблички на этой высоте); opts.edge - цвет рамки
 -- (по умолчанию золотой); opts.tip и opts.onClick - подсказка и щелчок.
 -- цвета таблички «Текущий шаг»: заливка, рамка, надпись
-local CUR_FILL, CUR_EDGE, CUR_INK = { 0.95, 0.72, 0.08 }, { 1, 0.92, 0.5 }, { 0.14, 0.08, 0 }
+local CUR_FILL, CUR_EDGE, CUR_INK = { 0.3, 0.21, 0.09 }, { 1, 0.82, 0 }, { 1, 0.82, 0 }
 function Card:EdgeBadge(x, text, opts)
   opts = opts or {}
   local b = self:Take("edgebadge", function()
@@ -561,7 +561,7 @@ function Card:EdgeBadge(x, text, opts)
   end)
   b:SetFrameLevel(self:GetFrameLevel() + 7)
   local e = opts.edge or { 1, 0.82, 0 }
-  -- big - «Текущий шаг»: крупнее, золотая заливка и тёмная надпись, чтобы
+  -- big - «Текущий шаг»: крупнее, тёплая заливка в золотой рамке с золотой надписью, чтобы
   -- табличка была видна сразу; обычная - тёмная с золотыми буквами
   b.text:SetFontObject(opts.big and (_G.SystemFont_Med3 or GameFontNormal) or GameFontNormalSmall)
   if opts.big then
@@ -947,7 +947,7 @@ UI.TILE_MODE, UI.TILE_TOP = TILE_MODE, TILE_TOP
 -- wide - широкая плитка текущего шага на главной: значок слева, рядом
 -- название и строка «что нужно», справа табличка «Текущий шаг» (как на
 -- карточке шага) и стрелка.
--- Золотая табличка с тёмной надписью, как «Текущий шаг» на карточке шага.
+-- Табличка в золотой рамке с золотой надписью, как выбранная вкладка окна (так же - «Текущий шаг» на карточке шага).
 local function GoldPlate(parent, edgeSize)
   local f = CreateFrame("Frame", nil, parent, BackdropTemplateMixin and "BackdropTemplate" or nil)
   if f.SetBackdrop then
