@@ -1432,21 +1432,21 @@ function Card:HeadTiles(buttons, opts)
   c.y = c.y + (row + 1) * (H + HEAD_TILE_GAP)
 end
 
--- Переключатель с текущей строки карточки (c.y): одна тёмная полоса в
--- рамке во всю ширину, внутри сегменты через тонкие разделители. Выбранный
--- сегмент чуть светлее фона, с золотой надписью и тонкой золотой чертой
--- снизу; остальные - приглушённая надпись на тёмном.
--- list = { { text =, icon =, tip =, sel =, onClick = } }.
-local SEG_H = 42
+-- Переключатель с текущей строки карточки (c.y), как вкладки внизу окна
+-- талантов: одна тёмная полоса в рамке во всю ширину, на ней надписи
+-- золотом через тонкие разделители. Выбранная вкладка светлее, как
+-- приподнятая плашка, с белой надписью. Значков нет.
+-- list = { { text =, tip =, sel =, onClick = } }.
+local SEG_H = 36
 function Card:Segments(list)
   local c = self
   local bar = c:Take("segbar", function()
     local f = CreateFrame("Frame", nil, c, BackdropTemplateMixin and "BackdropTemplate" or nil)
-    W.Backdrop(f, "Interface\\Buttons\\WHITE8X8", nil, 14, 0.07, 0.05, 0.03, 1, 0.75, 0.6, 0.3, 1)
+    W.Backdrop(f, "Interface\\Buttons\\WHITE8X8", nil, 12, 0.05, 0.04, 0.03, 1, 0.5, 0.42, 0.28, 1)
     f.segs = {}
     return f
   end)
-  local IN = 4 -- от рамки полосы до сегментов
+  local IN = 3 -- от рамки полосы до вкладок
   local barW = CARD_W - PAD * 2
   bar:SetSize(barW, SEG_H)
   bar:SetPoint("TOPLEFT", c, "TOPLEFT", PAD, -c.y)
@@ -1456,26 +1456,31 @@ function Card:Segments(list)
     local d, t = list[i], bar.segs[i]
     if d and not t then
       t = CreateFrame("Button", nil, bar)
+      -- плашка выбранной вкладки: светлее сверху, темнее книзу, со светлой кромкой
       t.fill = t:CreateTexture(nil, "BACKGROUND")
       t.fill:SetAllPoints()
-      t.mark = t:CreateTexture(nil, "BORDER")
-      t.mark:SetColorTexture(1, 0.82, 0, 0.9)
-      t.mark:SetHeight(2)
-      t.mark:SetPoint("BOTTOMLEFT", 6, 1)
-      t.mark:SetPoint("BOTTOMRIGHT", -6, 1)
+      t.fill:SetColorTexture(1, 1, 1, 1)
+      if CreateColor and t.fill.SetGradient then
+        pcall(t.fill.SetGradient, t.fill, "VERTICAL", CreateColor(0.2, 0.17, 0.13, 1), CreateColor(0.36, 0.31, 0.24, 1))
+      else
+        t.fill:SetColorTexture(0.28, 0.24, 0.18, 1)
+      end
+      t.edge = t:CreateTexture(nil, "BORDER")
+      t.edge:SetColorTexture(0.75, 0.66, 0.48, 0.9)
+      t.edge:SetHeight(1)
+      t.edge:SetPoint("TOPLEFT", 0, 0)
+      t.edge:SetPoint("TOPRIGHT", 0, 0)
       local hl = t:CreateTexture(nil, "HIGHLIGHT")
       hl:SetAllPoints()
-      hl:SetColorTexture(1, 0.82, 0, 0.12)
+      hl:SetColorTexture(1, 0.82, 0, 0.08)
       t.div = t:CreateTexture(nil, "BORDER")
-      t.div:SetColorTexture(0.75, 0.6, 0.3, 0.45)
+      t.div:SetColorTexture(0.5, 0.42, 0.28, 0.6)
       t.div:SetWidth(1)
-      t.div:SetPoint("TOPRIGHT", 0, -5)
-      t.div:SetPoint("BOTTOMRIGHT", 0, 5)
-      t.icon = t:CreateTexture(nil, "ARTWORK")
-      t.icon:SetSize(22, 22)
-      t.icon:SetTexCoord(0.08, 0.92, 0.08, 0.92)
-      t.title = W.Text(t, "title", false)
-      t.title:SetPoint("LEFT", t.icon, "RIGHT", 8, 0)
+      t.div:SetPoint("TOPRIGHT", 0, -4)
+      t.div:SetPoint("BOTTOMRIGHT", 0, 4)
+      t.title = t:CreateFontString(nil, "OVERLAY")
+      t.title:SetFontObject(_G.GameFontNormal)
+      t.title:SetPoint("CENTER", 0, 0)
       t:SetScript("OnEnter", function(s2)
         if not s2.tip then return end
         GameTooltip:SetOwner(s2, "ANCHOR_BOTTOM")
@@ -1492,28 +1497,15 @@ function Card:Segments(list)
         t:ClearAllPoints()
         t:SetPoint("TOPLEFT", bar, "TOPLEFT", IN + floor((i - 1) * segW + 0.5), -IN)
         t:SetSize(floor(segW + 0.5), SEG_H - IN * 2)
-        t.icon:SetTexture(ns.Icon(d.icon))
         t.title:SetText(d.text)
-        -- значок с надписью - одной группой по центру сегмента
-        local tw = ceil(t.title:GetStringWidth() or 60)
-        t.icon:ClearAllPoints()
-        t.icon:SetPoint("LEFT", t, "CENTER", -floor((22 + 8 + tw) / 2), 0)
         t.tip = d.tip
+        local sel = d.sel and true or false
+        t.fill:SetShown(sel)
+        t.edge:SetShown(sel)
         -- разделитель - только между двумя невыбранными соседями
         local nextSel = list[i + 1] and list[i + 1].sel
-        t.div:SetShown(i < n and not d.sel and not nextSel)
-        t.mark:SetShown(d.sel and true or false)
-        if d.sel then
-          t.fill:SetColorTexture(0.3, 0.21, 0.09, 1)
-          t.title:SetTextColor(1, 0.82, 0, 1)
-          t.icon:SetDesaturated(false)
-          t.icon:SetAlpha(1)
-        else
-          t.fill:SetColorTexture(0, 0, 0, 0)
-          t.title:SetTextColor(0.62, 0.55, 0.42, 1)
-          t.icon:SetDesaturated(true)
-          t.icon:SetAlpha(0.6)
-        end
+        t.div:SetShown(i < n and not sel and not nextSel)
+        if sel then t.title:SetTextColor(1, 1, 1, 1) else t.title:SetTextColor(1, 0.82, 0, 1) end
         local fn = d.onClick
         t:SetScript("OnClick", function(s2)
           W.Sound("IG_CHARACTER_INFO_TAB")
