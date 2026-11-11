@@ -49,6 +49,16 @@ local BAG = {
     "Свёрнутый ранец прямо под сумкой гонца. Награда - «Уютный спальник»." },
 }
 
+-- Где стоит каждый шаг: { зона (номер из Data/Zones.lua), x, y }.
+local BAG_PIN = {
+  { A = { 40, 37, 51 }, H = { 17, 46, 74 } },
+  { 406, 41, 53 },
+  { 406, 40, 50 },
+  { 38, 49, 13 },
+  { 267, 87, 50 },
+  { 45, 23, 24 },
+}
+
 function C:XpCard(UI)
   local PAD, CW = UI.PAD, UI.CARD_W
   local c = UI:Card()
@@ -98,12 +108,38 @@ function C:XpCard(UI)
     tip = T("Шесть заданий с 14 уровня на двух материках."),
     onClick = function() UI.xpBag = not UI.xpBag; UI:Render(true) end } })
   if open then
-    rows = {}
-    for _, b in ipairs(BAG) do
-      rows[#rows + 1] = { tex = ICON .. "INV_Misc_Note_01", text = b[1] .. ". " .. T(b[2]), sub = T(b[3]),
-        tip = { title = T(b[2]), lines = { T(b[3]), T(b[4]) } } }
+    -- шаги блоками: слева название, где и что сделать; справа кнопка метки
+    local BTN_W = 170
+    local tw = CW - PAD * 2 - BTN_W - 16
+    local me = ns:PlayerFaction()
+    local y = c.y + 8
+    for i, b in ipairs(BAG) do
+      -- у первого шага место своё у каждой фракции
+      local pin = BAG_PIN[i]
+      if pin.A then pin = (me == "A") and pin.A or pin.H end
+      local z = ns.Zones[pin[1]]
+      local top = y
+      local fs = c:Text(b[1] .. ". " .. T(b[2]), "head", { x = PAD, y = y, w = tw, color = W.LIGHT })
+      y = y + (fs and fs:GetStringHeight() or 16) + 3
+      fs = c:Text(T(b[3]), "small", { x = PAD, y = y, w = tw, color = W.LIGHT })
+      y = y + (fs and fs:GetStringHeight() or 14) + 3
+      fs = c:Text(T(b[4]), "small", { x = PAD, y = y, w = tw })
+      y = y + (fs and fs:GetStringHeight() or 14)
+      c:Button({ text = T("Показать на карте"), w = BTN_W, enabled = z ~= nil,
+        tip = T("Щелчок поставит метку и откроет карту."),
+        onClick = function()
+          ns:MapPoint(z.uiMap or z.ui, pin[2], pin[3], T(b[2]), ns:ZoneName(pin[1]), true)
+        end }, PAD, top, true)
+      local bg = c:Take("xpbg", function()
+        local t = c:CreateTexture(nil, "BORDER")
+        t:SetColorTexture(0, 0, 0, 0.3)
+        return t
+      end)
+      bg:SetPoint("TOPLEFT", c, "TOPLEFT", PAD - 8, -(top - 8))
+      bg:SetSize(CW - PAD * 2 + 16, y - top + 16)
+      y = y + 16 + 10
     end
-    c:Items(rows, 1, 28)
+    c.y = y - 6
     c:Text("|cff9d9d9d" .. T("Путь взят из гайдов; названия заданий в игре могут отличаться.") .. "|r", "small", { gap = 4 })
   end
   UI:End(c)
