@@ -1177,11 +1177,9 @@ function ns:DepositReagents(prev)
   C_Timer.After(0.4, function() ns:DepositReagents(n) end)
 end
 
--- Окно банка: игры или Bagnon (он прячет окно игры). Нет - блок вверху экрана.
+-- The game's bank window while it is shown; otherwise the block goes to the top of the screen.
 local function BankWindow()
-  for _, f in ipairs({ _G.BagnonBankFrame1 or false, _G.BagnonFramebank or false, BankFrame or false }) do
-    if f and f.IsVisible and f:IsVisible() then return f end
-  end
+  if BankFrame and BankFrame:IsVisible() then return BankFrame end
 end
 
 -------------------------------------------------------------------------------

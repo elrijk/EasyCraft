@@ -1,14 +1,14 @@
 local _, ns = ...
 
 -------------------------------------------------------------------------------
---  Свои цены аукциона. EasyCraft читает их сам, когда игрок открывает
---  аукцион: листает общий список (минимальная цена каждого предмета) и
---  заодно запоминает цены из любых поисков игрока.
---  Хранится в EasyCraftDB.ah[сервер] = { p = { id -> медь за штуку },
---  d = { id -> день, когда видели }, t = время последнего полного обхода }.
---  Других источников цен нет. Пока
---  игрок не был на аукционе, цен нет - об этом аддон напоминает (в чате при
---  входе и в окне).
+--  Own auction prices. EasyCraft reads them itself when the player opens
+--  the auction house: it pages through the browse list (the lowest price of
+--  every item) and also remembers prices from any search the player runs.
+--  Stored in EasyCraftDB.ah[realm] = { p = { id -> copper per unit },
+--  d = { id -> day last seen }, t = time of the last full pass }.
+--  There is no other price source. Until the player has visited the auction
+--  house there are no prices, and the addon says so (in chat on login and
+--  in the window).
 -------------------------------------------------------------------------------
 local AH = C_AuctionHouse
 local floor, min, time = math.floor, math.min, time

@@ -529,59 +529,6 @@ function ns:AllNeeds()
 end
 
 -------------------------------------------------------------------------------
---  Реагенты у других персонажей (альтов) из BagBrother (Bagnon): BrotherBags.
---  Свой персонаж не считается - его сумки и банк даёт сама игра.
--------------------------------------------------------------------------------
-local function squash(s) return (tostring(s or ""):gsub("[%s%-]", ""):lower()) end
-
-function ns:AltCounts()
-  if self.altCache then return self.altCache end
-  local out = {}
-  local B = _G.BrotherBags
-  local me = UnitName and UnitName("player")
-  if type(B) ~= "table" or not me then return out end
-  local myKey = squash(me)
-  -- свой сервер - тот, где записан текущий персонаж: сначала по имени
-  -- сервера, потом поиском себя
-  local realm
-  local byName = GetRealmName and B[GetRealmName()]
-  if type(byName) == "table" then
-    for name in pairs(byName) do if squash(name) == myKey then realm = byName break end end
-  end
-  for _, chars in pairs(realm and {} or B) do
-    if type(chars) == "table" then
-      for name in pairs(chars) do
-        if squash(name) == myKey then realm = chars break end
-      end
-    end
-    if realm then break end
-  end
-  -- себя не нашли (новый персонаж, BagBrother ещё не записал): альтов не
-  -- считаем, чтобы не посчитать себя дважды, и не запоминаем - спросим позже
-  if not realm then return out end
-  self.altCache = out
-  local n = 0
-  for name, data in pairs(realm) do
-    -- "Имя*" - банк гильдии, его не берём
-    if squash(name) ~= myKey and type(data) == "table" and not tostring(name):find("%*$") then
-      n = n + 1
-      for _, bag in pairs(data) do
-        if type(bag) == "table" and type(bag.items) == "table" then
-          for _, item in pairs(bag.items) do
-            if type(item) == "string" then
-              local id = tonumber(item:match("^(%d+)"))
-              if id then out[id] = (out[id] or 0) + (tonumber(item:match(";(%d+)$")) or 1) end
-            end
-          end
-        end
-      end
-    end
-  end
-  self.altChars = n
-  return out
-end
-
--------------------------------------------------------------------------------
 --  Отставание профессии от уровня персонажа: обычно навык ~5 за уровень
 --  (60 уровень - 300). Возвращает nil или { expected, level, skillLevel }.
 -------------------------------------------------------------------------------
@@ -988,14 +935,11 @@ function ns:Waypoint(id, show)
   self:MapPoint(n.ui, n.x, n.y, self:NpcName(id), self:NpcZone(id), show)
 end
 
--- Метка на карте в точке (x, y - в процентах) карты ui: TomTom и метка игры,
--- значок на карте мира; show - сразу открыть карту на ней.
+-- Map pin at the point (x, y in percent) of map ui: the game's own waypoint
+-- and an icon on the world map; show opens the map on it right away.
 function ns:MapPoint(ui, px, py, title, where, show)
   local x, y = px / 100, py / 100
   local arrow = false
-  if TomTom and TomTom.AddWaypoint then
-    arrow = pcall(TomTom.AddWaypoint, TomTom, ui, x, y, { title = title, persistent = false }) or arrow
-  end
   if C_Map and C_Map.SetUserWaypoint and UiMapPoint and UiMapPoint.CreateFromCoordinates then
     local ok = pcall(function()
       C_Map.SetUserWaypoint(UiMapPoint.CreateFromCoordinates(ui, x, y))

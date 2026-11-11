@@ -1,59 +1,17 @@
 local _, ns = ...
 
 -------------------------------------------------------------------------------
---  Реагенты у других персонажей из Syndicator (Baganator). Если его нет -
---  из BagBrother (Core.lua), а без обоих - свой учёт (ниже).
---  Syndicator отвечает по одному предмету, поэтому таблица заполняется по
---  мере обращений: alts[id] -> сколько лежит у альтов (сумки, банк, почта).
--------------------------------------------------------------------------------
-local fromBagBrother = ns.AltCounts
-
-local function syndicator()
-  local api = _G.Syndicator and _G.Syndicator.API
-  if not (api and api.GetInventoryInfoByItemID) then return nil end
-  if api.IsReady and not api.IsReady() then return nil end
-  return api
-end
-
-function ns:AltSource()
-  if syndicator() then return "Syndicator" end
-  if type(_G.BrotherBags) == "table" then return "BagBrother" end
-end
-
-function ns:AltCounts()
-  if self.altCache then return self.altCache end
-  local api = syndicator()
-  if not api then return fromBagBrother(self) end
-  local me = UnitName("player")
-  local realm = GetNormalizedRealmName and GetNormalizedRealmName() or nil
-  local out = setmetatable({}, { __index = function(t, id)
-    local n = 0
-    local ok, info = pcall(api.GetInventoryInfoByItemID, id, true, true)
-    if ok and type(info) == "table" and type(info.characters) == "table" then
-      for _, c in ipairs(info.characters) do
-        local mine = c.character == me and (not realm or not c.realmNormalized or c.realmNormalized == realm)
-        if not mine then n = n + (c.bags or 0) + (c.bank or 0) + (c.mail or 0) end
-      end
-    end
-    rawset(t, id, n)
-    return n
-  end })
-  self.altCache = out
-  return out
-end
-
--------------------------------------------------------------------------------
---  Свой учёт альтов: работает без других аддонов. Каждый персонаж при входе,
---  выходе и у банка записывает, что у него лежит, в общий EasyCraftDB.alts:
---  alts[сервер][имя] = { bags = { id -> шт }, bank = { ... }, mail = { ... } }.
---  Syndicator и BagBrother, если стоят, остаются главнее: они знают и тех
---  персонажей, на которых EasyCraft ещё не заходил.
+--  Reagents on the player's other characters.
+--  Each character writes what it holds into the shared EasyCraftDB.alts on
+--  login, on logout and at the bank:
+--  alts[realm][name] = { bags = { id -> count }, bank = { ... }, mail = { ... } }.
+--  A character is known only after it has logged in with EasyCraft enabled.
 -------------------------------------------------------------------------------
 local function ownStore()
   local db = ns.db
   if not db then return nil end
   db.alts = db.alts or {}
-  local realm = (GetRealmName and GetRealmName()) or "?"
+  local realm = GetRealmName() or "?"
   db.alts[realm] = db.alts[realm] or {}
   return db.alts[realm]
 end
@@ -61,7 +19,6 @@ end
 local function countBags(list)
   local out = {}
   local CC = C_Container
-  if not (CC and CC.GetContainerNumSlots and CC.GetContainerItemInfo) then return out end
   for _, bag in ipairs(list) do
     local ok, n = pcall(CC.GetContainerNumSlots, bag)
     for slot = 1, ok and tonumber(n) or 0 do
@@ -74,7 +31,8 @@ local function countBags(list)
   return out
 end
 
--- Номера сумок: свои (с сумкой реагентов) и банка (старый банк или вкладки).
+-- Bag numbers: the character's own bags (with the reagent bag) and the bank
+-- (the old bank container or the bank tabs, whichever the client has).
 local function bagLists()
   local bags, bank, seen = { 0, 1, 2, 3, 4 }, { -1 }, { [-1] = true }
   local idx = type(Enum) == "table" and Enum.BagIndex
@@ -94,7 +52,7 @@ local function bagLists()
 end
 
 function ns:SaveOwnItems(withBank)
-  local s, me = ownStore(), UnitName and UnitName("player")
+  local s, me = ownStore(), UnitName("player")
   if not (s and me) then return end
   local rec = s[me] or {}
   s[me] = rec
@@ -107,7 +65,7 @@ end
 
 local function ownCounts()
   local out = {}
-  local s, me = ownStore(), UnitName and UnitName("player")
+  local s, me = ownStore(), UnitName("player")
   if not s then return out end
   for name, rec in pairs(s) do
     if name ~= me and type(rec) == "table" then
@@ -123,31 +81,27 @@ local function ownCounts()
   return out
 end
 
-local viaAddons, addonSource = ns.AltCounts, ns.AltSource
-
-function ns:AltSource() return addonSource(self) or "EasyCraft" end
-
+-- id -> how many the other characters hold. Built once per session: other
+-- characters cannot change while this one is logged in.
 local NO_ALTS = {}
 function ns:AltCounts()
-  -- в настройках выключено: чужие сумки не считаем
+  -- turned off in the settings: other characters are not counted
   if self.settings and self.settings.useAlts == false then return NO_ALTS end
-  if addonSource(self) then return viaAddons(self) end
-  if self.altCache then return self.altCache end
-  self.altCache = ownCounts()
+  if not self.altCache then self.altCache = ownCounts() end
   return self.altCache
 end
 
 local ownEv = CreateFrame("Frame")
 for _, e in ipairs({ "PLAYER_ENTERING_WORLD", "PLAYER_LOGOUT", "BANKFRAME_OPENED", "BANKFRAME_CLOSED", "BAG_UPDATE_DELAYED" }) do
-  pcall(ownEv.RegisterEvent, ownEv, e)
+  ownEv:RegisterEvent(e)
 end
 local bankOpen
 local function later(sec, withBank)
   local function run() pcall(ns.SaveOwnItems, ns, withBank and bankOpen) end
   C_Timer.After(sec, run)
 end
--- Банк читается, только пока он открыт: записываем при открытии и при
--- перекладывании, а при закрытии - уже нет.
+-- The bank can be read only while it is open: save on opening and on every
+-- move of items, but not on closing.
 ownEv:SetScript("OnEvent", function(_, e)
   if e == "PLAYER_ENTERING_WORLD" then later(5)
   elseif e == "BANKFRAME_OPENED" then bankOpen = true later(0.5, true)
