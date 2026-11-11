@@ -1137,7 +1137,7 @@ function C:BuildRoute(UI, key)
   local cur, _, train = ns:CurrentStep(key)
   local order = routeOrder(p)
   local hide = ns.settings.hideDone
-  local states, nDone = {}, 0
+  local states = {}
   local inRank, doneInRank = {}, {}
   for _, i in ipairs(order) do
     local st = ns:StepState(key, i, rank, maxRank)
@@ -1145,7 +1145,6 @@ function C:BuildRoute(UI, key)
     states[i] = st
     inRank[bk] = (inRank[bk] or 0) + 1
     if st == "done" then
-      nDone = nDone + 1
       doneInRank[bk] = (doneInRank[bk] or 0) + 1
     end
   end
@@ -1183,16 +1182,6 @@ function C:BuildRoute(UI, key)
     end
     UI:End(mc, 6)
   end
-
-  -- полоса над шагами: галочка и сколько сделано
-  local bar = UI:Card("flat")
-  local y0 = bar.y
-  bar:Check(T("Скрывать выполненные"), hide, function(v)
-    ns.settings.hideDone = v
-    UI:Render(true)
-  end, T("Убрать шаги, которые уже сделаны. И здесь, и на главной."))
-  bar:Corner(format(T("Сделано шагов: %d из %d"), nDone, #order), "body", y0 + 5)
-  UI:End(bar, 6)
 
   -- куда прокрутить: выбранный шаг или текущий
   local focus = UI.focus[key]
