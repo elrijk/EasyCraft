@@ -1071,7 +1071,6 @@ end
 --  выполнено, можно сейчас), строка навыка; ниже - из чего, где или у кого.
 --  Текущий шаг - в золотой рамке, с предупреждениями и кнопками создания.
 -------------------------------------------------------------------------------
-local INK_RANGE = "|cff7a5c3a" -- диапазон навыка в заголовке ранга
 
 local function nodeItem(nk, rank)
   local n = ns.Nodes[nk]
@@ -1123,7 +1122,7 @@ function C:RankHead(UI, bk, done, total)
     end)
     ok:SetPoint("RIGHT", fs, "LEFT", -4, 1)
   end
-  c:Text(ns:RankName(hi) .. "  " .. INK_RANGE .. format("%d-%d", lo, hi) .. "|r", "title", { y = y, nowrap = true })
+  c:Text(ns:RankName(hi) .. "  " .. format("%d-%d", lo, hi), "title", { y = y, nowrap = true })
   c.y = y + 24
   UI:End(c, 4)
 end
