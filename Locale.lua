@@ -1602,3 +1602,17 @@ for k, v in pairs({
   ["Маршрут: %s"] = "Route: %s",
   ["Маршрута пока нет."] = "No route yet.",
 }) do if TJ.EN[k] == nil then TJ.EN[k] = v end end
+
+-- 1.2: режимы маршрута и настройка альтов
+for k, v in pairs({
+  ["Обычный"] = "Standard",
+  ["Дешевле"] = "Cheaper",
+  ["Быстрее"] = "Faster",
+  ["Сбалансировано"] = "Balanced",
+  ["Проверенный маршрут из гайда."] = "The proven guide route.",
+  ["Меньше золота: дольше держимся за дешёвый рецепт, даже когда он желтеет."] = "Less gold: stay on a cheap recipe longer, even after it turns yellow.",
+  ["Меньше созданий: всегда рецепт, который даёт навык почти наверняка."] = "Fewer crafts: always a recipe that gives skill almost every time.",
+  ["Середина: дешёвые рецепты, но без долгого битья по зелёным."] = "In between: cheap recipes, but no long grind on green ones.",
+  ["Для этого режима нужны цены: открой аукцион. Пока показан обычный маршрут."] = "This mode needs prices: open the auction house. The standard route is shown for now.",
+  ["Считать реагенты у других моих персонажей"] = "Count reagents on my other characters",
+}) do if TJ.EN[k] == nil then TJ.EN[k] = v end end

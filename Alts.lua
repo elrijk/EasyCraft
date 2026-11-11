@@ -127,7 +127,10 @@ local viaAddons, addonSource = TJ.AltCounts, TJ.AltSource
 
 function TJ:AltSource() return addonSource(self) or "EasyCraft" end
 
+local NO_ALTS = {}
 function TJ:AltCounts()
+  -- в настройках выключено: чужие сумки не считаем
+  if self.settings and self.settings.useAlts == false then return NO_ALTS end
   if addonSource(self) then return viaAddons(self) end
   if self.altCache then return self.altCache end
   self.altCache = ownCounts()

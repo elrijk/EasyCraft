@@ -16,6 +16,7 @@ local OPTIONS = {
   { "itemTips", "Подсказки: сколько предмета нужно до учителя, цвет жилы и травы" },
   { "trainerStars", "Окно учителя: звезда у рецептов, нужных маршруту" },
   { "ahScan", "Аукцион: читать цены самому при открытии" },
+  { "useAlts", "Считать реагенты у других моих персонажей", function(v) TJ.settings.useAlts = v; TJ.altCache = nil end },
   { "hintsLocked", "Закрепить подсказки у окон профессии, банка и аукциона", function(v)
     TJ.settings.hintsLocked = v
     if TJ.W and TJ.W.UpdateLocks then TJ.W.UpdateLocks() end

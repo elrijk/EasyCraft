@@ -1146,6 +1146,24 @@ function C:BuildRoute(UI, key)
     end
   end
 
+  -- режим маршрута: игрок выбирает сам
+  if TJ.HasRouteModes and TJ:HasRouteModes(key) then
+    local mc = UI:Card("flat")
+    local mode = TJ:RouteMode()
+    local list = {}
+    for _, m in ipairs(TJ.ROUTE_MODES) do
+      local on = m == mode
+      tinsert(list, { text = (on and "|cffffd100" or "") .. T(TJ.ROUTE_MODE_NAME[m]) .. (on and "|r" or ""),
+        tip = T(TJ.ROUTE_MODE_TIP[m]), enabled = not on,
+        onClick = function() TJ:SetRouteMode(m); UI:Render(true) end })
+    end
+    mc:Buttons(list)
+    if mode ~= "guide" and p.routeMode ~= mode then
+      mc:Text("|cff9d9d9d" .. T("Для этого режима нужны цены: открой аукцион. Пока показан обычный маршрут.") .. "|r", "small")
+    end
+    UI:End(mc, 6)
+  end
+
   -- полоса над шагами: галочка и сколько сделано
   local bar = UI:Card("flat")
   local y0 = bar.y
