@@ -1,4 +1,4 @@
-local ADDON, TJ = ...
+local ADDON, ns = ...
 
 -------------------------------------------------------------------------------
 --  Кнопка у миникарты (можно скрыть): ЛКМ - окно, ПКМ - настройки
@@ -6,7 +6,7 @@ local ADDON, TJ = ...
 local button
 
 local function place()
-  local a = math.rad(TJ.settings.minimapAngle or 205)
+  local a = math.rad(ns.settings.minimapAngle or 205)
   local r = (Minimap:GetWidth() / 2) + 5
   button:ClearAllPoints()
   button:SetPoint("CENTER", Minimap, "CENTER", math.cos(a) * r, math.sin(a) * r)
@@ -21,7 +21,7 @@ local function create()
   b:RegisterForDrag("LeftButton")
 
   local icon = b:CreateTexture(nil, "ARTWORK")
-  icon:SetTexture(TJ.ICON)
+  icon:SetTexture(ns.ICON)
   icon:SetSize(19, 19)
   icon:SetPoint("CENTER", 0, 1)
   if b.CreateMaskTexture and icon.AddMaskTexture then
@@ -43,9 +43,9 @@ local function create()
 
   b:SetScript("OnClick", function(_, btn)
     if btn == "RightButton" then
-      TJ:OpenSettings()
+      ns:OpenSettings()
     else
-      TJ:ToggleFrame()
+      ns:ToggleFrame()
     end
   end)
   b:SetScript("OnDragStart", function(self)
@@ -55,7 +55,7 @@ local function create()
       local mx, my = Minimap:GetCenter()
       local x, y = GetCursorPosition()
       local sc = Minimap:GetEffectiveScale()
-      TJ.settings.minimapAngle = math.deg(math.atan2(y / sc - my, x / sc - mx))
+      ns.settings.minimapAngle = math.deg(math.atan2(y / sc - my, x / sc - mx))
       place()
     end)
   end)
@@ -63,15 +63,15 @@ local function create()
   -- подсказка в одном виде с MacroCoach: название, что это, свои строки,
   -- потом кнопки мыши (ЛКМ, ПКМ, перетащить)
   b:SetScript("OnEnter", function(self)
-    local T = TJ.T
+    local T = ns.T
     GameTooltip:SetOwner(self, "ANCHOR_LEFT")
     GameTooltip:SetText("|cff33ff99Easy|rCraft")
     GameTooltip:AddLine(T("Прокачка профессий"), 0.7, 0.7, 0.7)
-    local list = TJ:LearnedList()
+    local list = ns:LearnedList()
     if #list > 0 then GameTooltip:AddLine(" ") end
     for _, key in ipairs(list) do
-      local r, m = TJ:GetSkill(key)
-      GameTooltip:AddDoubleLine(TJ:N(TJ.Profs[key]), string.format("%d/%d", r, m), 1, 1, 1, 1, 0.82, 0)
+      local r, m = ns:GetSkill(key)
+      GameTooltip:AddDoubleLine(ns:N(ns.Profs[key]), string.format("%d/%d", r, m), 1, 1, 1, 1, 0.82, 0)
     end
     GameTooltip:AddLine(" ")
     local KEY = "|cffffd100%s|r - %s"
@@ -84,7 +84,7 @@ local function create()
   return b
 end
 
-function TJ:UpdateMinimapButton()
+function ns:UpdateMinimapButton()
   if not Minimap then return end
   if not self.settings.minimap then
     if button then button:Hide() end
@@ -100,7 +100,7 @@ function TJ:UpdateMinimapButton()
   button:Show()
 end
 
-function TJ:SetMinimapHidden(hide)
+function ns:SetMinimapHidden(hide)
   self.settings.minimap = not hide
   self:UpdateMinimapButton()
   if self.RefreshOptions then self:RefreshOptions() end
@@ -108,10 +108,10 @@ end
 
 -- Меню аддонов у миникарты: ЛКМ - окно, ПКМ - настройки.
 function EasyCraft_OnAddonCompartmentClick(_, mouseButton)
-  if mouseButton == "RightButton" then TJ:OpenSettings() else TJ:ToggleFrame() end
+  if mouseButton == "RightButton" then ns:OpenSettings() else ns:ToggleFrame() end
 end
 
-function TJ:CreateMinimapButton()
+function ns:CreateMinimapButton()
   self:UpdateMinimapButton()
-  self:RegisterRefresh(function() TJ:UpdateMinimapButton() end)
+  self:RegisterRefresh(function() ns:UpdateMinimapButton() end)
 end

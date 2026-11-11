@@ -1,5 +1,5 @@
-local _, TJ = ...
-local W, C, T = TJ.W, TJ.Content, TJ.T
+local _, ns = ...
+local W, C, T = ns.W, ns.Content, ns.T
 local format, floor, min, max = string.format, math.floor, math.min, math.max
 
 -------------------------------------------------------------------------------
@@ -56,17 +56,17 @@ local function artAtlas(key)
 end
 
 local function className(token)
-  if TJ.IsRU then return CLASS_RU[token] or token end
+  if ns.IsRU then return CLASS_RU[token] or token end
   return (LOCALIZED_CLASS_NAMES_MALE and LOCALIZED_CLASS_NAMES_MALE[token]) or T(CLASS_RU[token] or token)
 end
 
 -- Профессии в паре: сбор для ремесла, ремёсла для сбора.
 local function pairKeys(key)
-  local p = TJ.Profs[key]
-  if p.pair and TJ.Profs[p.pair] then return { p.pair } end
+  local p = ns.Profs[key]
+  if p.pair and ns.Profs[p.pair] then return { p.pair } end
   local users = {}
-  for _, k in ipairs(TJ.ProfOrder) do
-    if TJ.Profs[k].pair == key then users[#users + 1] = k end
+  for _, k in ipairs(ns.ProfOrder) do
+    if ns.Profs[k].pair == key then users[#users + 1] = k end
   end
   return users
 end
@@ -80,7 +80,7 @@ local EXAMPLES = {
 
 -- Что получается из профессии: предметы маршрута, равномерно от начала до конца.
 local function products(key, limit)
-  local p = TJ.Profs[key]
+  local p = ns.Profs[key]
   local all, seen = {}, {}
   local function add(id)
     if type(id) == "number" and not seen[id] then seen[id] = true; all[#all + 1] = id end
@@ -88,7 +88,7 @@ local function products(key, limit)
   for _, s in ipairs(p.steps) do
     if s.k == "craft" then add(s.id) end
     if s.k == "gather" and s.nodes then
-      for _, nk in ipairs(s.nodes) do add(TJ.Nodes[nk] and TJ.Nodes[nk].item) end
+      for _, nk in ipairs(s.nodes) do add(ns.Nodes[nk] and ns.Nodes[nk].item) end
     end
   end
   -- в маршруте предметов нет (снятие шкур, рыбная ловля): готовые примеры
@@ -119,13 +119,13 @@ end
 local win
 
 local function turn(f, delta)
-  local order = TJ.ProfOrder
+  local order = ns.ProfOrder
   for i, k in ipairs(order) do
     if k == f.key then
       local n = i + delta
       if n < 1 then n = #order elseif n > #order then n = 1 end
       W.Sound("IG_ABILITY_PAGE_TURN")
-      TJ:ShowChoose(order[n])
+      ns:ShowChoose(order[n])
       return
     end
   end
@@ -190,7 +190,7 @@ local function build()
   f:RegisterForDrag("LeftButton")
   f:SetScript("OnDragStart", f.StartMoving)
   f:SetScript("OnDragStop", f.StopMovingOrSizing)
-  f:SetScale(TJ.settings.scale or 1)
+  f:SetScale(ns.settings.scale or 1)
   -- рамка - как у окна знакомства; фон - рисунок профессии на всё окно
   W.Backdrop(f, "Interface\\Buttons\\WHITE8X8", nil, 16, 0.04, 0.03, 0.02, 1, 0.75, 0.6, 0.3, 1)
   tinsert(UISpecialFrames, "EasyCraftChooseFrame")
@@ -305,10 +305,10 @@ local function build()
     -- при первом открытии окно аддона откроется само, когда это закроется
     local chained = f.after ~= nil
     f:Hide()
-    local UI = TJ.UI
+    local UI = ns.UI
     if not chained and not (UI.frame and UI.frame:IsShown()) then
-      TJ.skipIntro = true
-      TJ:ToggleFrame()
+      ns.skipIntro = true
+      ns:ToggleFrame()
     end
   end)
   f.route = W.Button(f, "", 160, S.btnBig)
@@ -331,10 +331,10 @@ local function build()
   -- вкладки профессий справа - те же, что у окна аддона (W.SideTab):
   -- значок на ярлыке, название и навык - в подсказке
   f.tabs = {}
-  for i, key in ipairs(TJ.ProfOrder) do
+  for i, key in ipairs(ns.ProfOrder) do
     local t = W.SideTab(f)
     t:SetPoint("TOPLEFT", f, "TOPRIGHT", 0, -40 - (i - 1) * 46)
-    t.icon:SetTexture(TJ.Icon(TJ.Profs[key].icon))
+    t.icon:SetTexture(ns.Icon(ns.Profs[key].icon))
     t.check = t:CreateTexture(nil, "OVERLAY", nil, 3)
     t.check:SetSize(16, 16)
     t.check:SetPoint("BOTTOMRIGHT", 5, -4)
@@ -342,7 +342,7 @@ local function build()
     t.key = key
     t:SetScript("OnClick", function()
       W.Sound("IG_ABILITY_PAGE_TURN")
-      TJ:ShowChoose(key)
+      ns:ShowChoose(key)
     end)
     f.tabs[i] = t
   end
@@ -379,11 +379,11 @@ end
 -------------------------------------------------------------------------------
 -- Строка «сколько стоит путь»: для окна выбора и для просмотра маршрута.
 local function costLine(key)
-  local p = TJ.Profs[key]
-  if not (p and p.steps and TJ.RouteCost) then return nil end
-  local ok, total, noPrice = pcall(TJ.RouteCost, TJ, key)
+  local p = ns.Profs[key]
+  if not (p and p.steps and ns.RouteCost) then return nil end
+  local ok, total, noPrice = pcall(ns.RouteCost, ns, key)
   if not ok or type(total) ~= "number" then return nil end
-  local _, _, learned = TJ:GetSkill(key)
+  local _, _, learned = ns:GetSkill(key)
   local head = learned and T("Осталось до 300: ") or T("Путь до 300: ")
   if total <= 0 and (noPrice or 0) == 0 then
     return head .. "|cff33dd33" .. T("покупать нечего") .. "|r"
@@ -396,7 +396,7 @@ end
 
 local preview
 local function showPreview(key)
-  local p = TJ.Profs[key]
+  local p = ns.Profs[key]
   if not p then return end
   local f = preview
   if not f then
@@ -412,7 +412,7 @@ local function showPreview(key)
     f:RegisterForDrag("LeftButton")
     f:SetScript("OnDragStart", f.StartMoving)
     f:SetScript("OnDragStop", f.StopMovingOrSizing)
-    f:SetScale(TJ.settings.scale or 1)
+    f:SetScale(ns.settings.scale or 1)
     W.Backdrop(f, "Interface\\Buttons\\WHITE8X8", nil, 16, 0.07, 0.05, 0.03, 0.97, 0.75, 0.6, 0.3, 1)
     tinsert(UISpecialFrames, "EasyCraftRoutePreview")
     f.title = W.Text(f, "title", false)
@@ -438,11 +438,11 @@ local function showPreview(key)
       sf:SetVerticalScroll(math.max(0, math.min(top, sf:GetVerticalScroll() - d * 60)))
     end)
   end
-  f.title:SetText(format(T("Маршрут: %s"), TJ:N(p)))
+  f.title:SetText(format(T("Маршрут: %s"), ns:N(p)))
   f.cost:SetText(costLine(key) or "")
   local lines = {}
   for _, s in ipairs(p.steps or {}) do
-    local ok, title = pcall(TJ.StepTitle, TJ, s)
+    local ok, title = pcall(ns.StepTitle, ns, s)
     if ok and title then
       if s.k == "craft" and s.n then
         title = title .. "  |cffb0aca0x" .. s.n .. "|r"
@@ -461,9 +461,9 @@ local function showPreview(key)
 end
 
 local function fill(f, key)
-  local p = TJ.Profs[key]
+  local p = ns.Profs[key]
   local info = INFO[key] or { "", "", ALL, { 0.3, 0.3, 0.3 } }
-  local rank, maxRank, learned = TJ:GetSkill(key)
+  local rank, maxRank, learned = ns:GetSkill(key)
   f.key = key
   f.title:SetText(T("Какую профессию выбрать"))
 
@@ -476,13 +476,13 @@ local function fill(f, key)
   f.glow:SetShown(shown)
   f.emblem:SetShown(not shown)
   if not shown then
-    f.emblem:SetTexture(TJ.Icon(p.icon))
+    f.emblem:SetTexture(ns.Icon(p.icon))
     f.emblem:SetAlpha(0.45)
   end
 
   f.kind:SetText(p.kind == "secondary" and T("Вторичная") or T("Основная"))
-  f.badge:SetIcon(TJ.Icon(p.icon))
-  f.name:SetText(TJ:N(p))
+  f.badge:SetIcon(ns.Icon(p.icon))
+  f.name:SetText(ns:N(p))
   f.state:SetText(learned and ("|cff33dd33" .. format(T("Изучена: %d/%d"), rank, maxRank) .. "|r")
     or ("|cffb0aca0" .. T("Не изучена") .. "|r"))
   local cost = costLine(key)
@@ -508,9 +508,9 @@ local function fill(f, key)
     list = c2:Row("rings", n, 44)
     local names = {}
     for i = 1, n do
-      local q = TJ.Profs[pairs2[i]]
-      list[i]:SetIcon(TJ.Icon(q.icon))
-      names[i] = TJ:N(q)
+      local q = ns.Profs[pairs2[i]]
+      list[i]:SetIcon(ns.Icon(q.icon))
+      names[i] = ns:N(q)
     end
     c2.caption:SetText(table.concat(names, ", "))
   else
@@ -548,17 +548,17 @@ local function fill(f, key)
   end
 
   -- низ: «учитель», «маршрут» (если изучена), «к аддону» - в ряд по центру
-  local npc = TJ:NearestTrainer(key)
+  local npc = ns:NearestTrainer(key)
   f.trainer:SetText(T("Учитель на карте"))
   f.trainer:SetEnabled(npc ~= nil)
-  f.trainer.tip = npc and (TJ:NpcName(npc) .. "\n" .. (TJ:NpcZone(npc) or "") .. "\n" .. T("Щелчок поставит метку и откроет карту."))
+  f.trainer.tip = npc and (ns:NpcName(npc) .. "\n" .. (ns:NpcZone(npc) or "") .. "\n" .. T("Щелчок поставит метку и откроет карту."))
     or T("Учителя этой профессии аддон не знает.")
-  f.trainer:SetScript("OnClick", function() if npc then TJ:Waypoint(npc, true) end end)
+  f.trainer:SetScript("OnClick", function() if npc then ns:Waypoint(npc, true) end end)
   f.go:SetText(T("Перейти к аддону"))
   f.route:SetText(learned and T("Открыть маршрут") or T("Смотреть маршрут"))
   f.route:SetShown(true)
   f.route.tip = learned and T("Маршрут прокачки этой профессии в окне EasyCraft.") or T("Все шаги до 300 и цена пути - до того, как учить профессию.")
-  f.route:SetScript("OnClick", function() if learned then f:Hide(); TJ.UI:Open(key) else showPreview(key) end end)
+  f.route:SetScript("OnClick", function() if learned then f:Hide(); ns.UI:Open(key) else showPreview(key) end end)
   f.trainer:ClearAllPoints()
   f.go:ClearAllPoints()
   f.route:ClearAllPoints()
@@ -576,9 +576,9 @@ local function fill(f, key)
   end
 
   for _, t in ipairs(f.tabs) do
-    local q = TJ.Profs[t.key]
-    local r2, m2, l2 = TJ:GetSkill(t.key)
-    t.tip = TJ:N(q)
+    local q = ns.Profs[t.key]
+    local r2, m2, l2 = ns:GetSkill(t.key)
+    t.tip = ns:N(q)
     t.tip2 = l2 and format("%d/%d", r2, m2) or T("Не изучена")
     t:SetChecked(t.key == key)
     t.check:SetShown(l2 and true or false)
@@ -588,13 +588,13 @@ end
 -- Открыть окно выбора на профессии key (или на той, что была; первый раз -
 -- на первой неизученной).
 -- after - что сделать, когда окно закроют (любым способом), один раз.
-function TJ:ShowChoose(key, after)
+function ns:ShowChoose(key, after)
   if not win then
     win = build()
     win:SetScript("OnHide", function(s)
       local fn = s.after
       s.after = nil
-      if fn then TJ:Safe(fn) end
+      if fn then ns:Safe(fn) end
     end)
   end
   if after then win.after = after end
@@ -611,7 +611,7 @@ function TJ:ShowChoose(key, after)
   win:Show()
 end
 
-function TJ:ToggleChoose()
+function ns:ToggleChoose()
   if win and win:IsShown() then win:Hide() else self:ShowChoose() end
 end
 
@@ -620,7 +620,7 @@ function C:BuildChoose(UI)
   local c = UI:Card("current")
   c:Head({ ring = "Interface\\Icons\\INV_Misc_Book_11" }, T("Какую профессию взять"),
     { { T("Основных можно взять две, вторичные - все три. Посмотри, что даёт каждая."), "body" } })
-  c:Buttons({ { text = T("Выбор профессии"), w = 220, onClick = function() TJ:ShowChoose() end } })
+  c:Buttons({ { text = T("Выбор профессии"), w = 220, onClick = function() ns:ShowChoose() end } })
   c:Text(T("Как только выучишь профессию, здесь появится её маршрут прокачки: что делать сейчас, сколько и из чего."), "small")
   UI:End(c)
 end

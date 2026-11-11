@@ -1,8 +1,8 @@
-local ADDON, TJ = ...
+local ADDON, ns = ...
 local format = string.format
 
 local ev = CreateFrame("Frame")
-TJ.eventFrame = ev
+ns.eventFrame = ev
 local handlers = {}
 
 local function on(event, fn)
@@ -11,7 +11,7 @@ local function on(event, fn)
 end
 ev:SetScript("OnEvent", function(_, event, ...)
   local fn = handlers[event]
-  if fn then TJ:Safe(fn, ...) end
+  if fn then ns:Safe(fn, ...) end
 end)
 
 local after = C_Timer.After
@@ -21,38 +21,38 @@ local scheduled = {}
 local function throttle(name, sec, fn)
   if scheduled[name] then return end
   scheduled[name] = true
-  after(sec, function() scheduled[name] = nil; TJ:Safe(fn) end)
+  after(sec, function() scheduled[name] = nil; ns:Safe(fn) end)
 end
 
 ---------------------------------------------------------------------------
 -- Login
 ---------------------------------------------------------------------------
 on("ADDON_LOADED", function(name)
-  if name == "Blizzard_WorldMap" and TJ.ready and TJ.MapOverlay then TJ.MapOverlay:Init() end
+  if name == "Blizzard_WorldMap" and ns.ready and ns.MapOverlay then ns.MapOverlay:Init() end
   if name ~= ADDON then return end
-  TJ:InitDB()
-  TJ:BuildLookups()
-  if TJ.BuildSettings then TJ:Safe(TJ.BuildSettings, TJ) end
+  ns:InitDB()
+  ns:BuildLookups()
+  if ns.BuildSettings then ns:Safe(ns.BuildSettings, ns) end
 end)
 
 on("PLAYER_LOGIN", function()
-  if not TJ.db then TJ:InitDB(); TJ:BuildLookups() end
-  if TJ.ApplyRealReagents then TJ:Safe(TJ.ApplyRealReagents, TJ) end -- реагенты, которые игра показала другими
-  TJ:ResolveMaps()
-  TJ:ScanSkills()
-  TJ.ready = true
-  if TJ.CreateMinimapButton then TJ:Safe(TJ.CreateMinimapButton, TJ) end
-  if TJ.MapOverlay then TJ:Safe(TJ.MapOverlay.Init, TJ.MapOverlay) end
-  if TJ.Tracker then TJ:Safe(TJ.Tracker.Init, TJ.Tracker) end
-  if TJ.HookPriceUpdates then TJ:Safe(TJ.HookPriceUpdates, TJ) end
-  if TJ.HookItemTooltips then TJ:Safe(TJ.HookItemTooltips, TJ) end
-  if TJ.HookNodeTooltips then TJ:Safe(TJ.HookNodeTooltips, TJ) end
-  TJ:RegisterRefresh(function() if TJ.UpdateMerchantButton then TJ:UpdateMerchantButton() end end)
+  if not ns.db then ns:InitDB(); ns:BuildLookups() end
+  if ns.ApplyRealReagents then ns:Safe(ns.ApplyRealReagents, ns) end -- реагенты, которые игра показала другими
+  ns:ResolveMaps()
+  ns:ScanSkills()
+  ns.ready = true
+  if ns.CreateMinimapButton then ns:Safe(ns.CreateMinimapButton, ns) end
+  if ns.MapOverlay then ns:Safe(ns.MapOverlay.Init, ns.MapOverlay) end
+  if ns.Tracker then ns:Safe(ns.Tracker.Init, ns.Tracker) end
+  if ns.HookPriceUpdates then ns:Safe(ns.HookPriceUpdates, ns) end
+  if ns.HookItemTooltips then ns:Safe(ns.HookItemTooltips, ns) end
+  if ns.HookNodeTooltips then ns:Safe(ns.HookNodeTooltips, ns) end
+  ns:RegisterRefresh(function() if ns.UpdateMerchantButton then ns:UpdateMerchantButton() end end)
   -- Один раз на учётную запись: где открыть аддон.
-  if not TJ.db.introDone and not TJ.db.introHinted then
-    TJ.db.introHinted = true
+  if not ns.db.introDone and not ns.db.introHinted then
+    ns.db.introHinted = true
     after(5, function()
-      TJ:Print(TJ.T("покажу, что качать в профессиях. Открыть - книга у миникарты или /ec."))
+      ns:Print(ns.T("покажу, что качать в профессиях. Открыть - книга у миникарты или /ec."))
     end)
   end
 end)
@@ -60,55 +60,55 @@ end)
 -- Торговец: кнопка «купить для шагов» под его окном.
 for _, e in ipairs({ "MERCHANT_SHOW", "MERCHANT_UPDATE", "MERCHANT_CLOSED" }) do
   on(e, function() throttle("merchant", 0.2, function()
-    TJ.needCache = nil
-    if e ~= "MERCHANT_CLOSED" then TJ:Safe(TJ.RecordMerchantPrices, TJ) end
-    TJ:UpdateMerchantButton()
+    ns.needCache = nil
+    if e ~= "MERCHANT_CLOSED" then ns:Safe(ns.RecordMerchantPrices, ns) end
+    ns:UpdateMerchantButton()
   end) end)
 end
 
 -- Аукцион открыт или закрыт: кнопка «Найти на аукционе» меняет вид.
 for _, e in ipairs({ "AUCTION_HOUSE_SHOW", "AUCTION_HOUSE_CLOSED" }) do
-  on(e, function() TJ:RefreshAll() end)
+  on(e, function() ns:RefreshAll() end)
 end
 
 on("PLAYER_ENTERING_WORLD", function()
-  after(2, function() TJ:Safe(TJ.ScanSkills, TJ) end)
+  after(2, function() ns:Safe(ns.ScanSkills, ns) end)
 end)
-on("SKILL_LINES_CHANGED", function() throttle("skills", 0.5, function() TJ:ScanSkills() end) end)
-on("CHAT_MSG_SKILL", function() throttle("skills", 0.5, function() TJ:ScanSkills() end) end)
+on("SKILL_LINES_CHANGED", function() throttle("skills", 0.5, function() ns:ScanSkills() end) end)
+on("CHAT_MSG_SKILL", function() throttle("skills", 0.5, function() ns:ScanSkills() end) end)
 
 -- Выучил рецепт (у учителя или из предмета-рецепта): отметить его в скане
 -- окна профессии, чтобы карточка сразу перестала звать к учителю.
 on("NEW_RECIPE_LEARNED", function(id)
   if type(id) ~= "number" then return end
-  for key in pairs(TJ.Profs) do
-    local sc = TJ.char.scan[key]
-    local s = TJ:SpellStep(key, id)
+  for key in pairs(ns.Profs) do
+    local sc = ns.char.scan[key]
+    local s = ns:SpellStep(key, id)
     if s and sc and sc.colors and sc.colors[id] == nil then
-      local col = s.sk and TJ:RecipeColor(s, TJ:GetSkill(key))
-      sc.colors[id] = (TJ.COLOR_BY_D and ({ orange = 0, yellow = 1, green = 2, gray = 3 })[col or ""]) or 0
+      local col = s.sk and ns:RecipeColor(s, ns:GetSkill(key))
+      sc.colors[id] = (ns.COLOR_BY_D and ({ orange = 0, yellow = 1, green = 2, gray = 3 })[col or ""]) or 0
     end
   end
-  TJ:RefreshAll()
+  ns:RefreshAll()
 end)
 
 -- Своё создание предмета прошло (окно профессии открыто): сумки сейчас
 -- уменьшатся раньше, чем вырастет навык - подержать перерисовку.
 -- только свои заклинания, а не каждого вокруг (в городе - сотни в секунду)
 handlers["UNIT_SPELLCAST_SUCCEEDED"] = function()
-  if TJ.openKey then TJ:HoldForSkill() end
+  if ns.openKey then ns:HoldForSkill() end
 end
 -- через pcall: если игра уберёт это событие, загрузка файла не должна оборваться
 pcall(ev.RegisterUnitEvent, ev, "UNIT_SPELLCAST_SUCCEEDED", "player")
-on("BAG_UPDATE_DELAYED", function() throttle("bags", 0.5, function() TJ:RefreshAll() end) end)
+on("BAG_UPDATE_DELAYED", function() throttle("bags", 0.5, function() ns:RefreshAll() end) end)
 -- Сервер прислал сведения о предмете: перерисовать, только если это
 -- предмет, который аддон сам ждал (а не любой из поиска на аукционе).
 on("GET_ITEM_INFO_RECEIVED", function(id, ok)
-  if not (id and TJ.wantItem and TJ.wantItem[id]) then return end
-  TJ.wantItem[id] = nil
+  if not (id and ns.wantItem and ns.wantItem[id]) then return end
+  ns.wantItem[id] = nil
   if ok == false then return end -- такого предмета нет: рисовать нечего
-  TJ.itemGen = (TJ.itemGen or 0) + 1 -- карта: названия своих точек
-  throttle("items", 0.4, function() TJ:RefreshAll() end)
+  ns.itemGen = (ns.itemGen or 0) + 1 -- карта: названия своих точек
+  throttle("items", 0.4, function() ns:RefreshAll() end)
 end)
 
 ---------------------------------------------------------------------------
@@ -122,7 +122,7 @@ end
 
 -- Чужая профессия: ссылка из чата, список гильдии, ремесленник-NPC.
 -- Её навык и рецепты не наши, записывать их нельзя.
-function TJ:IsForeignTradeSkill()
+function ns:IsForeignTradeSkill()
   local api = C_TradeSkillUI
   return api.IsTradeSkillLinked() or api.IsTradeSkillGuild() or api.IsTradeSkillGuildMember() or api.IsNPCCrafting()
     or false
@@ -138,7 +138,7 @@ local function sameCounts(a, b)
 end
 local routeSig = {} -- профессия -> «навык:рецептов» последней сверки маршрута
 
-function TJ:ScanTradeSkill()
+function ns:ScanTradeSkill()
   if self:IsForeignTradeSkill() then
     self.openKey = nil
     if self.Tracker and self.Tracker.Detach then self.Tracker:Detach() end
@@ -218,24 +218,24 @@ for _, e in ipairs({ "TRADE_SKILL_SHOW", "TRADE_SKILL_LIST_UPDATE", "TRADE_SKILL
   on(e, function()
     if e == "TRADE_SKILL_SHOW" then tradeOpen = true end
     throttle("trade", 0.4, function()
-      if tradeOpen or windowShown(TRADE_FRAMES) then TJ:ScanTradeSkill() end
+      if tradeOpen or windowShown(TRADE_FRAMES) then ns:ScanTradeSkill() end
     end)
   end)
 end
 on("TRADE_SKILL_CLOSE", function()
   tradeOpen = false
-  TJ.openKey = nil
+  ns.openKey = nil
   -- окно закрыли раньше, чем начали создавать: само потом не начнём
-  if TJ.pendingCraft and GetTime() - TJ.pendingCraft.t > 2 then TJ.pendingCraft = nil end
-  if TJ.Tracker and TJ.Tracker.Detach then TJ.Tracker:Detach() end
-  TJ:RefreshAll()
+  if ns.pendingCraft and GetTime() - ns.pendingCraft.t > 2 then ns.pendingCraft = nil end
+  if ns.Tracker and ns.Tracker.Detach then ns.Tracker:Detach() end
+  ns:RefreshAll()
 end)
 
 ---------------------------------------------------------------------------
 -- Журнал сбора (идея из Gather Together): что добыто с жил и трав,
 -- со шкур и рыбалки по зонам, и где стояли точки - для карты мира.
 ---------------------------------------------------------------------------
-function TJ:PlayerPosition()
+function ns:PlayerPosition()
   local mapID = C_Map.GetBestMapForUnit("player")
   if not mapID then return end
   local pos = C_Map.GetPlayerMapPosition(mapID, "player")
@@ -244,7 +244,7 @@ function TJ:PlayerPosition()
   return mapID, x, y
 end
 
-function TJ:AddNode(mapID, x, y, key)
+function ns:AddNode(mapID, x, y, key)
   if not (mapID and x and y and x > 0 and y > 0) then return end
   self.nodeGen = (self.nodeGen or 0) + 1 -- карта: свои находки изменились
   local list = self.db.nodes[mapID] or {}
@@ -268,7 +268,7 @@ local bpSet
 local function isBlueprint(id)
   if not bpSet then
     bpSet = {}
-    for _, p in pairs(TJ.Profs) do
+    for _, p in pairs(ns.Profs) do
       for _, e in ipairs(p.camp or {}) do if e.bp then bpSet[e.bp] = true end end
     end
   end
@@ -282,9 +282,9 @@ local function rememberBlueprint(id, slot)
   if UnitExists("target") and UnitIsDead("target") then who = UnitName("target") end
   local where = GetInstanceInfo()
   if not where or where == "" or not IsInInstance() then where = GetRealZoneText() end
-  local mapID, x, y = TJ:PlayerPosition()
-  TJ.db.bpFound = TJ.db.bpFound or {}
-  TJ.db.bpFound[id] = { who = who, where = where, map = mapID, x = x and x * 100, y = y and y * 100, t = time() }
+  local mapID, x, y = ns:PlayerPosition()
+  ns.db.bpFound = ns.db.bpFound or {}
+  ns.db.bpFound[id] = { who = who, where = where, map = mapID, x = x and x * 100, y = y and y * 100, t = time() }
 end
 
 local function onLoot()
@@ -293,7 +293,7 @@ local function onLoot()
   if numItems == 0 then return end
   lootDone = true
   local fishing = IsFishingLoot()
-  local mapID, x, y = TJ:PlayerPosition()
+  local mapID, x, y = ns:PlayerPosition()
   local nodeKey, any
   for slot = 1, numItems do
     local link = GetLootSlotLink(slot)
@@ -301,29 +301,29 @@ local function onLoot()
     if itemID then
       local _, _, qty = GetLootSlotInfo(slot)
       qty = tonumber(qty) or 1
-      if isBlueprint(itemID) then TJ:Safe(rememberBlueprint, itemID, slot) end
+      if isBlueprint(itemID) then ns:Safe(rememberBlueprint, itemID, slot) end
       if fishing then
         any = true
         if mapID then
-          TJ.char.fish[mapID] = TJ.char.fish[mapID] or {}
-          bump(TJ.char.fish[mapID], itemID, qty)
+          ns.char.fish[mapID] = ns.char.fish[mapID] or {}
+          bump(ns.char.fish[mapID], itemID, qty)
         end
-        bump(TJ.char.gathered, itemID, qty)
+        bump(ns.char.gathered, itemID, qty)
       else
-        local cat = TJ.ItemCategory[itemID]
+        local cat = ns.ItemCategory[itemID]
         if cat then
           any = true
-          bump(TJ.char.gathered, itemID, qty)
+          bump(ns.char.gathered, itemID, qty)
           if mapID then
-            TJ.char.zones[mapID] = TJ.char.zones[mapID] or {}
-            bump(TJ.char.zones[mapID], itemID, qty)
+            ns.char.zones[mapID] = ns.char.zones[mapID] or {}
+            bump(ns.char.zones[mapID], itemID, qty)
           end
           if cat ~= "skinning" then
             local guid = GetLootSourceInfo(slot)
             if type(guid) == "string" then
               local kind, _, _, _, _, objID = strsplit("-", guid)
               if kind == "GameObject" then
-                nodeKey = nodeKey or TJ.NodeByObject[tonumber(objID) or 0] or TJ.NodeByItem[itemID] or ("item:" .. itemID)
+                nodeKey = nodeKey or ns.NodeByObject[tonumber(objID) or 0] or ns.NodeByItem[itemID] or ("item:" .. itemID)
               end
             end
           end
@@ -331,9 +331,9 @@ local function onLoot()
       end
     end
   end
-  if nodeKey then TJ:AddNode(mapID, x, y, nodeKey) end
-  if fishing and any then TJ:AddNode(mapID, x, y, "fish") end
-  if any then TJ:RefreshAll() end
+  if nodeKey then ns:AddNode(mapID, x, y, nodeKey) end
+  if fishing and any then ns:AddNode(mapID, x, y, "fish") end
+  if any then ns:RefreshAll() end
 end
 on("LOOT_OPENED", onLoot)
 on("LOOT_READY", onLoot)
@@ -345,32 +345,32 @@ SLASH_EASYCRAFT1 = "/ec"
 SLASH_EASYCRAFT2 = "/easycraft"
 SLASH_EASYCRAFT3 = "/ремесла"
 SlashCmdList.EASYCRAFT = function(msg)
-  msg = TJ.Lower(strtrim(msg or ""))
+  msg = ns.Lower(strtrim(msg or ""))
   if msg == "reset" then
-    TJ:Print(TJ.T("это сотрёт данные этого персонажа: отметки шагов, журнал сбора, историю навыка. Подтвердить: /ec reset confirm"))
+    ns:Print(ns.T("это сотрёт данные этого персонажа: отметки шагов, журнал сбора, историю навыка. Подтвердить: /ec reset confirm"))
   elseif msg == "reset confirm" then
     EasyCraftCharDB = nil
-    TJ:InitDB()
-    TJ:ScanSkills()
-    TJ:Print(TJ.T("данные персонажа сброшены."))
-    TJ:RefreshAll()
+    ns:InitDB()
+    ns:ScanSkills()
+    ns:Print(ns.T("данные персонажа сброшены."))
+    ns:RefreshAll()
   elseif msg == "minimap" or msg == "миникарта" then
-    TJ:SetMinimapHidden(TJ.settings.minimap)
-    TJ:Print(TJ.settings.minimap and TJ.T("кнопка у миникарты показана.") or TJ.T("кнопка у миникарты скрыта (вернуть: /ec minimap)."))
+    ns:SetMinimapHidden(ns.settings.minimap)
+    ns:Print(ns.settings.minimap and ns.T("кнопка у миникарты показана.") or ns.T("кнопка у миникарты скрыта (вернуть: /ec minimap)."))
   elseif msg == "colors" or msg == "цвета" then
-    TJ:ShareColors()
+    ns:ShareColors()
   elseif msg == "scan" or msg == "цены" then
-    TJ:ScanAuction(true)
+    ns:ScanAuction(true)
   elseif msg == "check" or msg == "сверка" then
-    TJ:PrintRouteCheck()
+    ns:PrintRouteCheck()
   elseif msg == "options" or msg == "config" or msg == "настройки" then
-    TJ:OpenSettings()
+    ns:OpenSettings()
   elseif msg == "help" or msg == "intro" or msg == "помощь" then
-    TJ:ShowIntro()
+    ns:ShowIntro()
   elseif msg == "" then
-    if TJ.ToggleFrame then TJ:ToggleFrame() end
+    if ns.ToggleFrame then ns:ToggleFrame() end
   else
     -- commands, ?, команды и всё незнакомое - список команд
-    TJ:PrintCommands()
+    ns:PrintCommands()
   end
 end

@@ -1,4 +1,4 @@
-local _, TJ = ...
+local _, ns = ...
 
 -------------------------------------------------------------------------------
 --  Что из созданного считается лучшим для подземелий (d), рейдов (r) и PvP (p)
@@ -13,7 +13,7 @@ local HEALER = { "PRIEST", "DRUID", "PALADIN", "SHAMAN" }
 local MANA = { "MAGE", "WARLOCK", "PRIEST", "DRUID", "PALADIN", "SHAMAN", "HUNTER" }
 local TANK = { "WARRIOR", "DRUID", "PALADIN" }
 
-TJ.Best = {
+ns.Best = {
   -- Алхимия
   [13510] = { p = "alchemy", t = "r", c = TANK }, -- Настой титанов
   [13511] = { p = "alchemy", t = "r", c = HEALER }, -- Настой чистой мудрости

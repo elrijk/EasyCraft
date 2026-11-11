@@ -1,4 +1,4 @@
-local _, TJ = ...
+local _, ns = ...
 local floor, max, min = math.floor, math.max, math.min
 local format = string.format
 local TS = C_TradeSkillUI
@@ -10,14 +10,14 @@ local TS = C_TradeSkillUI
 --    known, d = цвет (0-3), step = шаг маршрута, best = "drp",
 --    cost = реагенты, sale = продажа, profit = выгода за одно создание,
 --    can = сколько можно создать из сумок }.
---  Выученные рецепты - из окна профессии (TJ.char.book), невыученные - из
+--  Выученные рецепты - из окна профессии (ns.char.book), невыученные - из
 --  маршрута и списка лучшего (Data\Best.lua).
 --  Порядок везде один: сверху то, что выгоднее по ценам аукциона.
 -------------------------------------------------------------------------------
 local function charKey()
   return (UnitName("player") or "?") .. "-" .. (GetRealmName() or "")
 end
-TJ.CharKey = charKey
+ns.CharKey = charKey
 
 -- Что выходит из рецепта: предмет и сколько (из окна профессии).
 local outCache = {}
@@ -38,7 +38,7 @@ end
 --  Откаты: запоминаем по персонажам в EasyCraftDB.cds[персонаж][рецепт] =
 --  { e = когда будет готов (time()), n = название, i = значок, k = профессия }.
 -------------------------------------------------------------------------------
-function TJ:NoteCooldown(key, id, b)
+function ns:NoteCooldown(key, id, b)
   if not (TS and TS.GetRecipeCooldown and self.db) then return end
   local ok, cd = pcall(TS.GetRecipeCooldown, id)
   if not ok then return end
@@ -55,7 +55,7 @@ function TJ:NoteCooldown(key, id, b)
 end
 
 -- Все откаты всех персонажей: готовые сверху, дальше - кому меньше ждать.
-function TJ:CooldownList()
+function ns:CooldownList()
   local out, now, me = {}, time(), charKey()
   for who, list in pairs(self.db.cds or {}) do
     for id, c in pairs(list) do
@@ -71,7 +71,7 @@ function TJ:CooldownList()
   return out
 end
 
-function TJ:ForgetCooldown(who, spell)
+function ns:ForgetCooldown(who, spell)
   local list = self.db.cds and self.db.cds[who]
   if not list then return end
   list[spell] = nil
@@ -79,8 +79,8 @@ function TJ:ForgetCooldown(who, spell)
 end
 
 -- «2 д 5 ч», «3 ч 20 мин», «15 мин».
-function TJ:TimeLeft(sec)
-  local T = TJ.T
+function ns:TimeLeft(sec)
+  local T = ns.T
   local m = floor(sec / 60 + 0.5)
   if m >= 1440 then return format(T("%d д %d ч"), floor(m / 1440), floor(m % 1440 / 60)) end
   if m >= 60 then return format(T("%d ч %d мин"), floor(m / 60), m % 60) end
@@ -91,7 +91,7 @@ end
 --  Скан окна профессии: все выученные рецепты с реагентами и результатом.
 --  Зовёт ScanTradeSkill (Tracking.lua) после своего скана.
 -------------------------------------------------------------------------------
-function TJ:ScanBook(key)
+function ns:ScanBook(key)
   if not (TS and TS.GetAllRecipeIDs and TS.GetRecipeInfo) then return end
   local ok, ids = pcall(TS.GetAllRecipeIDs)
   if not ok or type(ids) ~= "table" or #ids == 0 then return end
@@ -124,7 +124,7 @@ end
 -------------------------------------------------------------------------------
 -- Цены записи: реагенты, продажа и выгода за одно создание (без комиссии
 -- аукциона); сколько можно создать из сумок.
-function TJ:PriceEntry(e)
+function ns:PriceEntry(e)
   e.cost = self:RecipeCost(e.rc)
   local p = e.out and self:AuctionPrice(e.out)
   e.sale = p and p * (e.q or 1) or nil
@@ -147,7 +147,7 @@ local function fromStep(self, key, s, known)
 end
 
 -- Одна запись по рецепту (для очереди): из книги, иначе из маршрута.
-function TJ:BookEntry(key, spell)
+function ns:BookEntry(key, spell)
   local book = self.char.book and self.char.book[key]
   local sc = self.char.scan[key]
   local e
@@ -163,7 +163,7 @@ end
 
 -- Лучшее ли это для режима mode ("d", "r", "p"; nil - для любого) и, если
 -- mine, для класса игрока.
-function TJ:IsBest(e, mode, mine)
+function ns:IsBest(e, mode, mine)
   if not e.best then return false end
   if mode and not e.best:find(mode, 1, true) then return false end
   if mine and e.classes then
@@ -184,11 +184,11 @@ local function byProfit(a, b)
   if a.order and b.order and a.order ~= b.order then return a.order < b.order end
   return (a.name or "") < (b.name or "")
 end
-TJ.ByProfit = byProfit
+ns.ByProfit = byProfit
 
 -- Все рецепты профессии. Возвращает: выученные, невыученные (оба списка -
 -- по выгоде), прочитано ли окно профессии.
-function TJ:BookList(key)
+function ns:BookList(key)
   local p = self.Profs[key]
   if not p then return {}, {}, false end
   local book = self.char.book and self.char.book[key]
@@ -226,7 +226,7 @@ function TJ:BookList(key)
 end
 
 -------------------------------------------------------------------------------
---  Очередь крафта: TJ.char.queue = { { k = профессия, s = рецепт, n = штук } }
+--  Очередь крафта: ns.char.queue = { { k = профессия, s = рецепт, n = штук } }
 -------------------------------------------------------------------------------
 local function queue(self)
   local q = self.char.queue
@@ -236,10 +236,10 @@ end
 
 -- Очередь изменилась: обновить подсказку у окна профессии (мини-окно).
 local function queueChanged()
-  if TJ.Tracker and TJ.Tracker.Update then TJ:Safe(TJ.Tracker.Update, TJ.Tracker) end
+  if ns.Tracker and ns.Tracker.Update then ns:Safe(ns.Tracker.Update, ns.Tracker) end
 end
 
-function TJ:QueueAdd(key, spell, n)
+function ns:QueueAdd(key, spell, n)
   if not (key and spell) then return end
   local q = queue(self)
   local found
@@ -254,7 +254,7 @@ function TJ:QueueAdd(key, spell, n)
   queueChanged()
 end
 
-function TJ:QueueRemove(spell)
+function ns:QueueRemove(spell)
   local q = queue(self)
   for i = #q, 1, -1 do
     if q[i].s == spell then tremove(q, i) end
@@ -262,13 +262,13 @@ function TJ:QueueRemove(spell)
   queueChanged()
 end
 
-function TJ:QueueClear()
+function ns:QueueClear()
   self.char.queue = {}
   queueChanged()
 end
 
 -- Очередь записями рецептов (n - сколько создать), по выгоде.
-function TJ:QueueList()
+function ns:QueueList()
   local out = {}
   for i, it in ipairs(queue(self)) do
     local e = self:BookEntry(it.k, it.s)
@@ -284,7 +284,7 @@ end
 -- Чего не хватает на всю очередь: { items = { { id, need, have, buy, cost } },
 -- auction = { { id, buy } }, total (медь), noPrice, buyCount }.
 -- Запас - сумки, банк, почта и альты, как в покупках.
-function TJ:QueueNeeds(list)
+function ns:QueueNeeds(list)
   list = list or self:QueueList()
   local need, order = {}, {}
   for _, e in ipairs(list) do
@@ -321,16 +321,16 @@ end
 
 -- Создать запись очереди: сколько хватает реагентов, но не больше нужного.
 -- Реагентов нет - открыть рецепт в окне профессии.
-function TJ:QueueCraft(e)
+function ns:QueueCraft(e)
   if e.can > 0 and e.known then
     return self:CraftOrOpen(e.key, e.spell, min(e.n, e.can))
   end
   self:OpenRecipe(e.key, e.spell)
-  self:Print(TJ.T("не хватает реагентов."))
+  self:Print(ns.T("не хватает реагентов."))
 end
 
 -- Первое в очереди (по выгоде), на что есть реагенты.
-function TJ:QueueNext(list)
+function ns:QueueNext(list)
   for _, e in ipairs(list or self:QueueList()) do
     if e.can > 0 and e.known then return e end
   end
@@ -339,7 +339,7 @@ end
 -- Создал предмет из очереди - в очереди на одну штуку меньше.
 local ev = CreateFrame("Frame")
 ev:SetScript("OnEvent", function(_, _, _, _, spellID)
-  local q = TJ.char and TJ.char.queue
+  local q = ns.char and ns.char.queue
   if not (q and spellID) then return end
   for i, it in ipairs(q) do
     if it.s == spellID then
@@ -349,8 +349,8 @@ ev:SetScript("OnEvent", function(_, _, _, _, spellID)
       -- сумки изменятся и окно перерисуется само; откат - проверить позже
       local key = it.k
       C_Timer.After(1, function()
-        local b = TJ.char.book and TJ.char.book[key] and TJ.char.book[key][spellID]
-        if b and TJ:IsProfOpen(key) then TJ:NoteCooldown(key, spellID, b) end
+        local b = ns.char.book and ns.char.book[key] and ns.char.book[key][spellID]
+        if b and ns:IsProfOpen(key) then ns:NoteCooldown(key, spellID, b) end
       end)
       return
     end

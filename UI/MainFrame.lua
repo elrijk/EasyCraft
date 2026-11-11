@@ -1,7 +1,7 @@
-local ADDON, TJ = ...
-local W = TJ.W
+local ADDON, ns = ...
+local W = ns.W
 local UI = {}
-TJ.UI = UI
+ns.UI = UI
 local format, floor, max, min = string.format, math.floor, math.max, math.min
 
 -------------------------------------------------------------------------------
@@ -271,7 +271,7 @@ local function MakeCell(parent, size)
   end)
   b:SetScript("OnLeave", function() GameTooltip:Hide() end)
   function b:Set(it, w)
-    self.icon:SetTexture(it.id and TJ:ItemIcon(it.id) or it.tex or TJ.Icon(nil))
+    self.icon:SetTexture(it.id and ns:ItemIcon(it.id) or it.tex or ns.Icon(nil))
     self.star:SetShown(it.star and true or false)
     local st = it.hot and CELL_HOT or CELL_BG
     self:SetBackdropColor(st[1], st[2], st[3], st[4])
@@ -823,7 +823,7 @@ function Card:Row(r)
   end)
   b:SetPoint("TOPLEFT", self, "TOPLEFT", PAD - 6, -self.y)
   b:SetWidth(CARD_W - PAD * 2 + 12)
-  if r.id then b.icon:SetItem(r.id) else b.icon:SetPlain(r.tex or TJ.Icon(nil)) end
+  if r.id then b.icon:SetItem(r.id) else b.icon:SetPlain(r.tex or ns.Icon(nil)) end
   local c = r.color or W.LIGHT
   b.text:SetTextColor(c[1], c[2], c[3], 1)
   b.text:SetText(r.text or "")
@@ -845,7 +845,7 @@ function Card:Row(r)
   end
   b.icon:SetAlpha(r.done and 0.6 or 1)
   b.itemID = r.hoverItem and r.id or nil
-  b.tip = r.hoverItem and TJ.T("Shift+щелчок - ссылка в чат. На открытом аукционе щелчок ищет этот реагент.") or nil
+  b.tip = r.hoverItem and ns.T("Shift+щелчок - ссылка в чат. На открытом аукционе щелчок ищет этот реагент.") or nil
   b:SetScript("OnClick", r.onClick)
   -- крестик у правого края (r.onDelete): убрать строку; текст справа - левее
   b.right:ClearAllPoints()
@@ -1049,7 +1049,7 @@ local function MakeTile(parent, mode, wide)
     self.item, self.tip, self.onClick = t.item, t.tip, t.onClick
     -- текущий шаг - рамкой плитки и значком (стрелка / табличка), без
     -- свечения поверх значка
-    self.slot:Set(t.tex or (t.item and TJ:ItemIcon(t.item)) or TJ.Icon(nil), not done and t.count or nil,
+    self.slot:Set(t.tex or (t.item and ns:ItemIcon(t.item)) or ns.Icon(nil), not done and t.count or nil,
       done and "ok" or nil, not (done or cur), false)
     if self.curMark then self.curMark:SetShown(cur and true or false) end
     -- цвета карточек аддона (STYLE): текущая - ярко, пройденная - зелёная,
@@ -1403,7 +1403,7 @@ function UI:Create()
   f:RegisterForDrag("LeftButton")
   f:SetScript("OnDragStart", f.StartMoving)
   f:SetScript("OnDragStop", f.StopMovingOrSizing)
-  f:SetScale(TJ.settings.scale or 1)
+  f:SetScale(ns.settings.scale or 1)
   tinsert(UISpecialFrames, "EasyCraftFrame")
   if type(f.TitleContainer) ~= "table" then
     local bg = f:CreateTexture(nil, "BACKGROUND", nil, -8)
@@ -1421,10 +1421,10 @@ function UI:Create()
   if type(f.CloseButton) == "table" then help:SetPoint("RIGHT", f.CloseButton, "LEFT", -2, 0)
   else help:SetPoint("TOPRIGHT", -28, -1) end
   help:SetFrameLevel(f:GetFrameLevel() + 10)
-  help:SetScript("OnClick", function() W.Sound("IG_MAINMENU_OPTION_CHECKBOX_ON"); TJ:ShowIntro() end)
+  help:SetScript("OnClick", function() W.Sound("IG_MAINMENU_OPTION_CHECKBOX_ON"); ns:ShowIntro() end)
   help:SetScript("OnEnter", function(s)
     GameTooltip:SetOwner(s, "ANCHOR_BOTTOM")
-    GameTooltip:SetText(TJ.T("Как пользоваться EasyCraft"), 1, 0.82, 0)
+    GameTooltip:SetText(ns.T("Как пользоваться EasyCraft"), 1, 0.82, 0)
     GameTooltip:Show()
   end)
   help:SetScript("OnLeave", function() GameTooltip:Hide() end)
@@ -1483,9 +1483,9 @@ function UI:Create()
   local head = CreateFrame("Frame", nil, f)
   head:SetPoint("TOPLEFT", f, "TOPLEFT", 66, -26)
   head:SetPoint("BOTTOMRIGHT", f, "TOPRIGHT", -10, -ATTIC + 2)
-  head.open = W.Button(head, TJ.T("Окно профессии"), 140, 24)
+  head.open = W.Button(head, ns.T("Окно профессии"), 140, 24)
   head.open:SetPoint("RIGHT", head, "RIGHT", 0, 0)
-  head.link = W.Button(head, TJ.T("Ссылка в чат"), 130, 24)
+  head.link = W.Button(head, ns.T("Ссылка в чат"), 130, 24)
   head.link:SetPoint("RIGHT", head.open, "LEFT", -6, 0)
   head.bar = W.Bar(head)
   head.bar:SetHeight(18)
@@ -1509,29 +1509,29 @@ function UI:Create()
 
   f:Hide()
   -- Мини-окно у окна профессии прячется, пока это окно показывает ту же профессию.
-  f:SetScript("OnShow", function() UI:Render(); if TJ.Tracker then TJ.Tracker:Update() end end)
+  f:SetScript("OnShow", function() UI:Render(); if ns.Tracker then ns.Tracker:Update() end end)
   -- После открытия из настроек окно было над ними (DIALOG): вернуть обычный слой.
   f:SetScript("OnHide", function(s)
     s:SetFrameStrata("HIGH")
-    if TJ.Tracker then TJ.Tracker:Update() end
+    if ns.Tracker then ns.Tracker:Update() end
   end)
 end
 
 function UI:UpdateSideTabs()
   local views = { "home" }
-  for _, key in ipairs(TJ:LearnedList()) do views[#views + 1] = key end
+  for _, key in ipairs(ns:LearnedList()) do views[#views + 1] = key end
   for i, t in ipairs(self.sideTabs) do
     local v = views[i]
     if v then
       t.view = v
       if v == "home" then
         t.icon:SetTexture(HOME_ICON)
-        t.tip, t.tip2 = TJ.T("Главная"), TJ.T("Профессии, карта, лагерь")
+        t.tip, t.tip2 = ns.T("Главная"), ns.T("Профессии, карта, лагерь")
       else
-        local p = TJ.Profs[v]
-        local rank, maxRank = TJ:GetSkill(v)
-        t.icon:SetTexture(TJ.Icon(p.icon))
-        t.tip, t.tip2 = TJ:N(p), format("%d/%d", rank, maxRank)
+        local p = ns.Profs[v]
+        local rank, maxRank = ns:GetSkill(v)
+        t.icon:SetTexture(ns.Icon(p.icon))
+        t.tip, t.tip2 = ns:N(p), format("%d/%d", rank, maxRank)
       end
       t:SetChecked(v == self.view)
       t:Show()
@@ -1561,44 +1561,44 @@ end
 function UI:Render(keepScroll)
   local f = self.frame
   if not (f and f:IsShown()) then return end
-  if self.view ~= "home" and not TJ.char.profs[self.view] then self.view = "home" end
+  if self.view ~= "home" and not ns.char.profs[self.view] then self.view = "home" end
   local pos = keepScroll and f.scroll:GetVerticalScroll() or 0
   for i = 1, self.nCards do self.cards[i]:Hide() end
   self.nCards, self.y = 0, 14
   self:UpdateSideTabs()
 
-  local C = TJ.Content
+  local C = ns.Content
   if self.view == "home" then
-    SetTitle(f, TJ.T("EasyCraft: прокачка профессий"))
+    SetTitle(f, ns.T("EasyCraft: прокачка профессий"))
     self.profHead:Hide()
-    SetPortrait(f, TJ.ICON)
+    SetPortrait(f, ns.ICON)
     local tabs = C:HomeTabs()
     local sel = min(self.tab.home or 1, #tabs)
     self:SetTopTabs(tabs, sel)
-    TJ:Safe(C.BuildHome, C, self, sel)
+    ns:Safe(C.BuildHome, C, self, sel)
   else
     local key = self.view
-    local p = TJ.Profs[key]
-    SetTitle(f, "EasyCraft: " .. TJ:N(p))
-    local rank, maxRank = TJ:GetSkill(key)
+    local p = ns.Profs[key]
+    SetTitle(f, "EasyCraft: " .. ns:N(p))
+    local rank, maxRank = ns:GetSkill(key)
     local head = self.profHead
     -- Полоса до предела текущего ранга (как в окне профессии игры): 87 из 150.
     local cap = (maxRank and maxRank > 0) and maxRank or 300
     head.bar:SetMinMaxValues(0, cap)
     head.bar:SetValue(min(rank, cap))
     -- одной строкой по центру полосы: «Подмастерье 150/150»
-    head.bar.text:SetText(TJ:RankName(maxRank) .. "  " .. format("%d/%d", rank, cap))
+    head.bar.text:SetText(ns:RankName(maxRank) .. "  " .. format("%d/%d", rank, cap))
     head.bar.left:SetText("")
     head.bar.right:SetText("")
-    TJ:MarkNextRank(head.bar, key, rank, cap)
-    head.link:SetScript("OnClick", function(b) W.Sound("IG_MAINMENU_OPTION_CHECKBOX_ON"); TJ:LinkMenu(key, b) end)
-    head.open:SetScript("OnClick", function() W.Sound("IG_MAINMENU_OPTION_CHECKBOX_ON"); TJ:OpenProfession(key) end)
+    ns:MarkNextRank(head.bar, key, rank, cap)
+    head.link:SetScript("OnClick", function(b) W.Sound("IG_MAINMENU_OPTION_CHECKBOX_ON"); ns:LinkMenu(key, b) end)
+    head.open:SetScript("OnClick", function() W.Sound("IG_MAINMENU_OPTION_CHECKBOX_ON"); ns:OpenProfession(key) end)
     head:Show()
-    SetPortrait(f, TJ.ICON) -- в портрете всегда значок аддона, профессия - в шапке
+    SetPortrait(f, ns.ICON) -- в портрете всегда значок аддона, профессия - в шапке
     local tabs = C:ProfTabs(key)
     local sel = min(self.tab[key] or 1, #tabs)
     self:SetTopTabs(tabs, sel)
-    TJ:Safe(C.BuildProfession, C, self, key, sel)
+    ns:Safe(C.BuildProfession, C, self, key, sel)
   end
 
   self.child:SetHeight(max(self.y, 10))
@@ -1612,9 +1612,9 @@ end
 -- Открыть страницу: "home" или профессия; sel = "step:N" - показать шаг.
 function UI:Open(view, sel)
   self:Create()
-  if view ~= "home" and not (view and TJ.char.profs[view]) then view = "home" end
+  if view ~= "home" and not (view and ns.char.profs[view]) then view = "home" end
   self.view = view
-  TJ.char.lastView = view
+  ns.char.lastView = view
   if view ~= "home" then
     -- страница профессии открывается на шаге: выбранном или текущем
     local i = sel and tonumber(tostring(sel):match("^step:(%d+)$"))
@@ -1623,23 +1623,23 @@ function UI:Open(view, sel)
   if not self.frame:IsShown() then self.frame:Show() else self:Render() end
 end
 
-function TJ:ToggleFrame()
+function ns:ToggleFrame()
   UI:Create()
   if UI.frame:IsShown() then UI.frame:Hide(); return end
   -- Первое открытие аддона: сначала знакомство, потом выбор профессии (если
   -- их нет), и только затем это окно (UI/Intro.lua).
-  if TJ.IntroFirst and TJ:IntroFirst() then return end
+  if ns.IntroFirst and ns:IntroFirst() then return end
   -- Первый раз - на главную.
-  if not TJ.db.introDone then
+  if not ns.db.introDone then
     UI.tab.home = 1
     UI:Open("home")
   else
-    local last = TJ.char.lastView
-    UI:Open((last and TJ.char.profs[last]) and last or "home")
+    local last = ns.char.lastView
+    UI:Open((last and ns.char.profs[last]) and last or "home")
   end
 end
 
-TJ:RegisterRefresh(function() UI:Render(true) end)
+ns:RegisterRefresh(function() UI:Render(true) end)
 
 -------------------------------------------------------------------------------
 --  Мини-окно рядом с окном профессии: шаг, сколько осталось, реагенты и
@@ -1647,7 +1647,7 @@ TJ:RegisterRefresh(function() UI:Render(true) end)
 -------------------------------------------------------------------------------
 local Mini = {}
 local BookShown -- ниже
-TJ.Tracker = Mini -- Tracking.lua зовёт Attach/Detach, когда окно профессии открылось и закрылось
+ns.Tracker = Mini -- Tracking.lua зовёт Attach/Detach, когда окно профессии открылось и закрылось
 
 -- Два вида подсказки (настройка miniClassic, по умолчанию прежний):
 --  * новый - как окна игры (ButtonFrameTemplate: металлическая рамка,
@@ -1808,10 +1808,10 @@ function NewHeadIcons(f, RS)
   local set = {}
   set.open = W.RingIcon(f, RS)
   f.open = set.open
-  f.open:SetIcon(TJ.ICON)
+  f.open:SetIcon(ns.ICON)
   f.open:EnableMouse(true)
   f.open:SetScript("OnMouseUp", function() if Mini.key then UI:Open(Mini.key) end end)
-  tipOn(f.open, TJ.T("Открыть EasyCraft"), TJ.T("Там весь маршрут, покупки и учителя."))
+  tipOn(f.open, ns.T("Открыть EasyCraft"), ns.T("Там весь маршрут, покупки и учителя."))
   -- учитель: знак учителя из игры на тёмном круге
   set.trainer = W.RingIcon(f, RS)
   f.findTrainer = set.trainer
@@ -1822,19 +1822,19 @@ function NewHeadIcons(f, RS)
   f.findTrainer:EnableMouse(true)
   -- учитель, который нужен сейчас: выучить рецепт шага или следующий ранг
   f.findTrainer:SetScript("OnMouseUp", function()
-    local id = Mini.key and TJ:NeededTrainer(Mini.key)
-    if id then TJ:Waypoint(id, true) end
+    local id = Mini.key and ns:NeededTrainer(Mini.key)
+    if id then ns:Waypoint(id, true) end
   end)
   f.findTrainer:SetScript("OnEnter", function(s)
     GameTooltip:SetOwner(s, "ANCHOR_RIGHT")
-    local id, why = TJ:NeededTrainer(Mini.key or "")
+    local id, why = ns:NeededTrainer(Mini.key or "")
     if id then
-      GameTooltip:SetText(TJ.T("Нужный учитель"), 1, 0.82, 0)
+      GameTooltip:SetText(ns.T("Нужный учитель"), 1, 0.82, 0)
       GameTooltip:AddLine(why, 1, 1, 1, true)
-      GameTooltip:AddLine(TJ:NpcName(id) .. ", " .. TJ:NpcZone(id), 0.9, 0.9, 0.9, true)
-      GameTooltip:AddLine(TJ.T("Щелчок поставит метку и откроет карту."), 0.7, 0.7, 0.7, true)
+      GameTooltip:AddLine(ns:NpcName(id) .. ", " .. ns:NpcZone(id), 0.9, 0.9, 0.9, true)
+      GameTooltip:AddLine(ns.T("Щелчок поставит метку и откроет карту."), 0.7, 0.7, 0.7, true)
     else
-      GameTooltip:SetText(TJ.T("Учитель пока не нужен"), 1, 0.82, 0)
+      GameTooltip:SetText(ns.T("Учитель пока не нужен"), 1, 0.82, 0)
       if why then GameTooltip:AddLine(why, 1, 1, 1, true) end
     end
     GameTooltip:Show()
@@ -1847,7 +1847,7 @@ end
 
 -- Поставить вид подсказки (новый «как окна игры» или прежний).
 function Mini:ApplyStyle(f)
-  local classic = TJ.settings.miniClassic == true and f.skin ~= nil
+  local classic = ns.settings.miniClassic == true and f.skin ~= nil
   local st = STYLE_MINI[classic and "classic" or "old"]
   MINI_W, MINI_ICON = st.w, st.icon
   HEAD_MID, HEAD_H, HEAD_ICON = st.headMid, st.headH, st.headIcon
@@ -1968,7 +1968,7 @@ function Mini:CreateRest(f)
   local thl = f.trainer:CreateTexture(nil, "HIGHLIGHT")
   thl:SetAllPoints()
   thl:SetColorTexture(1, 0.82, 0, 0.1)
-  f.pin = W.Button(f.box, TJ.T("На карте"), 68, 22)
+  f.pin = W.Button(f.box, ns.T("На карте"), 68, 22)
   -- черта между частями окна
   f.seps = {}
   for i = 1, 3 do
@@ -1978,7 +1978,7 @@ function Mini:CreateRest(f)
     f.seps[i] = t
   end
   -- кнопка у строки «где собирать»
-  f.map = W.Button(f, TJ.T("Показать на карте"), MINI_W - MINI_PAD * 2, 22)
+  f.map = W.Button(f, ns.T("Показать на карте"), MINI_W - MINI_PAD * 2, 22)
   -- «Включи поиск трав» и т. п.: щелчок включает
   f.find = CreateFrame("Button", nil, f)
   f.find.icon = f.find:CreateTexture(nil, "ARTWORK")
@@ -1994,7 +1994,7 @@ function Mini:CreateRest(f)
   hl:SetAllPoints()
   hl:SetColorTexture(1, 0.82, 0, 0.12)
 
-  f.create = W.Button(f, TJ.T("Создать"), MINI_W - MINI_PAD * 2, 22)
+  f.create = W.Button(f, ns.T("Создать"), MINI_W - MINI_PAD * 2, 22)
   f.rows = {}
   f:SetClampedToScreen(true)
   f:Hide()
@@ -2017,14 +2017,14 @@ function Mini:Dots(f, key, order, sel, rank, maxRank, y)
   if n == 0 then return y end
   local gap = 2
   local w = math.min(14, floor((MINI_W - MINI_PAD * 2 - gap * (n - 1)) / n))
-  local cur = TJ:CurrentStep(key, rank, maxRank)
+  local cur = ns:CurrentStep(key, rank, maxRank)
   for k, si in ipairs(order) do
     local d = f.dots[k]
     if not d then d = f:CreateTexture(nil, "ARTWORK"); f.dots[k] = d end
     d:SetSize(w, 6)
     d:ClearAllPoints()
     d:SetPoint("TOPLEFT", f, "TOPLEFT", MINI_PAD + (k - 1) * (w + gap), -(y + 1))
-    local st = TJ:StepState(key, si, rank, maxRank)
+    local st = ns:StepState(key, si, rank, maxRank)
     if st == "done" then d:SetColorTexture(0.3, 0.75, 0.3, 1)
     elseif si == cur then d:SetColorTexture(1, 0.82, 0, 1)
     else d:SetColorTexture(0.32, 0.27, 0.2, 1) end
@@ -2248,19 +2248,19 @@ function Mini:Update()
   local anchor = key and ProfWindow(key)
   local mainOnIt = UI.frame and UI.frame:IsShown() and UI.view == key -- то же уже видно в окне EasyCraft
   self.anchor = anchor
-  if not anchor or mainOnIt or self.hidden or TJ.settings.miniGuide == false or not TJ:IsProfOpen(key) or BookShown() then
+  if not anchor or mainOnIt or self.hidden or ns.settings.miniGuide == false or not ns:IsProfOpen(key) or BookShown() then
     f:Hide()
     return
   end
-  local rank, maxRank = TJ:GetSkill(key)
-  local i, s = TJ:CurrentStep(key, rank, maxRank)
+  local rank, maxRank = ns:GetSkill(key)
+  local i, s = ns:CurrentStep(key, rank, maxRank)
   -- маршрут пройден: окно остаётся ради очереди крафта (если рецепты прочитаны)
   local finished = not s
-  if finished and not (TJ.char.book and TJ.char.book[key]) then f:Hide(); return end
+  if finished and not (ns.char.book and ns.char.book[key]) then f:Hide(); return end
   -- Горное дело у плавильни: шаг - сбор, а здесь полезно другое - что плавить.
-  local smelt = not finished and key == "mining" and s.k == "gather" and TJ:SmeltNow(rank)
+  local smelt = not finished and key == "mining" and s.k == "gather" and ns:SmeltNow(rank)
   if smelt and not smelt.real then smelt = nil end
-  local state = not finished and TJ:StepState(key, i, rank, maxRank)
+  local state = not finished and ns:StepState(key, i, rank, maxRank)
 
   -- справа от окна, без прозрачного края классических окон; не за экраном
   local _, insetR = 0, 0
@@ -2274,14 +2274,14 @@ function Mini:Update()
   self:ApplyStyle(f)
 
   self:Reset(f)
-  local T = TJ.T
+  local T = ns.T
   -- 1. Шапка
   local pos, count, order
-  if not finished then pos, count, order = TJ.Content:StepPos(TJ.Profs[key], i) end
-  f.stepBig:SetText(pos and format(T("Шаг %d"), pos) or TJ:N(TJ.Profs[key]))
+  if not finished then pos, count, order = ns.Content:StepPos(ns.Profs[key], i) end
+  f.stepBig:SetText(pos and format(T("Шаг %d"), pos) or ns:N(ns.Profs[key]))
   f.stepOf:SetText(pos and format(T("из %d"), count) or "")
   -- значок учителя ярко, только когда учитель нужен сейчас
-  local need = TJ:NeededTrainer(key)
+  local need = ns:NeededTrainer(key)
   -- не нужен - серый и тусклее; нужен - в цвете
   f.findTrainer.glyph:SetDesaturated(not need)
   f.findTrainer:SetAlpha(need and 1 or 0.65)
@@ -2295,24 +2295,24 @@ function Mini:Update()
   if smelt then return self:ShowSmelt(f, key, smelt, y) end
 
   local isCraft = s.k == "craft" and state ~= "done"
-  local col = s.k == "craft" and (TJ:RealColor(key, s.spell, rank) or (s.sk and TJ:RecipeColor(s, rank)))
-  local nameText = col and (TJ:Hex(col) .. TJ:StepName(s) .. "|r") or TJ:StepName(s)
+  local col = s.k == "craft" and (ns:RealColor(key, s.spell, rank) or (s.sk and ns:RecipeColor(s, rank)))
+  local nameText = col and (ns:Hex(col) .. ns:StepName(s) .. "|r") or ns:StepName(s)
   if isCraft and s.spell then
-    f.nameBtn:SetScript("OnClick", function() TJ:OpenRecipe(key, s.spell) end)
-    tipOn(f.nameBtn, TJ:StepName(s), T("Щелчок выберет рецепт в окне профессии."))
+    f.nameBtn:SetScript("OnClick", function() ns:OpenRecipe(key, s.spell) end)
+    tipOn(f.nameBtn, ns:StepName(s), T("Щелчок выберет рецепт в окне профессии."))
   end
 
   -- 2. Что делается
-  local left = isCraft and TJ:RemainingCrafts(s, rank) or 0
+  local left = isCraft and ns:RemainingCrafts(s, rank) or 0
   local n = 0
-  local st = isCraft and s.spell and TJ:RecipeState(key, s.spell)
+  local st = isCraft and s.spell and ns:RecipeState(key, s.spell)
   if st and not st.unknown and st.known and not st.enchant then n = math.min(st.count or 0, math.max(left, 1)) end
   if isCraft and s.rc and left > 0 then
-    local b = TJ:StepBuy(s, left)
+    local b = ns:StepBuy(s, left)
     local inputs, total = {}, #b.items
     for _, e in ipairs(b.items) do
       if #inputs < MAX_REAGENTS then
-        local tip = e.mail > 0 and (TJ.MAIL_COLOR .. format(T("на почте %d"), e.mail) .. "|r") or nil
+        local tip = e.mail > 0 and (ns.MAIL_COLOR .. format(T("на почте %d"), e.mail) .. "|r") or nil
         if e.have < e.need and e.all > e.have then
           tip = "|cffffd100" .. format(T("в банке %d - забери у банкира"), e.all - e.have) .. "|r" .. (tip and ("\n" .. tip) or "")
         end
@@ -2327,11 +2327,11 @@ function Mini:Update()
           text = (e.have >= e.need and "|cff33dd33" or "|cffff5555") .. min(e.have, 999) .. "/" .. e.need .. "|r", tip = tip })
       end
     end
-    local out = s.id and { id = s.id } or { tex = TJ:StepIcon(s, TJ.Profs[key]), spell = s.spell }
+    local out = s.id and { id = s.id } or { tex = ns:StepIcon(s, ns.Profs[key]), spell = s.spell }
     out.text = "|cffffffff" .. left .. "|r"
     -- где взять недостающее (хватает - видно по галочкам, отдельно не пишем) -
     -- в той же рамке, что реагенты
-    local lines = b.allHave and {} or TJ:StepBuyLines(b)
+    local lines = b.allHave and {} or ns:StepBuyLines(b)
     if total > #inputs then tinsert(lines, 1, "|cff9d9d9d" .. format(T("и ещё %d"), total - #inputs) .. "|r") end
     y = self:PlaceFlow(f, inputs, out, y, lines)
   elseif s.k == "gather" or s.k == "zone" then
@@ -2339,17 +2339,17 @@ function Mini:Update()
   else
     -- ранг у учителя, книга, задание: если ниже будет кнопка «к кому идти»,
     -- название и «навык упёрся» не пишем - кнопка говорит всё сама
-    local ra0 = TJ:RankAction(key)
+    local ra0 = ns:RankAction(key)
     if not (ra0 and ra0.can and ra0.id and ra0.s == s) then
       y = placeName(f, nameText, MINI_W, y, 0, y)
-      local stx = TJ:ShortStatus(key, s, rank, state)
+      local stx = ns:ShortStatus(key, s, rank, state)
       if stx then f.note:SetText(stx); y = place(f.note, f, y) end
     end
   end
   if f.name:IsShown() and isCraft and s.spell then f.nameBtn:SetAllPoints(f.name); f.nameBtn:Show() end
 
   -- 3. Главное действие
-  local ra = TJ:RankAction(key)
+  local ra = ns:RankAction(key)
   if isCraft and st and st.known == false and not st.unknown then
     y = self:LearnBox(f, key, s, y)
   elseif ra and ra.can and ra.id then
@@ -2357,7 +2357,7 @@ function Mini:Update()
     y = self:RankBox(f, ra, y)
   elseif ra and maxRank > 0 and rank >= maxRank - 10 then
     -- скоро упрёшься в предел, а ранг ещё нельзя - сказать, когда можно
-    local _, why = TJ:NeededTrainer(key)
+    local _, why = ns:NeededTrainer(key)
     if why then
       f.note:SetText("|cffa03000" .. format(T("Предел навыка %d."), maxRank) .. "|r " .. why)
       y = place(f.note, f, y) + GAP_SECTION - 4
@@ -2369,7 +2369,7 @@ function Mini:Update()
   end
 
   -- 4. Другие рецепты: лучший в рамке
-  local offers = isCraft and TJ:BestRecipes(key, s, rank, 3) or {}
+  local offers = isCraft and ns:BestRecipes(key, s, rank, 3) or {}
   if #offers > 0 then
     y = sep(f, 1, y - GAP_SECTION / 2)
     local best = offers[1]
@@ -2385,10 +2385,10 @@ function Mini:Update()
         or T("Ещё вариант.")) .. (o.cost and ("\n" .. format(T("~%s за создание"), W.Money(o.cost))) or "")
       if o.chance then why = why .. "\n" .. format(T("Навык растёт не всегда: %s за создание."), o.chance) end
       local id = o.id
-      y = SetRow(f, k, y, { icon = o.icon or TJ.Icon(nil), star = k == 1, hot = k == 1,
-        text = TJ:Hex(o.color) .. (o.name or "?") .. "|r", right = right,
+      y = SetRow(f, k, y, { icon = o.icon or ns.Icon(nil), star = k == 1, hot = k == 1,
+        text = ns:Hex(o.color) .. (o.name or "?") .. "|r", right = right,
         tipTitle = o.name, tip = why .. "\n" .. T("Щелчок откроет его в окне профессии."),
-        onClick = function() TJ:OpenRecipe(key, id) end })
+        onClick = function() ns:OpenRecipe(key, id) end })
     end
     y = y + GAP_SECTION - 3
     if instead and best.n > 0 then
@@ -2408,10 +2408,10 @@ end
 -- открывает вкладку «Рецепты», где её собирают. Только у профессий, чьи
 -- рецепты аддон уже прочитал.
 function Mini:Queue(f, key, y)
-  if not (TJ.QueueList and TJ.char.book and TJ.char.book[key]) then return y end
-  local T = TJ.T
+  if not (ns.QueueList and ns.char.book and ns.char.book[key]) then return y end
+  local T = ns.T
   local list = {}
-  for _, e in ipairs(TJ:QueueList()) do
+  for _, e in ipairs(ns:QueueList()) do
     if e.key == key then list[#list + 1] = e end
   end
   y = sep(f, 3, y - GAP_SECTION / 2)
@@ -2429,14 +2429,14 @@ function Mini:Queue(f, key, y)
     btn:SetScript("OnClick", openBook)
     tipOn(btn, T("Очередь крафта"), T("Откроет вкладку «Рецепты»: щёлкни по рецепту, и он появится здесь."))
   else
-    local hot = TJ:QueueNext(list)
+    local hot = ns:QueueNext(list)
     for k, e in ipairs(list) do
       local right = not e.known and ("|cffff5555" .. T("рецепт не выучен") .. "|r")
         or (e.can > 0 and format(T("хватит на %d"), e.can) or ("|cff9d9d9d" .. T("нет реагентов") .. "|r"))
-      y = SetRow(f, k, y, { icon = (e.out and TJ:ItemIcon(e.out)) or e.icon or TJ.Icon(nil), hot = e == hot, star = e == hot,
+      y = SetRow(f, k, y, { icon = (e.out and ns:ItemIcon(e.out)) or e.icon or ns.Icon(nil), hot = e == hot, star = e == hot,
         text = format("%d × %s", e.n, e.name or "?"), right = right,
         tipTitle = e.name or "?", tip = T("Щелчок - создать. Крестик справа уберёт из очереди."),
-        onClick = function() TJ:QueueCraft(e) end })
+        onClick = function() ns:QueueCraft(e) end })
       -- крестик у правого края строки, текст справа - левее него
       local r = f.rows[f.nextRow]
       if not r.del then
@@ -2445,8 +2445,8 @@ function Mini:Queue(f, key, y)
         r.del:SetPoint("RIGHT", -1, 0)
       end
       r.del:SetScript("OnClick", function()
-        TJ:QueueRemove(e.spell)
-        TJ:RefreshAll()
+        ns:QueueRemove(e.spell)
+        ns:RefreshAll()
       end)
       r.del:Show()
       r.right:ClearAllPoints()
@@ -2468,20 +2468,20 @@ function Mini:CreateBtn(f, key, spell, count, y, tip)
   f.create:ClearAllPoints()
   f.create:SetWidth(MINI_W - MINI_PAD * 2)
   f.create:SetPoint("TOPLEFT", f, "TOPLEFT", MINI_PAD, -y)
-  f.create:SetText(format(TJ.T("Создать %d"), count))
+  f.create:SetText(format(ns.T("Создать %d"), count))
   f.create:SetEnabled(true)
-  f.create:SetScript("OnClick", function() TJ:Craft(key, spell, count) end)
-  tipOn(f.create, TJ.T("Создать"), tip)
+  f.create:SetScript("OnClick", function() ns:Craft(key, spell, count) end)
+  tipOn(f.create, ns.T("Создать"), tip)
   f.create:Show()
 end
 
 -- Рамка «выучи рецепт»: заголовок с ценой, торговец или учитель (значок
 -- рецепта или учителя, имя, зона) и «На карте» - метка и карта.
 function Mini:LearnBox(f, key, s, y)
-  local T = TJ.T
-  local src = TJ:RecipeSource(key, s)
+  local T = ns.T
+  local src = ns:RecipeSource(key, s)
   local head = src.kind == "vendor" and T("Купи рецепт") or (src.kind == "trainer" and src.npc and T("Выучи рецепт у учителя"))
-    or TJ:RecipeSourceHead(src)
+    or ns:RecipeSourceHead(src)
   local money = src.kind == "vendor" and (src.copper and W.Money(src.copper) or src.price) or nil
   return self:NpcBox(f, head, src.npc, src.kind == "vendor" and src.item or nil,
     src.extra, (src.kind == "vendor" and T("Ближайший торговец этим рецептом.") or T("Ближайший учитель.")), y, src.count, money)
@@ -2489,11 +2489,11 @@ end
 
 -- Можно взять следующий ранг: у учителя, купить книгу, взять задание.
 function Mini:RankBox(f, ra, y)
-  local T = TJ.T
+  local T = ns.T
   local head
   -- цена книги: запомненная у торговца или примерная (по цене продажи)
   local price, approx
-  if ra.item then price, approx = TJ:VendorPrice(ra.item) end
+  if ra.item then price, approx = ns:VendorPrice(ra.item) end
   -- коротко: что сделать и какой ранг; предел - в подсказке строки, цена -
   -- на самой строке справа
   if ra.kind == "book" then head = format(T("Купи книгу «%s»"), ra.name)
@@ -2510,7 +2510,7 @@ end
 -- слева значок (книга/рецепт или свиток учителя), имя и зона, справа -
 -- значок карты; в золотой рамке - это главное действие. Щелчок - метка и карта.
 function Mini:NpcBox(f, head, id, item, extra, who, y, count, money)
-  local T = TJ.T
+  local T = ns.T
   f.npcHead:SetText(head)
   y = place(f.npcHead, f, y) + 3
   if not id then return y + GAP_SECTION - 4 end
@@ -2520,10 +2520,10 @@ function Mini:NpcBox(f, head, id, item, extra, who, y, count, money)
   -- как кнопки зон: слева значок карты (щелчок - карта), справа - что там
   -- взять (книга, рецепт или свиток учителя)
   y = SetRow(f, nil, y, { icon = "Interface\\Icons\\INV_Misc_Map_01", hot = true,
-    text = TJ:NpcName(id) .. "  |cff9d9d9d" .. TJ:NpcZone(id) .. "|r",
-    right = money, nodeIcons = { item and TJ:ItemIcon(item) or "Interface\\Icons\\INV_Scroll_03" },
-    tipTitle = TJ:NpcName(id), tip = tip,
-    onClick = function() TJ:Waypoint(id, true) end })
+    text = ns:NpcName(id) .. "  |cff9d9d9d" .. ns:NpcZone(id) .. "|r",
+    right = money, nodeIcons = { item and ns:ItemIcon(item) or "Interface\\Icons\\INV_Scroll_03" },
+    tipTitle = ns:NpcName(id), tip = tip,
+    onClick = function() ns:Waypoint(id, true) end })
   return y + GAP_SECTION - 3
 end
 
@@ -2531,16 +2531,16 @@ end
 -- по твоему навыку) и справа название шага; зоны - отдельными кнопками на
 -- карту, лучшая в рамке; включить поиск; наживка.
 function Mini:Gather(f, key, s, rank, y, nameText)
-  local T = TJ.T
-  local C = TJ.Content
+  local T = ns.T
+  local C = ns.Content
   local inputs = {}
   if s.k == "gather" and s.nodes then
     for _, nk in ipairs(s.nodes) do
-      local nd = TJ.Nodes[nk]
+      local nd = ns.Nodes[nk]
       if nd and #inputs < ROW_REAGENTS + 1 then
-        local col = TJ:GatherColor(max(rank, 1), nd.req)
-        tinsert(inputs, { id = nd.item, text = TJ:Hex(col) .. nd.req .. "|r",
-          tip = format(T("с навыка %d, %s"), nd.req, TJ.ColorName[col] or "") })
+        local col = ns:GatherColor(max(rank, 1), nd.req)
+        tinsert(inputs, { id = nd.item, text = ns:Hex(col) .. nd.req .. "|r",
+          tip = format(T("с навыка %d, %s"), nd.req, ns.ColorName[col] or "") })
       end
     end
   end
@@ -2550,15 +2550,15 @@ function Mini:Gather(f, key, s, rank, y, nameText)
   -- зоны: где больше всего (сбор) или где ловить (зоны шага); первая - лучшая
   local zones = {}
   if s.k == "gather" then
-    zones = TJ:StepGatherZones(s, rank, 6)
+    zones = ns:StepGatherZones(s, rank, 6)
   else
     -- рыбалка: зоны шага по порядку, рекомендуем первую
     -- сначала лучшие зоны своей фракции (из маршрута), потом остальные
     local seen = {}
-    local recList = s[TJ:PlayerFaction() == "A" and "recA" or "recH"] or {}
+    local recList = s[ns:PlayerFaction() == "A" and "recA" or "recH"] or {}
     for _, list in ipairs({ recList, s.areas or {} }) do
       for _, a in ipairs(list) do
-        if not seen[a] and TJ:ZoneAllowed(a) and #zones < 4 then
+        if not seen[a] and ns:ZoneAllowed(a) and #zones < 4 then
           seen[a] = true
           tinsert(zones, { area = a, rec = #zones == 0 })
         end
@@ -2572,13 +2572,13 @@ function Mini:Gather(f, key, s, rank, y, nameText)
     for k, z in ipairs(zones) do
       local a = z.area
       -- справа - что из шага там растёт (значки); первая - лучшая, в рамке
-      local _, what = TJ:ZoneNodesText(z, 19, 3)
-      local nodeIcons = TJ:ZoneNodeIcons(z, 3)
-      local why = TJ:ZoneWhy(z)
+      local _, what = ns:ZoneNodesText(z, 19, 3)
+      local nodeIcons = ns:ZoneNodeIcons(z, 3)
+      local why = ns:ZoneWhy(z)
       -- одна пометка - звезда «рекомендуем»; список и так от лучшей к худшей
       y = SetRow(f, k, y, { icon = "Interface\\Icons\\INV_Misc_Map_01", star = z.rec, hot = z.rec,
         text = C:ZoneText(a, true), nodeIcons = nodeIcons,
-        tipTitle = TJ:ZoneName(a), tip = why .. (what ~= "" and ("\n" .. what) or "")
+        tipTitle = ns:ZoneName(a), tip = why .. (what ~= "" and ("\n" .. what) or "")
           .. "\n" .. T("Щелчок откроет карту на этой зоне: места сбора отмечены."),
         onClick = function() C:ShowOnMap(a, s.nodes) end })
     end
@@ -2589,14 +2589,14 @@ function Mini:Gather(f, key, s, rank, y, nameText)
   end
   -- поиск руды и трав выключен - щелчок включит
   if s.k == "gather" then
-    local t = TJ:FindTracking(key)
-    if t and not t.active and not TJ:AnyFindActive() then
-      f.find.icon:SetTexture(t.icon or TJ.Icon(nil))
+    local t = ns:FindTracking(key)
+    if t and not t.active and not ns:AnyFindActive() then
+      f.find.icon:SetTexture(t.icon or ns.Icon(nil))
       f.find.text:SetText(format(T("Включи «%s»"), t.name))
       f.find:ClearAllPoints()
       f.find:SetPoint("TOPLEFT", f, "TOPLEFT", MINI_PAD, -(y + 2))
       f.find:SetSize(MINI_W - MINI_PAD * 2, 18)
-      f.find:SetScript("OnClick", function() TJ:EnableFindTracking(key) end)
+      f.find:SetScript("OnClick", function() ns:EnableFindTracking(key) end)
       tipOn(f.find, t.name, T("Щелчок включит поиск на миникарте."))
       f.find:Show()
       y = y + 24
@@ -2604,9 +2604,9 @@ function Mini:Gather(f, key, s, rank, y, nameText)
   end
   -- рыбалка: наживка
   if key == "fishing" then
-    local lure, bonus = TJ:LureHint(rank)
+    local lure, bonus = ns:LureHint(rank)
     if lure then
-      f.note:SetText(format(T("Наживи «%s» на удочку: +%d к ловле."), TJ:ItemName(lure), bonus))
+      f.note:SetText(format(T("Наживи «%s» на удочку: +%d к ловле."), ns:ItemName(lure), bonus))
       y = place(f.note, f, y)
     end
   end
@@ -2615,16 +2615,16 @@ end
 
 -- Плавильня: «Плавить сейчас: Бронзовый слиток», руды хватит на N, «Создать N».
 function Mini:ShowSmelt(f, key, sm, y)
-  local T = TJ.T
+  local T = ns.T
   y = y or 30
   f.name:ClearAllPoints()
   f.name:SetPoint("TOPLEFT", f, "TOPLEFT", MINI_PAD, -y)
   f.name:SetWidth(MINI_W - MINI_PAD * 2)
-  f.name:SetText(T("Плавить сейчас: ") .. TJ:Hex(sm.color) .. (sm.name or "?") .. "|r")
+  f.name:SetText(T("Плавить сейчас: ") .. ns:Hex(sm.color) .. (sm.name or "?") .. "|r")
   f.name:Show()
   y = y + f.name:GetStringHeight() + 4
   f.nameBtn:SetAllPoints(f.name)
-  f.nameBtn:SetScript("OnClick", function() TJ:OpenRecipe(key, sm.id) end)
+  f.nameBtn:SetScript("OnClick", function() ns:OpenRecipe(key, sm.id) end)
   tipOn(f.nameBtn, sm.name or "", T("Плавка тоже растит горное дело. Щелчок выберет рецепт в окне профессии."))
   f.nameBtn:Show()
   f.status:SetText(sm.a > 0 and format(T("хватит на %d"), sm.a) or T("реагентов нет"))
@@ -2665,7 +2665,7 @@ function Mini:Watch(on)
       local f = Mini.f
       if not (f and Mini.key) then return end
       local a = ProfWindow(Mini.key)
-      local want = a ~= nil and not BookShown() and TJ:IsProfOpen(Mini.key)
+      local want = a ~= nil and not BookShown() and ns:IsProfOpen(Mini.key)
       if want ~= f:IsShown() or (want and a ~= Mini.anchor) then Mini:Update() end
     end)
   end
@@ -2674,5 +2674,5 @@ end
 
 function Mini:Init() end
 
-TJ:RegisterRefresh(function() Mini:Update() end)
+ns:RegisterRefresh(function() Mini:Update() end)
 

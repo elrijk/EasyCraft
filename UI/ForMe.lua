@@ -1,6 +1,6 @@
-local _, TJ = ...
-local C, T = TJ.Content, TJ.T
-local W = TJ.W
+local _, ns = ...
+local C, T = ns.Content, ns.T
+local W = ns.W
 
 -------------------------------------------------------------------------------
 --  «Что создать себе сейчас» (вкладка «Рецепты»): из выученных рецептов -
@@ -70,7 +70,7 @@ local function consumable(out, level)
   return reqLevel <= level and reqLevel >= level - 12
 end
 
-function TJ:CraftForMe()
+function ns:CraftForMe()
   local level = UnitLevel and UnitLevel("player") or 1
   local _, class = UnitClass("player")
   local gear, use, seen = {}, {}, {}
@@ -93,7 +93,7 @@ function TJ:CraftForMe()
 end
 
 function C:ForMeCard(UI)
-  local ok, gear, use = pcall(TJ.CraftForMe, TJ)
+  local ok, gear, use = pcall(ns.CraftForMe, ns)
   if not ok or (#gear == 0 and #use == 0) then return end
   local c = UI:Card()
   c:Head({ ring = "Interface\\Icons\\INV_Chest_Chain_05" }, T("Что создать себе сейчас"),
@@ -104,7 +104,7 @@ function C:ForMeCard(UI)
     local e = x.e
     rows[#rows + 1] = { id = e.out, tex = e.icon, text = e.name or "?", sub = sub, right = right,
       onClick = function()
-        TJ:QueueAdd(x.key, e.spell, 1)
+        ns:QueueAdd(x.key, e.spell, 1)
         UI:Render(true)
       end }
   end

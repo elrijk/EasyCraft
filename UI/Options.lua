@@ -1,4 +1,4 @@
-local ADDON, TJ = ...
+local ADDON, ns = ...
 
 -------------------------------------------------------------------------------
 --  Страница аддона в «Настройки -> Модификации -> EasyCraft»
@@ -9,31 +9,31 @@ local settingsCategory, panel
 -- ADDON_LOADED язык из настроек уже известен).
 
 local OPTIONS = {
-  { "minimap", "Показывать кнопку у миникарты", function(v) TJ:SetMinimapHidden(not v) end },
-  { "miniGuide", "Мини-окно рядом с окном профессии", function(v) TJ.settings.miniGuide = v; if TJ.Tracker then TJ.Tracker.hidden = nil end end },
+  { "minimap", "Показывать кнопку у миникарты", function(v) ns:SetMinimapHidden(not v) end },
+  { "miniGuide", "Мини-окно рядом с окном профессии", function(v) ns.settings.miniGuide = v; if ns.Tracker then ns.Tracker.hidden = nil end end },
   { "hideDone", "Скрывать выполненные шаги в маршруте" },
   { "mapMine", "Карта мира: мои находки" },
   { "itemTips", "Подсказки: сколько предмета нужно до учителя, цвет жилы и травы" },
   { "trainerStars", "Окно учителя: звезда у рецептов, нужных маршруту" },
   { "ahScan", "Аукцион: читать цены самому при открытии" },
   { "askShare", "Напоминать поделиться данными о рецептах" },
-  { "useAlts", "Считать реагенты у других моих персонажей", function(v) TJ.settings.useAlts = v; TJ.altCache = nil end },
+  { "useAlts", "Считать реагенты у других моих персонажей", function(v) ns.settings.useAlts = v; ns.altCache = nil end },
   { "hintsLocked", "Закрепить подсказки у окон профессии, банка и аукциона", function(v)
-    TJ.settings.hintsLocked = v
-    if TJ.W and TJ.W.UpdateLocks then TJ.W.UpdateLocks() end
+    ns.settings.hintsLocked = v
+    if ns.W and ns.W.UpdateLocks then ns.W.UpdateLocks() end
   end },
 }
 
-function TJ:RefreshOptions()
+function ns:RefreshOptions()
   if not panel then return end
-  for _, c in ipairs(panel.checks) do c:SetChecked(TJ.settings[c.opt] and true or false) end
-  if panel.scale then panel.scale:SetValue(TJ.settings.scale or 1) end
-  if panel.areaAlpha then panel.areaAlpha:SetValue(TJ.settings.mapAreaAlpha or 0.5) end
+  for _, c in ipairs(panel.checks) do c:SetChecked(ns.settings[c.opt] and true or false) end
+  if panel.scale then panel.scale:SetValue(ns.settings.scale or 1) end
+  if panel.areaAlpha then panel.areaAlpha:SetValue(ns.settings.mapAreaAlpha or 0.5) end
 end
 
 -- Команды чата: список в настройках и по /ec commands (описания по-русски,
 -- переводятся при показе).
-TJ.COMMANDS = {
+ns.COMMANDS = {
   { "/ec", "открыть или закрыть окно" },
   { "/ec help", "снова показать гайды вкладок" },
   { "/ec options", "открыть настройки" },
@@ -43,15 +43,15 @@ TJ.COMMANDS = {
   { "/ec commands", "этот список в чат" },
 }
 
-function TJ:CommandLines()
+function ns:CommandLines()
   local out = {}
-  for _, c in ipairs(TJ.COMMANDS) do out[#out + 1] = "|cffffd100" .. c[1] .. "|r - " .. TJ.T(c[2]) end
+  for _, c in ipairs(ns.COMMANDS) do out[#out + 1] = "|cffffd100" .. c[1] .. "|r - " .. ns.T(c[2]) end
   return out
 end
 
-function TJ:PrintCommands()
-  TJ:Print(TJ.T("команды:"))
-  for _, line in ipairs(TJ:CommandLines()) do DEFAULT_CHAT_FRAME:AddMessage("  " .. line) end
+function ns:PrintCommands()
+  ns:Print(ns.T("команды:"))
+  for _, line in ipairs(ns:CommandLines()) do DEFAULT_CHAT_FRAME:AddMessage("  " .. line) end
 end
 
 -- Страница настроек с прокруткой: внизу список команд, всё может не влезть.
@@ -68,7 +68,7 @@ local function ScrollBody(panel)
   return body
 end
 
-function TJ:BuildSettings()
+function ns:BuildSettings()
   if panel then return end
   panel = CreateFrame("Frame")
   panel.name = "EasyCraft"
@@ -81,65 +81,65 @@ function TJ:BuildSettings()
   title:SetText("|cff33ff99Easy|rCraft")
 
   -- Язык EasyCraft (выбор - в EasyCraftDB.lang, меняется после перезагрузки)
-  local lang = TJ:LanguageDropdown(body)
+  local lang = ns:LanguageDropdown(body)
   lang:SetPoint("TOPLEFT", title, "BOTTOMLEFT", 0, -14)
 
   local sub = body:CreateFontString(nil, "ARTWORK", "GameFontHighlightSmall")
   sub:SetPoint("TOPLEFT", lang, "BOTTOMLEFT", 0, -6)
   sub:SetWidth(560)
   sub:SetJustifyH("LEFT")
-  sub:SetText(TJ.T("Прокачка профессий WoW Forever: текущий шаг и цель, кнопки создания, учителя и рецепты, точки на карте."))
+  sub:SetText(ns.T("Прокачка профессий WoW Forever: текущий шаг и цель, кнопки создания, учителя и рецепты, точки на карте."))
 
-  local open = TJ.W.Button(body, TJ.T("Открыть окно"), 200, 26)
+  local open = ns.W.Button(body, ns.T("Открыть окно"), 200, 26)
   open:SetPoint("TOPLEFT", sub, "BOTTOMLEFT", 0, -14)
   open:SetScript("OnClick", function()
     -- Окно настроек игры не закрываем из кода аддона (это «заражает»
     -- настройки), а показываем окно EasyCraft поверх него.
-    TJ.UI:Create()
-    local f = TJ.UI.frame
+    ns.UI:Create()
+    local f = ns.UI.frame
     f:SetFrameStrata("DIALOG")
-    if not f:IsShown() then TJ:ToggleFrame() end
+    if not f:IsShown() then ns:ToggleFrame() end
     f:Raise()
   end)
 
-  local intro = TJ.W.Button(body, TJ.T("Как пользоваться"), 200, 26)
+  local intro = ns.W.Button(body, ns.T("Как пользоваться"), 200, 26)
   intro:SetPoint("LEFT", open, "RIGHT", 10, 0)
   intro:SetScript("OnClick", function()
-    TJ.UI:Create()
-    TJ.UI.frame:SetFrameStrata("DIALOG")
-    TJ:ShowIntro()
-    TJ.UI.frame:Raise()
+    ns.UI:Create()
+    ns.UI.frame:SetFrameStrata("DIALOG")
+    ns:ShowIntro()
+    ns.UI.frame:Raise()
   end)
 
   -- отправить автору наблюдения цветов рецептов (Seen.lua)
-  local share = TJ.W.Button(body, TJ.T("Отправить данные"), 200, 26)
+  local share = ns.W.Button(body, ns.T("Отправить данные"), 200, 26)
   share:SetPoint("LEFT", intro, "RIGHT", 10, 0)
-  share:SetScript("OnClick", function() if TJ.ShareColors then TJ:ShareColors() end end)
+  share:SetScript("OnClick", function() if ns.ShareColors then ns:ShareColors() end end)
 
   panel.checks = {}
   local prev = open
   for i, o in ipairs(OPTIONS) do
-    local c = TJ.W.Check(body, TJ.T(o[2]))
+    local c = ns.W.Check(body, ns.T(o[2]))
     c:SetSize(26, 26)
     c.label:SetFontObject("GameFontHighlight")
     c:SetPoint("TOPLEFT", prev, "BOTTOMLEFT", i == 1 and -2 or 0, i == 1 and -14 or -4)
     c.opt = o[1]
     c:SetScript("OnClick", function(self)
       local v = self:GetChecked() and true or false
-      if o[3] then o[3](v) else TJ.settings[o[1]] = v end
-      TJ:RefreshAll()
+      if o[3] then o[3](v) else ns.settings[o[1]] = v end
+      ns:RefreshAll()
     end)
     panel.checks[i] = c
     prev = c
   end
 
   -- подсказки, которые перетаскивали, - на прежние места
-  local reset = TJ.W.Button(body, TJ.T("Вернуть подсказки на место"), 240, 22)
+  local reset = ns.W.Button(body, ns.T("Вернуть подсказки на место"), 240, 22)
   reset:SetPoint("TOPLEFT", prev, "BOTTOMLEFT", 2, -14)
   reset:SetScript("OnClick", function()
-    TJ.db.hintPos = nil
-    TJ:RefreshAll()
-    TJ:Print(TJ.T("подсказки вернутся на свои места, когда появятся снова."))
+    ns.db.hintPos = nil
+    ns:RefreshAll()
+    ns:Print(ns.T("подсказки вернутся на свои места, когда появятся снова."))
   end)
   prev = reset
 
@@ -154,17 +154,17 @@ function TJ:BuildSettings()
     if sl.SetObeyStepOnDrag then sl:SetObeyStepOnDrag(true) end
     local label = sl.Text or _G[sl:GetName() .. "Text"]
     local function ShowValue(v)
-      if label then label:SetText(TJ.T("Размер окна") .. ": " .. math.floor(v * 100 + 0.5) .. "%") end
+      if label then label:SetText(ns.T("Размер окна") .. ": " .. math.floor(v * 100 + 0.5) .. "%") end
     end
-    ShowValue(TJ.settings.scale or 1)
+    ShowValue(ns.settings.scale or 1)
     local low, high = sl.Low or _G[sl:GetName() .. "Low"], sl.High or _G[sl:GetName() .. "High"]
     if low then low:SetText("70%") end
     if high then high:SetText("130%") end
     sl:SetScript("OnValueChanged", function(_, v)
       v = math.floor(v * 20 + 0.5) / 20
-      TJ.settings.scale = v
+      ns.settings.scale = v
       ShowValue(v)
-      if TJ.UI and TJ.UI.frame then TJ.UI.frame:SetScale(v) end
+      if ns.UI and ns.UI.frame then ns.UI.frame:SetScale(v) end
     end)
     panel.scale = sl
   end
@@ -180,20 +180,20 @@ function TJ:BuildSettings()
     if al.SetObeyStepOnDrag then al:SetObeyStepOnDrag(true) end
     local label = al.Text or _G[al:GetName() .. "Text"]
     local function ShowValue(v)
-      if label then label:SetText(TJ.T("Области сбора на карте: непрозрачность") .. " " .. math.floor(v * 100 + 0.5) .. "%") end
+      if label then label:SetText(ns.T("Области сбора на карте: непрозрачность") .. " " .. math.floor(v * 100 + 0.5) .. "%") end
     end
-    ShowValue(TJ.settings.mapAreaAlpha or 0.5)
+    ShowValue(ns.settings.mapAreaAlpha or 0.5)
     local low, high = al.Low or _G[al:GetName() .. "Low"], al.High or _G[al:GetName() .. "High"]
     if low then low:SetText("10%") end
     if high then high:SetText("100%") end
     al:SetScript("OnValueChanged", function(_, v)
       v = math.floor(v * 20 + 0.5) / 20
-      TJ.settings.mapAreaAlpha = v
+      ns.settings.mapAreaAlpha = v
       ShowValue(v)
       -- ползунок двигают плавно: перерисовать области раз в 0.05 с, а не на каждый шаг
-      if TJ.MapOverlay and WorldMapFrame and WorldMapFrame:IsShown() and not al.pending then
+      if ns.MapOverlay and WorldMapFrame and WorldMapFrame:IsShown() and not al.pending then
         al.pending = true
-        local function go() al.pending = nil; TJ.MapOverlay:Refresh() end
+        local function go() al.pending = nil; ns.MapOverlay:Refresh() end
         C_Timer.After(0.05, go)
       end
     end)
@@ -203,26 +203,26 @@ function TJ:BuildSettings()
   -- команды чата
   local cmdHead = body:CreateFontString(nil, "ARTWORK", "GameFontNormal")
   cmdHead:SetPoint("TOPLEFT", al or sl or prev, "BOTTOMLEFT", (al or sl) and -4 or 2, -30)
-  cmdHead:SetText(TJ.T("Команды в чате"))
+  cmdHead:SetText(ns.T("Команды в чате"))
   local cmds = body:CreateFontString(nil, "ARTWORK", "GameFontHighlight")
   cmds:SetPoint("TOPLEFT", cmdHead, "BOTTOMLEFT", 0, -8)
   cmds:SetWidth(560)
   cmds:SetJustifyH("LEFT")
   if cmds.SetSpacing then cmds:SetSpacing(4) end
-  cmds:SetText(table.concat(TJ:CommandLines(), "\n") .. "\n|cff9d9d9d" .. TJ.T("То же по-русски: /ремесла, /ec помощь, /ec настройки, /ec миникарта.") .. "|r")
+  cmds:SetText(table.concat(ns:CommandLines(), "\n") .. "\n|cff9d9d9d" .. ns.T("То же по-русски: /ремесла, /ec помощь, /ec настройки, /ec миникарта.") .. "|r")
 
   panel:SetScript("OnShow", function()
-    TJ:RefreshOptions()
+    ns:RefreshOptions()
     if lang then lang.Refresh() end
   end)
   -- Настройки закрыли: окно EasyCraft возвращается на обычный слой.
   panel:SetScript("OnHide", function()
-    local f = TJ.UI and TJ.UI.frame
+    local f = ns.UI and ns.UI.frame
     if f then f:SetFrameStrata("HIGH") end
   end)
   -- Галочки ставим сразу: страница видима с создания, и при первом
   -- открытии настроек OnShow может не сработать.
-  TJ:RefreshOptions()
+  ns:RefreshOptions()
   panel:Hide()
 
   if Settings and Settings.RegisterCanvasLayoutCategory then
@@ -232,8 +232,8 @@ function TJ:BuildSettings()
 end
 
 -- Выбор языка: подпись, выпадающий список, пояснение и кнопка перезагрузки.
-function TJ:LanguageDropdown(parent)
-  local T = TJ.T
+function ns:LanguageDropdown(parent)
+  local T = ns.T
   local box = CreateFrame("Frame", nil, parent)
   box:SetSize(560, 66)
   local label = box:CreateFontString(nil, "ARTWORK", "GameFontNormal")
@@ -246,7 +246,7 @@ function TJ:LanguageDropdown(parent)
   reload:SetText(T("Перезагрузить интерфейс"))
   reload:SetScript("OnClick", function() ReloadUI() end)
   local function Changed()
-    local changed = TJ.ResolveLang(TJ.db and TJ.db.lang) ~= TJ.lang
+    local changed = ns.ResolveLang(ns.db and ns.db.lang) ~= ns.lang
     note:SetText(changed and T("Язык сменится после перезагрузки интерфейса.") or "")
     reload:SetShown(changed)
   end
@@ -255,13 +255,13 @@ function TJ:LanguageDropdown(parent)
     dd:SetWidth(240)
     dd:SetPoint("TOPLEFT", label, "BOTTOMLEFT", 0, -8)
     dd:SetupMenu(function(_, root)
-      for _, l in ipairs(TJ.LANGS) do
+      for _, l in ipairs(ns.LANGS) do
         local text = l.code == "auto" and T(l.label) or l.label
-        local r = root:CreateRadio(text, function() return ((TJ.db and TJ.db.lang) or "auto") == l.code end, function()
-          if TJ.db then TJ.db.lang = l.code end
+        local r = root:CreateRadio(text, function() return ((ns.db and ns.db.lang) or "auto") == l.code end, function()
+          if ns.db then ns.db.lang = l.code end
           Changed()
         end)
-        if l.code ~= "auto" and not TJ.READY[l.code] and r then
+        if l.code ~= "auto" and not ns.READY[l.code] and r then
           if r.SetEnabled then r:SetEnabled(false) end
           if r.SetTooltip then
             r:SetTooltip(function(tip) tip:SetText(T("Перевода на этот язык пока нет.")) end)
@@ -283,7 +283,7 @@ function TJ:LanguageDropdown(parent)
   return box
 end
 
-function TJ:OpenSettings()
+function ns:OpenSettings()
   if not settingsCategory then
     self:ToggleFrame()
     return

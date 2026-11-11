@@ -1,7 +1,7 @@
-local _, TJ = ...
+local _, ns = ...
 -- EasyCraft: перевод на frFR (английская строка -> перевод).
--- Таблица строится только если выбран этот язык (TJ.SetLang).
-TJ.LOCALES.frFR = function() return {
+-- Таблица строится только если выбран этот язык (ns.SetLang).
+ns.LOCALES.frFR = function() return {
   ["  |cffff5555Missing: |r"] = "  |cffff5555Il manque : |r",
   [" (%d each)"] = " (%d chacun)",
   [" - it raises the skill too."] = " - cela augmente aussi la compétence.",

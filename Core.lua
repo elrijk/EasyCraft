@@ -1,8 +1,8 @@
-local ADDON, TJ = ...
-_G.EasyCraft = TJ
-TJ.version = "1.2.0"
+local ADDON, ns = ...
+_G.EasyCraft = ns
+ns.version = "1.2.0"
 -- значок аддона: список модификаций, портрет окна, кнопка у миникарты
-TJ.ICON = "Interface\\AddOns\\" .. ADDON .. "\\Media\\Icon"
+ns.ICON = "Interface\\AddOns\\" .. ADDON .. "\\Media\\Icon"
 
 ---------------------------------------------------------------------------
 -- Мелкие помощники
@@ -10,20 +10,20 @@ TJ.ICON = "Interface\\AddOns\\" .. ADDON .. "\\Media\\Icon"
 local floor, ceil, max, min = math.floor, math.ceil, math.max, math.min
 local format = string.format
 
-TJ.PREFIX = "|cff33ff99Easy|r|cffffd100Craft:|r "
-function TJ:Print(msg) DEFAULT_CHAT_FRAME:AddMessage(TJ.PREFIX .. tostring(msg)) end
+ns.PREFIX = "|cff33ff99Easy|r|cffffd100Craft:|r "
+function ns:Print(msg) DEFAULT_CHAT_FRAME:AddMessage(ns.PREFIX .. tostring(msg)) end
 
 local errorsShown = {}
-function TJ:Safe(fn, ...)
+function ns:Safe(fn, ...)
   local ok, err = pcall(fn, ...)
   if not ok and not errorsShown[err] then
     errorsShown[err] = true
-    TJ:Print(TJ.T("|cffff5555ошибка:|r ") .. tostring(err))
+    ns:Print(ns.T("|cffff5555ошибка:|r ") .. tostring(err))
   end
   return ok, err
 end
 
-function TJ.Icon(path)
+function ns.Icon(path)
   if not path then return "Interface\\Icons\\INV_Misc_QuestionMark" end
   if type(path) == "number" then return path end
   if path:find("\\", 1, true) then return path end
@@ -31,7 +31,7 @@ function TJ.Icon(path)
 end
 
 -- UTF-8 aware lower-case for Russian text (string.lower is byte based)
-function TJ.Lower(s)
+function ns.Lower(s)
   s = string.lower(s or "")
   s = s:gsub("\208([\144-\159])", function(b) return "\208" .. string.char(b:byte() + 32) end)
   s = s:gsub("\208([\160-\175])", function(b) return "\209" .. string.char(b:byte() - 32) end)
@@ -46,37 +46,37 @@ local GetItemCountFn = C_Item.GetItemCount
 -- Предметы, сведения о которых аддон сам запросил у сервера (игра их ещё
 -- не знала): перерисовываемся только когда пришли они, а не любой предмет
 -- любого аддона (поиск на аукционе, сумки).
-TJ.wantItem = {}
-function TJ:WantItem(id) if type(id) == "number" then self.wantItem[id] = true end end
+ns.wantItem = {}
+function ns:WantItem(id) if type(id) == "number" then self.wantItem[id] = true end end
 
-function TJ:ItemName(id)
-  if type(id) ~= "number" then return TJ.ItemNames[id] or tostring(id) end
+function ns:ItemName(id)
+  if type(id) ~= "number" then return ns.ItemNames[id] or tostring(id) end
   -- Язык аддона не тот, что у клиента (английский при русском клиенте):
   -- английское название из своей базы. Иначе - из игры.
-  if not TJ.IsRU and not TJ.UseClient and TJ.ItemNamesEN and TJ.ItemNamesEN[id] then return TJ.ItemNamesEN[id] end
+  if not ns.IsRU and not ns.UseClient and ns.ItemNamesEN and ns.ItemNamesEN[id] then return ns.ItemNamesEN[id] end
   local name = GetItemInfoFn and GetItemInfoFn(id)
   if name then return name end
   self.wantItem[id] = true
   if C_Item and C_Item.RequestLoadItemDataByID then pcall(C_Item.RequestLoadItemDataByID, id) end
-  return TJ.ItemNames[id] or (TJ.T("Предмет ") .. id)
+  return ns.ItemNames[id] or (ns.T("Предмет ") .. id)
 end
 
-function TJ:ItemNameIfCached(id)
+function ns:ItemNameIfCached(id)
   if type(id) ~= "number" then return nil end
-  if not TJ.IsRU and not TJ.UseClient then return TJ.ItemNamesEN and TJ.ItemNamesEN[id] or nil end
+  if not ns.IsRU and not ns.UseClient then return ns.ItemNamesEN and ns.ItemNamesEN[id] or nil end
   if not GetItemInfoFn then return nil end
   local name = GetItemInfoFn(id)
   if not name then self.wantItem[id] = true end
   return name
 end
 
-function TJ:ItemIcon(id)
-  if type(id) ~= "number" then return TJ.Icon("INV_Enchant_DustStrange") end
+function ns:ItemIcon(id)
+  if type(id) ~= "number" then return ns.Icon("INV_Enchant_DustStrange") end
   local icon = GetItemIconFn and GetItemIconFn(id)
-  return icon or TJ.Icon(nil)
+  return icon or ns.Icon(nil)
 end
 
-function TJ:ItemCount(id)
+function ns:ItemCount(id)
   if type(id) ~= "number" or not GetItemCountFn then return 0 end
   local ok, n = pcall(GetItemCountFn, id, true, false, true, true) -- сумки, банк, банк реагентов, общий банк
   return ok and n or 0
@@ -84,20 +84,20 @@ end
 
 -- То, из чего можно создавать прямо сейчас: сумки и банк реагентов,
 -- без обычного банка.
-function TJ:BagCount(id)
+function ns:BagCount(id)
   if type(id) ~= "number" or not GetItemCountFn then return 0 end
   local ok, n = pcall(GetItemCountFn, id, false, false, true)
   return ok and n or 0
 end
 
 -- Только сумки: то, что можно применить прямо сейчас.
-function TJ:InBags(id)
+function ns:InBags(id)
   if type(id) ~= "number" or not GetItemCountFn then return 0 end
   local ok, n = pcall(GetItemCountFn, id)
   return ok and n or 0
 end
 
-function TJ:ItemQualityColor(id)
+function ns:ItemQualityColor(id)
   if type(id) ~= "number" or not GetItemInfoFn then return 1, 1, 1 end
   local name, _, q = GetItemInfoFn(id)
   if not name then self.wantItem[id] = true end
@@ -113,12 +113,12 @@ end
 ---------------------------------------------------------------------------
 -- переводятся при обращении: язык из настроек известен только на ADDON_LOADED
 local RANK_RU = { [75] = "Ученик", [150] = "Подмастерье", [225] = "Умелец", [300] = "Искусник" }
-TJ.RankNames = setmetatable({}, { __index = function(_, k) return RANK_RU[k] and TJ.T(RANK_RU[k]) end })
-TJ.RankOrder = { 75, 150, 225, 300 }
-TJ.SkillLineToKey, TJ.NameToKey = {}, {}
-TJ.ItemCategory, TJ.NodeByItem, TJ.UiToArea = {}, {}, {}
+ns.RankNames = setmetatable({}, { __index = function(_, k) return RANK_RU[k] and ns.T(RANK_RU[k]) end })
+ns.RankOrder = { 75, 150, 225, 300 }
+ns.SkillLineToKey, ns.NameToKey = {}, {}
+ns.ItemCategory, ns.NodeByItem, ns.UiToArea = {}, {}, {}
 
-function TJ:BuildLookups()
+function ns:BuildLookups()
   for _, key in ipairs(self.ProfOrder) do
     local p = self.Profs[key]
     self.SkillLineToKey[p.skill] = key
@@ -151,7 +151,7 @@ function TJ:BuildLookups()
 end
 
 -- Зоны из данных (номера AreaTable) -> uiMapID клиента, с проверкой по названию.
-function TJ:ResolveMaps()
+function ns:ResolveMaps()
   wipe(self.UiToArea)
   local byName
   local function search(name)
@@ -179,41 +179,41 @@ function TJ:ResolveMaps()
   end
 end
 
-function TJ:ZoneName(area)
+function ns:ZoneName(area)
   local z = self.Zones[area]
   if not z then return "?" end
   if not z.name and C_Map and C_Map.GetMapInfo then
     local info = C_Map.GetMapInfo(z.uiMap or z.ui)
     if info and info.name and info.name ~= "" then z.name = info.name end
   end
-  if not TJ.IsRU then return (TJ.UseClient and TJ.lang ~= "enUS" and z.name) or z.en or z.ru end
+  if not ns.IsRU then return (ns.UseClient and ns.lang ~= "enUS" and z.name) or z.en or z.ru end
   return z.name or z.ru
 end
 
-function TJ:ZoneColor(area)
+function ns:ZoneColor(area)
   local z = self.Zones[area]
   local f = z and z.f or "C"
   if f == "A" then return "|cff4f9cff" elseif f == "H" then return "|cffff5555" end
   return "|cffffd36b"
 end
 
-function TJ:PlayerFaction()
+function ns:PlayerFaction()
   local f = UnitFactionGroup and UnitFactionGroup("player")
   return f == "Alliance" and "A" or (f == "Horde" and "H" or nil)
 end
 
 -- Ничьи зоны, где лагерь и полёты есть только у одной стороны: другой
 -- фракции туда далеко и опасно - такие зоны ниже в списке.
-TJ.ZONE_SIDE = { [406] = "H", [400] = "H", [8] = "H" }
+ns.ZONE_SIDE = { [406] = "H", [400] = "H", [8] = "H" }
 
 -- «для Орды» / «для Альянса».
-function TJ:FactionFor()
+function ns:FactionFor()
   local me = self:PlayerFaction()
   return me == "A" and self.T("для Альянса") or (me == "H" and self.T("для Орды") or nil)
 end
 
 -- домашние зоны чужой фракции не показываем
-function TJ:ZoneAllowed(area)
+function ns:ZoneAllowed(area)
   local z = self.Zones[area]
   if not z then return false end
   local me = self:PlayerFaction()
@@ -228,7 +228,7 @@ local DEFAULTS = {
   minimapAngle = 205, scale = 1, ahScan = true, askShare = true, useAlts = true, routeMode = "guide",
 }
 
-function TJ:InitDB()
+function ns:InitDB()
   EasyCraftDB = EasyCraftDB or {}
   local db = EasyCraftDB
   db.settings = db.settings or {}
@@ -255,21 +255,21 @@ end
 ---------------------------------------------------------------------------
 -- Skills
 ---------------------------------------------------------------------------
-function TJ:GetSkill(key)
+function ns:GetSkill(key)
   local p = self.char and self.char.profs[key]
   if not p then return 0, 0, false end
   return p.rank or 0, p.max or 0, true
 end
 
-function TJ:RankName(maxRank)
-  if not maxRank or maxRank <= 0 then return TJ.T("не изучено") end
+function ns:RankName(maxRank)
+  if not maxRank or maxRank <= 0 then return ns.T("не изучено") end
   for _, cap in ipairs(self.RankOrder) do
     if maxRank <= cap then return self.RankNames[cap] end
   end
   return self.RankNames[300]
 end
 
-function TJ:LearnedList()
+function ns:LearnedList()
   local primary, secondary = {}, {}
   for _, key in ipairs(self.ProfOrder) do
     if self.char.profs[key] then
@@ -284,7 +284,7 @@ local function addFound(found, key, rank, maxRank)
   if key and rank then found[key] = { rank = rank, max = maxRank or 0 } end
 end
 
-function TJ:ScanSkills()
+function ns:ScanSkills()
   local found, enumerated = {}, false
   if GetProfessions and GetProfessionInfo then
     local ok, a, b, c, d, e, f = pcall(GetProfessions)
@@ -316,7 +316,7 @@ function TJ:ScanSkills()
   if changed then self:RefreshAll() end
 end
 
-function TJ:SetSkillFromWindow(key, rank, maxRank)
+function ns:SetSkillFromWindow(key, rank, maxRank)
   if not key or not rank or rank <= 0 then return end
   local old = self.char.profs[key]
   -- Из окна обновляем только свою изученную профессию. Новую профессию
@@ -334,7 +334,7 @@ function TJ:SetSkillFromWindow(key, rank, maxRank)
   end
 end
 
-function TJ:OnSkillChanged(key, oldRank, newRank, newMax, firstSeen)
+function ns:OnSkillChanged(key, oldRank, newRank, newMax, firstSeen)
   -- навык пришёл после создания: рисуем сразу и вместе с сумками
   if self.craftHold then self.craftHold, self.skillNow = nil, true end
   -- история для журнала
@@ -349,18 +349,18 @@ function TJ:OnSkillChanged(key, oldRank, newRank, newMax, firstSeen)
   -- выполненные шаги
   for _, s in ipairs(p.steps) do
     if s.t and oldRank < s.t and newRank >= s.t then
-      self:Print(format(TJ.T("%s: |cff33dd33шаг выполнен|r - %s"), TJ:N(p), self:StepTitle(s)))
+      self:Print(format(ns.T("%s: |cff33dd33шаг выполнен|r - %s"), ns:N(p), self:StepTitle(s)))
       local _, nextStep = self:CurrentStep(key, newRank, newMax)
-      if nextStep then self:Print(TJ.T("Дальше: ") .. self:StepTitle(nextStep)) end
+      if nextStep then self:Print(ns.T("Дальше: ") .. self:StepTitle(nextStep)) end
     end
   end
   for _, s in ipairs(p.steps) do
     if s.learn and s.max and (newMax or 0) < s.max and oldRank < s.learn and newRank >= s.learn and self:CanLearnRank(s, newRank) then
-      self:Print(format(TJ.T("%s: |cffffd100можно выучить «%s»|r - успей до %d навыка"), TJ:N(p), self:RankName(s.max), s.at))
+      self:Print(format(ns.T("%s: |cffffd100можно выучить «%s»|r - успей до %d навыка"), ns:N(p), self:RankName(s.max), s.at))
     end
   end
   if newMax and newMax < 300 and newRank >= newMax and oldRank < newMax then
-    local msg = format(TJ.T("%s %d/%d - пора к учителю: %s"), TJ:N(p), newRank, newMax, self:RankName(newMax + 75))
+    local msg = format(ns.T("%s %d/%d - пора к учителю: %s"), ns:N(p), newRank, newMax, self:RankName(newMax + 75))
     self:Print("|cffffd100" .. msg .. "|r")
     if UIErrorsFrame then UIErrorsFrame:AddMessage(msg, 1, 0.82, 0) end
   end
@@ -369,7 +369,7 @@ end
 ---------------------------------------------------------------------------
 -- Steps
 ---------------------------------------------------------------------------
-function TJ:SpellName(id)
+function ns:SpellName(id)
   if not id then return end
   if C_Spell and C_Spell.GetSpellName then
     local ok, n = pcall(C_Spell.GetSpellName, id)
@@ -377,26 +377,26 @@ function TJ:SpellName(id)
   end
 end
 
-function TJ:StepName(s)
+function ns:StepName(s)
   if s.id and s.k ~= "zone" then return self:ItemName(s.id) end
   if s.spell and not s.id then
     -- язык аддона не тот, что у клиента: английское название из базы
-    if not TJ.IsRU and not TJ.UseClient and s.en then return s.en end
+    if not ns.IsRU and not ns.UseClient and s.en then return s.en end
     local n = self:SpellName(s.spell)
     if n then return n end
   end
-  if s.k == "train" then return TJ.T("Выучить: ") .. self:RankName(s.max) end
-  return TJ:N(s) or "?"
+  if s.k == "train" then return ns.T("Выучить: ") .. self:RankName(s.max) end
+  return ns:N(s) or "?"
 end
 
-function TJ:StepTitle(s)
-  if s.k == "train" then return format(TJ.T("%s (с %d)"), self:StepName(s), s.learn or s.at) end
-  if s.k == "book" then return format(TJ.T("Книга: %s"), self:StepName(s)) end
-  if s.k == "quest" then return TJ:N(s) end
+function ns:StepTitle(s)
+  if s.k == "train" then return format(ns.T("%s (с %d)"), self:StepName(s), s.learn or s.at) end
+  if s.k == "book" then return format(ns.T("Книга: %s"), self:StepName(s)) end
+  if s.k == "quest" then return ns:N(s) end
   return format("%d-%d  %s", s.f, s.t, self:StepName(s))
 end
 
-function TJ:StepIcon(s, prof)
+function ns:StepIcon(s, prof)
   if s.icon then return self.Icon(s.icon) end
   if s.id then return self:ItemIcon(s.id) end
   if s.k == "gather" and s.nodes and s.nodes[1] then return self:ItemIcon(self.Nodes[s.nodes[1]].item) end
@@ -405,7 +405,7 @@ function TJ:StepIcon(s, prof)
 end
 
 -- "done", "current", "todo"
-function TJ:StepState(key, i, rank, maxRank)
+function ns:StepState(key, i, rank, maxRank)
   local p = self.Profs[key]
   local s = p.steps[i]
   if not rank then rank, maxRank = self:GetSkill(key) end
@@ -423,7 +423,7 @@ function TJ:StepState(key, i, rank, maxRank)
   return "todo"
 end
 
-function TJ:CurrentStep(key, rank, maxRank)
+function ns:CurrentStep(key, rank, maxRank)
   local p = self.Profs[key]
   if not rank then rank, maxRank = self:GetSkill(key) end
   -- возвращает шаг, над которым работать, и ранг, который уже можно выучить (пока не срочно)
@@ -445,7 +445,7 @@ function TJ:CurrentStep(key, rank, maxRank)
   if firstTodo then return firstTodo, p.steps[firstTodo] end
 end
 
-function TJ:ToggleManual(key, i)
+function ns:ToggleManual(key, i)
   local m = self.char.manual[key] or {}
   self.char.manual[key] = m
   local auto = self:StepState(key, i) -- с учётом ручной отметки
@@ -457,7 +457,7 @@ function TJ:ToggleManual(key, i)
   self:RefreshAll()
 end
 
-function TJ:RemainingCrafts(s, rank)
+function ns:RemainingCrafts(s, rank)
   if not s.n then return 0 end
   if rank >= s.t then return 0 end
   if rank <= s.f then return s.n end
@@ -465,7 +465,7 @@ function TJ:RemainingCrafts(s, rank)
 end
 
 -- Сколько реагента нужно на оставшиеся крафты шага.
-function TJ:StepNeed(s, q, left)
+function ns:StepNeed(s, q, left)
   if s.rc then return q * left end
   return ceil(q * left / s.n)
 end
@@ -473,7 +473,7 @@ end
 -- Что купить для оставшихся шагов-ремёсел, которые начинаются ниже upTo
 -- (обычно предел ранга): { id, need, have, buy, step, crafted } по порядку
 -- шагов. crafted - предмет делается своим же шагом маршрута, покупать не надо.
-function TJ:ShoppingList(key, upTo)
+function ns:ShoppingList(key, upTo)
   local p = self.Profs[key]
   local rank, maxRank = self:GetSkill(key)
   local need, order, made = {}, {}, {}
@@ -506,7 +506,7 @@ end
 
 -- Все покупки по всем профессиям: id -> { need, have, alts, buy, profs = { {key, need, cap} } }.
 -- Кешируется до следующего обновления (сумки, навык, окно профессии).
-function TJ:AllNeeds()
+function ns:AllNeeds()
   if self.needCache then return self.needCache end
   local all = {}
   for _, key in ipairs(self:LearnedList()) do
@@ -534,7 +534,7 @@ end
 -------------------------------------------------------------------------------
 local function squash(s) return (tostring(s or ""):gsub("[%s%-]", ""):lower()) end
 
-function TJ:AltCounts()
+function ns:AltCounts()
   if self.altCache then return self.altCache end
   local out = {}
   local B = _G.BrotherBags
@@ -585,13 +585,13 @@ end
 --  Отставание профессии от уровня персонажа: обычно навык ~5 за уровень
 --  (60 уровень - 300). Возвращает nil или { expected, level, skillLevel }.
 -------------------------------------------------------------------------------
-TJ.SKILL_PER_LEVEL = 5
-TJ.LAG_WARN = 40 -- предупреждать, если навык ниже обычного на столько (~8 уровней)
+ns.SKILL_PER_LEVEL = 5
+ns.LAG_WARN = 40 -- предупреждать, если навык ниже обычного на столько (~8 уровней)
 
-function TJ:SkillForLevel(level) return min(300, max(1, level or 1) * self.SKILL_PER_LEVEL) end
-function TJ:LevelForSkill(rank) return max(1, ceil((rank or 1) / self.SKILL_PER_LEVEL)) end
+function ns:SkillForLevel(level) return min(300, max(1, level or 1) * self.SKILL_PER_LEVEL) end
+function ns:LevelForSkill(rank) return max(1, ceil((rank or 1) / self.SKILL_PER_LEVEL)) end
 
-function TJ:Lag(key)
+function ns:Lag(key)
   local rank, _, learned = self:GetSkill(key)
   if not learned then return nil end
   local level = UnitLevel and UnitLevel("player") or 1
@@ -602,14 +602,14 @@ end
 
 -- До какого навыка считать покупки: до предела ранга, а если навык в него
 -- уже упёрся - до предела следующего ранга (после учителя).
-function TJ:ShoppingCap(key)
+function ns:ShoppingCap(key)
   local rank, maxRank = self:GetSkill(key)
   if maxRank <= 0 then return 75 end
   if rank >= maxRank and maxRank < 300 then return maxRank + 75 end
   return maxRank
 end
 
-function TJ:RouteProgress(key)
+function ns:RouteProgress(key)
   local p = self.Profs[key]
   local rank = self:GetSkill(key)
   return min(1, rank / 300), rank
@@ -618,22 +618,22 @@ end
 ---------------------------------------------------------------------------
 -- Gathering difficulty (classic rules: orange <25, yellow <50, green <100)
 ---------------------------------------------------------------------------
-function TJ:GatherColor(rank, req)
+function ns:GatherColor(rank, req)
   if rank < req then return "red" end
   local d = rank - req
   if d < 25 then return "orange" elseif d < 50 then return "yellow" elseif d < 100 then return "green" end
   return "gray"
 end
 
-TJ.ColorRGB = {
+ns.ColorRGB = {
   orange = { 1, 0.5, 0.25 }, yellow = { 1, 1, 0 }, green = { 0.25, 0.75, 0.25 },
   gray = { 0.5, 0.5, 0.5 }, red = { 1, 0.1, 0.1 },
 }
 local COLOR_RU = { orange = "оранжевый", yellow = "жёлтый", green = "зелёный", gray = "серый", red = "недоступно" }
-TJ.ColorName = setmetatable({}, { __index = function(_, k) return COLOR_RU[k] and TJ.T(COLOR_RU[k]) end })
-function TJ.ColorRGBText(color, text) return TJ:Hex(color) .. text .. "|r" end
+ns.ColorName = setmetatable({}, { __index = function(_, k) return COLOR_RU[k] and ns.T(COLOR_RU[k]) end })
+function ns.ColorRGBText(color, text) return ns:Hex(color) .. text .. "|r" end
 
-function TJ:Hex(color)
+function ns:Hex(color)
   local c = self.ColorRGB[color] or { 1, 1, 1 }
   return format("|cff%02x%02x%02x", c[1] * 255, c[2] * 255, c[3] * 255)
 end
@@ -645,7 +645,7 @@ end
 --  * где ты сам уже собирал это (свой опыт - сильный довод);
 --  * уровень зоны: заметно выше персонажа - опасно, ниже в списке.
 -- { area, rec, mine, score, nodes = { key = мест }, order = { key, ... } }.
-function TJ:StepGatherZones(s, rank, limit)
+function ns:StepGatherZones(s, rank, limit)
   local zones, want = {}, {}
   local function zone(area)
     local z = zones[area]
@@ -701,8 +701,8 @@ function TJ:StepGatherZones(s, rank, limit)
 end
 
 -- Почему зона в списке: строки для подсказки.
-function TJ:ZoneWhy(z)
-  local T, out = TJ.T, {}
+function ns:ZoneWhy(z)
+  local T, out = ns.T, {}
   if z.rec then
     local side = self:FactionFor()
     tinsert(out, side and (T("Рекомендуем ") .. side .. ".") or T("Рекомендуем по маршруту."))
@@ -716,7 +716,7 @@ function TJ:ZoneWhy(z)
 end
 
 -- Значки трав/руды зоны (пути к картинкам), что там больше - первым.
-function TJ:ZoneNodeIcons(z, most)
+function ns:ZoneNodeIcons(z, most)
   local order = {}
   for _, nk in ipairs(z.order or {}) do tinsert(order, nk) end
   table.sort(order, function(a, b) return (z.nodes[a] or 0) > (z.nodes[b] or 0) end)
@@ -729,7 +729,7 @@ function TJ:ZoneNodeIcons(z, most)
 end
 
 -- Значки трав/руды зоны строкой (для кнопок зон) и подсказка «что там есть».
-function TJ:ZoneNodesText(z, size, most)
+function ns:ZoneNodesText(z, size, most)
   local icons, lines = {}, {}
   -- значки: сначала то, чего там больше
   local order = {}
@@ -741,13 +741,13 @@ function TJ:ZoneNodesText(z, size, most)
       if not most or #icons < most then
         tinsert(icons, "|T" .. self:ItemIcon(n.item) .. ":" .. (size or 14) .. ":" .. (size or 14) .. "|t")
       end
-      tinsert(lines, format(TJ.T("%s: мест %d"), TJ:N(n), z.nodes[nk]))
+      tinsert(lines, format(ns.T("%s: мест %d"), ns:N(n), z.nodes[nk]))
     end
   end
   return table.concat(icons, ""), table.concat(lines, "\n")
 end
 
-function TJ:BestGatherZones(profKey, rank, limit)
+function ns:BestGatherZones(profKey, rank, limit)
   local zones = {}
   for _, key in ipairs(self.NodeOrder) do
     local n = self.Nodes[key]
@@ -774,7 +774,7 @@ function TJ:BestGatherZones(profKey, rank, limit)
   return list
 end
 
-function TJ:NodeTopZones(key, limit)
+function ns:NodeTopZones(key, limit)
   local out = {}
   for _, zc in ipairs(self.Nodes[key].zones) do
     if self:ZoneAllowed(zc[1]) then tinsert(out, zc) end
@@ -784,7 +784,7 @@ function TJ:NodeTopZones(key, limit)
 end
 
 -- Source areas for a material: list of {area, weight}
-function TJ:MaterialAreas(id, limit)
+function ns:MaterialAreas(id, limit)
   local src = self.MatSources[id]
   if not src then return {} end
   local acc, list = {}, {}
@@ -804,15 +804,15 @@ end
 ---------------------------------------------------------------------------
 -- Рассылка обновлений (сюда подписываются части окна)
 ---------------------------------------------------------------------------
-TJ.refreshers = {}
-function TJ:RegisterRefresh(fn) tinsert(self.refreshers, fn) end
+ns.refreshers = {}
+function ns:RegisterRefresh(fn) tinsert(self.refreshers, fn) end
 -- Только что создали предмет: реагенты из сумок уже ушли, а навык игра
 -- пришлёт чуть позже. Перерисуй сразу - на долю секунды «7/8» красным.
 -- Поэтому после создания ждём навык (не дольше CRAFT_HOLD), а как он
 -- пришёл - рисуем сразу.
 local CRAFT_HOLD = 0.8
 local pending, gen = false, 0
-function TJ:RefreshAll()
+function ns:RefreshAll()
   self.needCache = nil -- покупки пересчитаются при следующем обращении
   local wait = 0.1
   local hold = self.craftHold and (self.craftHold - GetTime()) or 0
@@ -826,34 +826,34 @@ function TJ:RefreshAll()
   local function run()
     if my ~= gen then return end
     pending = false
-    for _, fn in ipairs(TJ.refreshers) do TJ:Safe(fn) end
+    for _, fn in ipairs(ns.refreshers) do ns:Safe(fn) end
   end
   C_Timer.After(wait, run)
 end
 
 -- Создание предмета прошло: подержать перерисовку до прихода навыка.
-function TJ:HoldForSkill()
+function ns:HoldForSkill()
   self.craftHold = GetTime() + CRAFT_HOLD
 end
 
 ---------------------------------------------------------------------------
 -- Цвет рецепта на навыке (пороги Forever: оранжевый, жёлтый, зелёный, серый)
 ---------------------------------------------------------------------------
-function TJ:RecipeColor(s, rank)
+function ns:RecipeColor(s, rank)
   local sk = s.sk
   if not sk then return nil end
   if rank >= sk[4] then return "gray" elseif rank >= sk[3] then return "green" elseif rank >= sk[2] then return "yellow" end
   return "orange"
 end
 
-function TJ:RecipeColorText(s)
+function ns:RecipeColorText(s)
   local sk = s.sk
   if not sk then return nil end
   local parts = {}
-  if sk[1] and sk[1] > 0 and sk[2] > sk[1] then tinsert(parts, self:Hex("orange") .. TJ.T("оранжевый с ") .. sk[1] .. "|r") end
-  tinsert(parts, self:Hex("yellow") .. TJ.T("жёлтый с ") .. sk[2] .. "|r")
-  tinsert(parts, self:Hex("green") .. TJ.T("зелёный с ") .. sk[3] .. "|r")
-  tinsert(parts, self:Hex("gray") .. TJ.T("серый с ") .. sk[4] .. "|r")
+  if sk[1] and sk[1] > 0 and sk[2] > sk[1] then tinsert(parts, self:Hex("orange") .. ns.T("оранжевый с ") .. sk[1] .. "|r") end
+  tinsert(parts, self:Hex("yellow") .. ns.T("жёлтый с ") .. sk[2] .. "|r")
+  tinsert(parts, self:Hex("green") .. ns.T("зелёный с ") .. sk[3] .. "|r")
+  tinsert(parts, self:Hex("gray") .. ns.T("серый с ") .. sk[4] .. "|r")
   return table.concat(parts, ", ")
 end
 
@@ -862,7 +862,7 @@ end
 -- ближе навык к серому: (серый - навык) / (серый - жёлтый).
 -- color - настоящий цвет из окна профессии; если он расходится с данными
 -- маршрута, шанс не считаем, чтобы не врать.
-function TJ:SkillChance(s, rank, color)
+function ns:SkillChance(s, rank, color)
   local sk = s and s.sk
   if not (sk and sk[2] and sk[4]) then return nil end
   local dataColor = self:RecipeColor(s, rank)
@@ -874,14 +874,14 @@ function TJ:SkillChance(s, rank, color)
 end
 
 -- «шанс ~60%» для жёлтого и зелёного, nil для остальных.
-function TJ:ChanceText(s, rank, color)
+function ns:ChanceText(s, rank, color)
   local p = self:SkillChance(s, rank, color)
   if not p or p >= 1 or p <= 0 then return nil end
-  return format(TJ.T("шанс ~%d%%"), math.floor(p * 100 + 0.5))
+  return format(ns.T("шанс ~%d%%"), math.floor(p * 100 + 0.5))
 end
 
 -- Шаг маршрута с этим рецептом (первый невыполненный, иначе любой).
-function TJ:SpellStep(key, spell)
+function ns:SpellStep(key, spell)
   local p = self.Profs[key]
   if not (p and spell) then return nil end
   local any
@@ -895,13 +895,13 @@ function TJ:SpellStep(key, spell)
 end
 
 -- Можно ли уже выучить ранг шага s: хватает и навыка, и уровня персонажа.
-function TJ:CanLearnRank(s, rank)
+function ns:CanLearnRank(s, rank)
   if not s or rank < (s.learn or s.at or 0) then return false end
   return not s.lvl or (UnitLevel and UnitLevel("player") or 0) >= s.lvl
 end
 
 -- Следующий ранг: с какого навыка его можно учить и какой предел он даст.
-function TJ:NextRank(key)
+function ns:NextRank(key)
   local p = self.Profs[key]
   if not (p and self.char and self.char.profs[key]) then return nil end -- профессия не изучена
   local rank, maxRank = self:GetSkill(key)
@@ -917,13 +917,13 @@ end
 ---------------------------------------------------------------------------
 -- НИПы (учителя, торговцы рецептами): отбор по фракции, расстояние, метки
 ---------------------------------------------------------------------------
-function TJ:NpcName(id)
+function ns:NpcName(id)
   local n = self.NPCs[id]
-  return n and (TJ.IsRU and (n.ru or n.en) or (n.en or n.ru)) or ("NPC " .. tostring(id))
+  return n and (ns.IsRU and (n.ru or n.en) or (n.en or n.ru)) or ("NPC " .. tostring(id))
 end
 
-function TJ:MapName(ui)
-  if not TJ.IsRU and not TJ.UseClient then
+function ns:MapName(ui)
+  if not ns.IsRU and not ns.UseClient then
     local area = self.UiToArea[ui]
     local z = area and self.Zones[area]
     if z and z.en then return z.en end
@@ -931,10 +931,10 @@ function TJ:MapName(ui)
   local info = C_Map and C_Map.GetMapInfo and C_Map.GetMapInfo(ui)
   if info and info.name and info.name ~= "" then return info.name end
   local area = self.UiToArea[ui]
-  return area and self.Zones[area] and TJ:N(self.Zones[area]) or nil
+  return area and self.Zones[area] and ns:N(self.Zones[area]) or nil
 end
 
-function TJ:NpcZone(id)
+function ns:NpcZone(id)
   local n = self.NPCs[id]
   if not n then return "" end
   return self:MapName(n.ui) or n.zone or ""
@@ -949,7 +949,7 @@ end
 local npcWorld = {} -- id -> { континент, x, y } или false
 
 -- НИПы фракции игрока (и нейтральные); ближайшие первыми, если клиент знает расстояние
-function TJ:NpcsFor(npcs, limit)
+function ns:NpcsFor(npcs, limit)
   if not npcs then return {} end
   local me = self:PlayerFaction()
   local list = {}
@@ -982,7 +982,7 @@ function TJ:NpcsFor(npcs, limit)
 end
 
 -- show - сразу открыть карту на метке (кнопка «Метка на карте»).
-function TJ:Waypoint(id, show)
+function ns:Waypoint(id, show)
   local n = self.NPCs[id]
   if not n then return end
   self:MapPoint(n.ui, n.x, n.y, self:NpcName(id), self:NpcZone(id), show)
@@ -990,7 +990,7 @@ end
 
 -- Метка на карте в точке (x, y - в процентах) карты ui: TomTom и метка игры,
 -- значок на карте мира; show - сразу открыть карту на ней.
-function TJ:MapPoint(ui, px, py, title, where, show)
+function ns:MapPoint(ui, px, py, title, where, show)
   local x, y = px / 100, py / 100
   local arrow = false
   if TomTom and TomTom.AddWaypoint then
@@ -1004,7 +1004,7 @@ function TJ:MapPoint(ui, px, py, title, where, show)
     arrow = arrow or ok
   end
   self.mapTarget = { ui = ui, x = x, y = y, title = title }
-  self:Print(format("%s - %s (%.1f, %.1f)%s", title, where or "", px, py, arrow and TJ.T(", метка поставлена") or ""))
+  self:Print(format("%s - %s (%.1f, %.1f)%s", title, where or "", px, py, arrow and ns.T(", метка поставлена") or ""))
   if (show or not arrow) and self.MapOverlay then self.MapOverlay:OpenMap(ui) end
   self:RefreshAll()
 end
@@ -1012,7 +1012,7 @@ end
 ---------------------------------------------------------------------------
 -- Tools
 ---------------------------------------------------------------------------
-function TJ:MissingTools(key, rank)
+function ns:MissingTools(key, rank)
   local p = self.Profs[key]
   local out = {}
   for _, t in ipairs(p.tools or {}) do

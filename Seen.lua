@@ -1,4 +1,4 @@
-local _, TJ = ...
+local _, ns = ...
 
 -------------------------------------------------------------------------------
 --  Свои наблюдения цветов рецептов. Каждый раз, когда открыто окно профессии,
@@ -26,7 +26,7 @@ local function seenOf(self, key, make)
 end
 
 -- colors: рецепт -> 0 оранжевый, 1 жёлтый, 2 зелёный, 3 серый; rank - навык.
-function TJ:NoteColors(key, colors, rank)
+function ns:NoteColors(key, colors, rank)
   if type(colors) ~= "table" or type(rank) ~= "number" or rank <= 0 then return end
   local t = seenOf(self, key, true)
   if not t then return end
@@ -43,7 +43,7 @@ end
 -- Пороги по наблюдениям: с какого навыка видели, жёлтый, зелёный, серый -
 -- или nil, если наблюдений мало. Оценка осторожная: считаем, что рецепт
 -- желтеет и сереет раньше, а не позже - цена пути выйдет чуть выше, не ниже.
-function TJ:SeenThresholds(r)
+function ns:SeenThresholds(r)
   if type(r) ~= "table" then return nil end
   local yellow = (r.o and r.o + 1) or r.y1
   if not yellow then return nil end
@@ -60,7 +60,7 @@ end
 
 -- Выученные рецепты с порогами по наблюдениям - кандидаты для режимов
 -- маршрута. skip[рецепт] - уже есть в маршруте.
-function TJ:SeenCandidates(key, skip)
+function ns:SeenCandidates(key, skip)
   local out = {}
   local t = seenOf(self, key)
   local book = self.char and self.char.book and self.char.book[key]
@@ -79,7 +79,7 @@ function TJ:SeenCandidates(key, skip)
 end
 
 -- Код наблюдений для автора: «профессия;рецепт;o;y1;y2;g1;g2;x;выход;реагенты».
-function TJ:ColorsReport()
+function ns:ColorsReport()
   local parts, n = { HEADER }, 0
   local db = self.db
   for key, t in pairs(db and db.seen or {}) do
@@ -98,14 +98,14 @@ function TJ:ColorsReport()
   return table.concat(parts, "|"), n
 end
 
-function TJ:ShareColors()
+function ns:ShareColors()
   local code, n = self:ColorsReport()
   if n == 0 then
-    self:Print(TJ.T("наблюдений пока нет: открой окно профессии."))
+    self:Print(ns.T("наблюдений пока нет: открой окно профессии."))
     return
   end
   if StaticPopupDialogs and StaticPopupDialogs.EASYCRAFT_SHARE then
-    StaticPopup_Show("EASYCRAFT_SHARE", format(TJ.T("Цвета рецептов (%d). Скопируй код (Ctrl+C) и отправь автору аддона:"), n)
+    StaticPopup_Show("EASYCRAFT_SHARE", format(ns.T("Цвета рецептов (%d). Скопируй код (Ctrl+C) и отправь автору аддона:"), n)
       .. "\ngithub.com/elrijk/EasyCraft/issues", nil, code)
   end
 end
@@ -133,7 +133,7 @@ local function profWindow()
   end
 end
 
-function TJ:AskShare()
+function ns:AskShare()
   if self.askedShare or not self.db or not (self.W and self.W.HintPanel) then return end
   if self.settings and self.settings.askShare == false then return end
   local n = seenCount(self)
@@ -160,9 +160,9 @@ function TJ:AskShare()
   f.btn:ClearAllPoints()
   f.btn:SetPoint("TOPLEFT", f, "TOPLEFT", W.HINT_PAD, -y)
   f.btn:SetScript("OnClick", function()
-    TJ.db.seenSent = seenCount(TJ)
+    ns.db.seenSent = seenCount(ns)
     f:Hide()
-    TJ:ShareColors()
+    ns:ShareColors()
   end)
   f.btn:Show()
   y = y + 22 + 6
@@ -171,8 +171,8 @@ function TJ:AskShare()
     f.never = W.Check(f, T("Больше не напоминать"))
     f.never.label:SetTextColor(0.25, 0.18, 0.1)
     f.never:SetScript("OnClick", function(self)
-      TJ.settings.askShare = not self:GetChecked()
-      if TJ.RefreshOptions then TJ:RefreshOptions() end
+      ns.settings.askShare = not self:GetChecked()
+      if ns.RefreshOptions then ns:RefreshOptions() end
       if self:GetChecked() then f:Hide() end
     end)
   end
@@ -197,7 +197,7 @@ for _, e in ipairs({ "TRADE_SKILL_SHOW", "TRADE_SKILL_CLOSE", "CRAFT_CLOSE" }) d
 askEv:SetScript("OnEvent", function(_, e)
   if e == "TRADE_SKILL_SHOW" then
     -- после чтения окна (Tracking.lua) и появления мини-окна
-    C_Timer.After(2, function() pcall(TJ.AskShare, TJ) end)
+    C_Timer.After(2, function() pcall(ns.AskShare, ns) end)
   elseif askPanel then
     askPanel:Hide()
   end
@@ -205,10 +205,10 @@ end)
 
 -- Запасной путь: если события открытия окна в клиенте нет, просьбу покажет
 -- само чтение окна профессии.
-local noteColors = TJ.NoteColors
-function TJ:NoteColors(key, colors, rank)
+local noteColors = ns.NoteColors
+function ns:NoteColors(key, colors, rank)
   noteColors(self, key, colors, rank)
   if not self.askedShare then
-    C_Timer.After(2, function() pcall(TJ.AskShare, TJ) end)
+    C_Timer.After(2, function() pcall(ns.AskShare, ns) end)
   end
 end

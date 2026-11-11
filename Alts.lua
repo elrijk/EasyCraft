@@ -1,4 +1,4 @@
-local _, TJ = ...
+local _, ns = ...
 
 -------------------------------------------------------------------------------
 --  Реагенты у других персонажей из Syndicator (Baganator). Если его нет -
@@ -6,7 +6,7 @@ local _, TJ = ...
 --  Syndicator отвечает по одному предмету, поэтому таблица заполняется по
 --  мере обращений: alts[id] -> сколько лежит у альтов (сумки, банк, почта).
 -------------------------------------------------------------------------------
-local fromBagBrother = TJ.AltCounts
+local fromBagBrother = ns.AltCounts
 
 local function syndicator()
   local api = _G.Syndicator and _G.Syndicator.API
@@ -15,12 +15,12 @@ local function syndicator()
   return api
 end
 
-function TJ:AltSource()
+function ns:AltSource()
   if syndicator() then return "Syndicator" end
   if type(_G.BrotherBags) == "table" then return "BagBrother" end
 end
 
-function TJ:AltCounts()
+function ns:AltCounts()
   if self.altCache then return self.altCache end
   local api = syndicator()
   if not api then return fromBagBrother(self) end
@@ -50,7 +50,7 @@ end
 --  персонажей, на которых EasyCraft ещё не заходил.
 -------------------------------------------------------------------------------
 local function ownStore()
-  local db = TJ.db
+  local db = ns.db
   if not db then return nil end
   db.alts = db.alts or {}
   local realm = (GetRealmName and GetRealmName()) or "?"
@@ -93,7 +93,7 @@ local function bagLists()
   return bags, bank
 end
 
-function TJ:SaveOwnItems(withBank)
+function ns:SaveOwnItems(withBank)
   local s, me = ownStore(), UnitName and UnitName("player")
   if not (s and me) then return end
   local rec = s[me] or {}
@@ -123,12 +123,12 @@ local function ownCounts()
   return out
 end
 
-local viaAddons, addonSource = TJ.AltCounts, TJ.AltSource
+local viaAddons, addonSource = ns.AltCounts, ns.AltSource
 
-function TJ:AltSource() return addonSource(self) or "EasyCraft" end
+function ns:AltSource() return addonSource(self) or "EasyCraft" end
 
 local NO_ALTS = {}
-function TJ:AltCounts()
+function ns:AltCounts()
   -- в настройках выключено: чужие сумки не считаем
   if self.settings and self.settings.useAlts == false then return NO_ALTS end
   if addonSource(self) then return viaAddons(self) end
@@ -143,7 +143,7 @@ for _, e in ipairs({ "PLAYER_ENTERING_WORLD", "PLAYER_LOGOUT", "BANKFRAME_OPENED
 end
 local bankOpen
 local function later(sec, withBank)
-  local function run() pcall(TJ.SaveOwnItems, TJ, withBank and bankOpen) end
+  local function run() pcall(ns.SaveOwnItems, ns, withBank and bankOpen) end
   C_Timer.After(sec, run)
 end
 -- Банк читается, только пока он открыт: записываем при открытии и при
@@ -153,5 +153,5 @@ ownEv:SetScript("OnEvent", function(_, e)
   elseif e == "BANKFRAME_OPENED" then bankOpen = true later(0.5, true)
   elseif e == "BANKFRAME_CLOSED" then bankOpen = nil
   elseif e == "BAG_UPDATE_DELAYED" then if bankOpen then later(0.2, true) end
-  else pcall(TJ.SaveOwnItems, TJ) end
+  else pcall(ns.SaveOwnItems, ns) end
 end)

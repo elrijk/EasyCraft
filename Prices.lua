@@ -1,4 +1,4 @@
-local _, TJ = ...
+local _, ns = ...
 
 -------------------------------------------------------------------------------
 --  Свои цены аукциона. EasyCraft читает их сам, когда игрок открывает
@@ -21,7 +21,7 @@ local dirty
 local function today() return floor(time() / 86400) end
 
 local function store()
-  local db = TJ.db
+  local db = ns.db
   if not db then return nil end
   db.ah = db.ah or {}
   local realm = (GetRealmName and GetRealmName()) or "?"
@@ -31,13 +31,13 @@ local function store()
   return s
 end
 
-function TJ:CanScanAuction()
+function ns:CanScanAuction()
   return type(AH) == "table" and type(AH.SendBrowseQuery) == "function"
     and type(AH.GetBrowseResults) == "function" or false
 end
 
 -- Есть ли хоть одна своя цена.
-function TJ:HasOwnPrices()
+function ns:HasOwnPrices()
   local s = store()
   return s and next(s.p) ~= nil or false
 end
@@ -45,7 +45,7 @@ end
 local function refreshSoon()
   if dirty then return end
   dirty = true
-  local function run() dirty = nil TJ:Safe(TJ.RefreshAll, TJ) end
+  local function run() dirty = nil ns:Safe(ns.RefreshAll, ns) end
   C_Timer.After(0.5, run)
 end
 
@@ -83,7 +83,7 @@ local function finish(done)
   local s = store()
   if done and s then s.t = time() end
   if (scan.n or 0) > 0 then
-    TJ:Print(format(TJ.T("цены аукциона прочитаны, предметов: %d."), scan.n))
+    ns:Print(format(ns.T("цены аукциона прочитаны, предметов: %d."), scan.n))
   end
   refreshSoon()
 end
@@ -105,13 +105,13 @@ local function step()
 end
 
 -- Начать обход. force - по команде игрока, не глядя на паузу и Auctionator.
-function TJ:ScanAuction(force)
+function ns:ScanAuction(force)
   if not self:CanScanAuction() then
-    if force then self:Print(TJ.T("этот клиент не даёт читать аукцион.")) end
+    if force then self:Print(ns.T("этот клиент не даёт читать аукцион.")) end
     return false
   end
   if not self.ahOpen then
-    if force then self:Print(TJ.T("открой аукцион: цены читаются там.")) end
+    if force then self:Print(ns.T("открой аукцион: цены читаются там.")) end
     return false
   end
   if scan.active then return true end
@@ -123,13 +123,13 @@ function TJ:ScanAuction(force)
   end
   scan = { active = true, n = 0 }
   batch = {}
-  if force then self:Print(TJ.T("читаю цены аукциона...")) end
+  if force then self:Print(ns.T("читаю цены аукциона...")) end
   step()
   return true
 end
 
 -- Идёт ли обход и сколько цен уже прочитано.
-function TJ:AuctionScanState() return scan.active or false, scan.n or 0 end
+function ns:AuctionScanState() return scan.active or false, scan.n or 0 end
 
 local ev = CreateFrame("Frame")
 for _, e in ipairs({
@@ -140,11 +140,11 @@ for _, e in ipairs({
 
 local function onEvent(e, a)
   if e == "AUCTION_HOUSE_SHOW" then
-    TJ.ahOpen = true
-    local function go() if TJ.ahOpen then TJ:ScanAuction() end end
+    ns.ahOpen = true
+    local function go() if ns.ahOpen then ns:ScanAuction() end end
     C_Timer.After(1, go)
   elseif e == "AUCTION_HOUSE_CLOSED" then
-    TJ.ahOpen = nil
+    ns.ahOpen = nil
     finish(false)
   elseif e == "AUCTION_HOUSE_THROTTLED_SYSTEM_READY" then
     if scan.active and scan.wait then step() end
@@ -176,22 +176,22 @@ local function onEvent(e, a)
     end
   end
 end
-ev:SetScript("OnEvent", function(_, e, a) if type(AH) == "table" then TJ:Safe(onEvent, e, a) end end)
+ev:SetScript("OnEvent", function(_, e, a) if type(AH) == "table" then ns:Safe(onEvent, e, a) end end)
 
 -------------------------------------------------------------------------------
 --  Источник цен для остального аддона.
 -------------------------------------------------------------------------------
-local baseSource, basePrice = TJ.PriceSource, TJ.AuctionPrice
+local baseSource, basePrice = ns.PriceSource, ns.AuctionPrice
 
 -- Откуда цены: "EasyCraft" (свои), "Auctionator", "TSM" или nil.
-function TJ:PriceSource()
+function ns:PriceSource()
   if self:HasOwnPrices() or self:CanScanAuction() then return "EasyCraft" end
   return baseSource(self)
 end
 
 -- Цена одной штуки в меди и сколько дней назад её видели. Из своей цены и
 -- цены Auctionator берётся более свежая.
-function TJ:AuctionPrice(id)
+function ns:AuctionPrice(id)
   if type(id) ~= "number" then return nil end
   local otherPrice, otherAge = basePrice(self, id)
   local s = store()

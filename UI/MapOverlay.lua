@@ -1,7 +1,7 @@
-local ADDON, TJ = ...
-local W = TJ.W
+local ADDON, ns = ...
+local W = ns.W
 local M = {}
-TJ.MapOverlay = M
+ns.MapOverlay = M
 local format, max = string.format, math.max
 
 local MINE_SIZE = 15
@@ -23,18 +23,18 @@ function M:Init()
 
   if map.AddDataProvider and MapCanvasDataProviderMixin and CreateFromMixins then
     local p = CreateFromMixins(MapCanvasDataProviderMixin)
-    p.RefreshAllData = function() TJ:Safe(M.Refresh, M) end
+    p.RefreshAllData = function() ns:Safe(M.Refresh, M) end
     p.RemoveAllData = function() M:Clear() end
-    p.OnCanvasScaleChanged = function() TJ:Safe(M.Rescale, M) end
+    p.OnCanvasScaleChanged = function() ns:Safe(M.Rescale, M) end
     map:AddDataProvider(p)
     self.provider = p
   else
-    map:HookScript("OnShow", function() TJ:Safe(M.Refresh, M) end)
+    map:HookScript("OnShow", function() ns:Safe(M.Refresh, M) end)
     local last
     local poll = CreateFrame("Frame", nil, map)
     poll:SetScript("OnUpdate", function()
       local id = map.GetMapID and map:GetMapID()
-      if id ~= last then last = id; TJ:Safe(M.Refresh, M) end
+      if id ~= last then last = id; ns:Safe(M.Refresh, M) end
     end)
   end
 
@@ -52,7 +52,7 @@ function M:Init()
   local x = W.Create("Button", nil, banner, { "UIPanelCloseButton" })
   x:SetSize(22, 22)
   x:SetPoint("RIGHT", 2, 0)
-  x:SetScript("OnClick", function() TJ.mapFocus, TJ.mapFocusArea = nil, nil; TJ.mapTarget = nil; M:Refresh() end)
+  x:SetScript("OnClick", function() ns.mapFocus, ns.mapFocusArea = nil, nil; ns.mapTarget = nil; M:Refresh() end)
   banner:Hide()
   self.banner = banner
 
@@ -66,16 +66,16 @@ function M:Init()
   tog.ring:SetPoint("CENTER")
   tog.ring:SetIcon("Interface\\Icons\\INV_Misc_Flower_02")
   tog:SetScript("OnClick", function()
-    TJ.settings.mapShow = not (TJ.settings.mapShow ~= false)
-    if TJ.settings.mapShow == false then TJ.mapFocus, TJ.mapFocusArea = nil, nil end
+    ns.settings.mapShow = not (ns.settings.mapShow ~= false)
+    if ns.settings.mapShow == false then ns.mapFocus, ns.mapFocusArea = nil, nil end
     M:Refresh()
     if GameTooltip:IsOwned(tog) then tog:GetScript("OnEnter")(tog) end
   end)
   tog:SetScript("OnEnter", function(s)
     GameTooltip:SetOwner(s, "ANCHOR_LEFT")
     GameTooltip:SetText("|cff33ff99Easy|rCraft", 1, 1, 1)
-    GameTooltip:AddLine(TJ.settings.mapShow ~= false and TJ.T("Места сбора на карте показаны. Щелчок - скрыть.")
-      or TJ.T("Места сбора на карте скрыты. Щелчок - показать."), 1, 0.82, 0, true)
+    GameTooltip:AddLine(ns.settings.mapShow ~= false and ns.T("Места сбора на карте показаны. Щелчок - скрыть.")
+      or ns.T("Места сбора на карте скрыты. Щелчок - показать."), 1, 0.82, 0, true)
     GameTooltip:Show()
   end)
   tog:SetScript("OnLeave", function() GameTooltip:Hide() end)
@@ -94,7 +94,7 @@ function M:Init()
   cur.x:SetPoint("BOTTOMRIGHT", 2, -1)
   cur.x:SetTexture("Interface\\RaidFrame\\ReadyCheck-NotReady")
   cur:SetScript("OnClick", function()
-    TJ.mapFocus, TJ.mapFocusArea, TJ.mapTarget = nil, nil, nil
+    ns.mapFocus, ns.mapFocusArea, ns.mapTarget = nil, nil, nil
     GameTooltip:Hide()
     M:Refresh()
   end)
@@ -102,14 +102,14 @@ function M:Init()
     GameTooltip:SetOwner(s, "ANCHOR_RIGHT")
     GameTooltip:SetText("|cff33ff99Easy|rCraft", 1, 1, 1)
     GameTooltip:AddLine(s.what or "", 1, 0.82, 0, true)
-    GameTooltip:AddLine(TJ.T("Щелчок - убрать с карты."), 0.8, 0.8, 0.8, true)
+    GameTooltip:AddLine(ns.T("Щелчок - убрать с карты."), 0.8, 0.8, 0.8, true)
     GameTooltip:Show()
   end)
   cur:SetScript("OnLeave", function() GameTooltip:Hide() end)
   cur:Hide()
   self.current = cur
 
-  TJ:RegisterRefresh(function() if map:IsShown() then M:Refresh() end end)
+  ns:RegisterRefresh(function() if map:IsShown() then M:Refresh() end end)
 end
 
 function M:Overlay()
@@ -156,7 +156,7 @@ function M:DrawAreas(overlay, keys, mapID, w, h, scale)
   local cnt = {}
   local function idx(cx, cy) return cy * G + cx end
   for _, key in ipairs(keys) do
-    local packed = TJ.Spawns[key] and TJ.Spawns[key][mapID]
+    local packed = ns.Spawns[key] and ns.Spawns[key][mapID]
     if packed then
       for i = 1, #packed, 6 do
         local x = tonumber(packed:sub(i, i + 2)) / 1000
@@ -206,7 +206,7 @@ function M:DrawAreas(overlay, keys, mapID, w, h, scale)
       end
     end
   end
-  local a = TJ.settings.mapAreaAlpha or 0.5
+  local a = ns.settings.mapAreaAlpha or 0.5
   local cw, ch = w / G, h / G
   local line = 2 / (scale or 1)
   local function rect(x1, y1, x2, y2, r, g, b, al, layer)
@@ -273,8 +273,8 @@ function M:MinePin(parent)
     b:SetScript("OnEnter", function(s)
       GameTooltip:SetOwner(s, "ANCHOR_RIGHT")
       GameTooltip:AddLine(s.title or "", 1, 0.82, 0)
-      if s.count then GameTooltip:AddLine(format(TJ.T("Собрано здесь: %d"), s.count), 1, 1, 1) end
-      if s.when then GameTooltip:AddLine(TJ.T("Последний раз: ") .. date("%d.%m %H:%M", s.when), 0.7, 0.7, 0.7) end
+      if s.count then GameTooltip:AddLine(format(ns.T("Собрано здесь: %d"), s.count), 1, 1, 1) end
+      if s.when then GameTooltip:AddLine(ns.T("Последний раз: ") .. date("%d.%m %H:%M", s.when), 0.7, 0.7, 0.7) end
       GameTooltip:AddLine("EasyCraft", 0.5, 0.5, 0.5)
       GameTooltip:Show()
     end)
@@ -290,18 +290,18 @@ end
 
 -- Ресурс на карте: то, что сейчас даёт навык изученной профессии сбора.
 function M:NodeShown(key)
-  local n = TJ.Nodes[key]
+  local n = ns.Nodes[key]
   if not n then return false end
-  local rank, _, learned = TJ:GetSkill(n.prof)
+  local rank, _, learned = ns:GetSkill(n.prof)
   if not learned then return false end
-  local c = TJ:GatherColor(max(rank, 1), n.req)
+  local c = ns:GatherColor(max(rank, 1), n.req)
   return c ~= "red" and c ~= "gray"
 end
 
 function M:VisibleNodeKeys()
-  if TJ.mapFocus then return TJ.mapFocus end
+  if ns.mapFocus then return ns.mapFocus end
   local out = {}
-  for _, key in ipairs(TJ.NodeOrder) do
+  for _, key in ipairs(ns.NodeOrder) do
     if self:NodeShown(key) then tinsert(out, key) end
   end
   return out
@@ -315,7 +315,7 @@ end
 function M:Refresh()
   local map = mapFrame()
   if not (self.inited and map and map:IsShown()) then return end
-  local on = TJ.settings.mapShow ~= false
+  local on = ns.settings.mapShow ~= false
   if self.toggle then
     self.toggle.ring.icon:SetDesaturated(not on)
     self.toggle.ring:SetAlpha(on and 1 or 0.6)
@@ -335,10 +335,10 @@ function M:Refresh()
   local keys = self:VisibleNodeKeys()
   -- Перерисовка аддона (сумки, добыча) при открытой карте: если на карте
   -- ничего не поменялось, области заново не строим.
-  local tg = TJ.mapTarget
+  local tg = ns.mapTarget
   local sig = table.concat({ tostring(overlay), mapID or 0, floor(w), floor(h), table.concat(keys, ","),
-    tostring(TJ.mapFocus), tostring(TJ.settings.mapMine), tostring(TJ.settings.mapAreaAlpha),
-    tg and (tostring(tg.ui) .. ":" .. tostring(tg.x) .. ":" .. tostring(tg.y)) or "-", TJ.nodeGen or 0, TJ.itemGen or 0 }, "|")
+    tostring(ns.mapFocus), tostring(ns.settings.mapMine), tostring(ns.settings.mapAreaAlpha),
+    tg and (tostring(tg.ui) .. ":" .. tostring(tg.x) .. ":" .. tostring(tg.y)) or "-", ns.nodeGen or 0, ns.itemGen or 0 }, "|")
   if sig == self.sig then return end
   self:Clear()
   self.sig = sig
@@ -346,18 +346,18 @@ function M:Refresh()
   self.banner:Hide()
   local cur = self.current
   if cur then
-    if TJ.mapFocus then
+    if ns.mapFocus then
       local names, first = {}, nil
       for _, k in ipairs(keys) do
-        local n = TJ.Nodes[k]
-        if n then first = first or n; tinsert(names, TJ:N(n)) end
+        local n = ns.Nodes[k]
+        if n then first = first or n; tinsert(names, ns:N(n)) end
       end
-      cur.ring:SetIcon(first and TJ:ItemIcon(first.item) or "Interface\\Icons\\INV_Misc_Flower_02")
-      cur.what = TJ.T("Показаны области: ") .. table.concat(names, ", ")
+      cur.ring:SetIcon(first and ns:ItemIcon(first.item) or "Interface\\Icons\\INV_Misc_Flower_02")
+      cur.what = ns.T("Показаны области: ") .. table.concat(names, ", ")
       cur:Show()
-    elseif TJ.mapTarget then
+    elseif ns.mapTarget then
       cur.ring:SetIcon("Interface\\Icons\\INV_Misc_Book_11")
-      cur.what = TJ.T("Метка: ") .. (TJ.mapTarget.title or "")
+      cur.what = ns.T("Метка: ") .. (ns.mapTarget.title or "")
       cur:Show()
     else
       cur:Hide()
@@ -368,7 +368,7 @@ function M:Refresh()
   -- даёт навык изученным профессиям сбора.
   self:DrawAreas(overlay, keys, mapID, w, h, scale)
 
-  local tg = TJ.mapTarget
+  local tg = ns.mapTarget
   if tg and tg.ui == mapID then
     local b = self:MinePin(overlay)
     b.icon:SetTexture("Interface\\GossipFrame\\TrainerGossipIcon")
@@ -381,19 +381,19 @@ function M:Refresh()
     b:SetPoint("CENTER", overlay, "TOPLEFT", tg.x * w, -tg.y * h)
   end
 
-  if TJ.settings.mapMine then
-    local list = TJ.db.nodes[mapID]
+  if ns.settings.mapMine then
+    local list = ns.db.nodes[mapID]
     for _, n in ipairs(list or {}) do
       local key = n[3]
-      local node = TJ.Nodes[key]
+      local node = ns.Nodes[key]
       local icon, title
       if key == "fish" then
-        icon, title = TJ.Icon("Trade_Fishing"), TJ.T("Место рыбалки")
+        icon, title = ns.Icon("Trade_Fishing"), ns.T("Место рыбалки")
       elseif node then
-        icon, title = TJ:ItemIcon(node.item), TJ:N(node)
+        icon, title = ns:ItemIcon(node.item), ns:N(node)
       else
         local id = tonumber(tostring(key):match("item:(%d+)"))
-        icon, title = id and TJ:ItemIcon(id) or TJ.Icon(nil), id and TJ:ItemName(id) or "?"
+        icon, title = id and ns:ItemIcon(id) or ns.Icon(nil), id and ns:ItemName(id) or "?"
       end
       local b = self:MinePin(overlay)
       b.icon:SetTexture(icon)
@@ -416,7 +416,7 @@ function M:Rescale()
   if (self.narea or 0) > 0 then
     if not self.rescalePending then
       self.rescalePending = true
-      local function go() self.rescalePending = nil; self.sig = nil; TJ:Safe(M.Refresh, M) end
+      local function go() self.rescalePending = nil; self.sig = nil; ns:Safe(M.Refresh, M) end
       C_Timer.After(0.05, go)
     end
     return
@@ -435,10 +435,10 @@ function M:OpenMap(uiMapID)
   local map = mapFrame()
   if not map then return end
   if not map:IsShown() and InCombatLockdown and InCombatLockdown() then
-    TJ:Print(TJ.T("в бою карту из аддона не открыть: открой её сам (M)."))
+    ns:Print(ns.T("в бою карту из аддона не открыть: открой её сам (M)."))
     return
   end
-  if TJ.UI and TJ.UI.frame then TJ.UI.frame:Hide() end
+  if ns.UI and ns.UI.frame then ns.UI.frame:Hide() end
   if not map:IsShown() then
     if ToggleWorldMap then ToggleWorldMap() elseif ShowUIPanel then ShowUIPanel(map) end
   end

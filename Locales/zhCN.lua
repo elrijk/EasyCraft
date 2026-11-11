@@ -1,7 +1,7 @@
-local _, TJ = ...
+local _, ns = ...
 -- EasyCraft: перевод на zhCN (английская строка -> перевод).
--- Таблица строится только если выбран этот язык (TJ.SetLang).
-TJ.LOCALES.zhCN = function() return {
+-- Таблица строится только если выбран этот язык (ns.SetLang).
+ns.LOCALES.zhCN = function() return {
   ["  |cffff5555Missing: |r"] = "  |cffff5555缺少：|r",
   [" (%d each)"] = " （每个 %d）",
   [" - it raises the skill too."] = " - 也能提升技能。",

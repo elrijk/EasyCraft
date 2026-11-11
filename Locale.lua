@@ -2,16 +2,16 @@
 --  EasyCraft: языки
 --  Язык выбирается в настройках EasyCraft («Авто» - язык клиента) и
 --  меняется после перезагрузки интерфейса. Строки в коде и данных написаны
---  по-русски: TJ.T() переводит их, TJ:N(obj) берёт английское имя obj.en.
+--  по-русски: ns.T() переводит их, ns:N(obj) берёт английское имя obj.en.
 --  Названия, по которым аддон узнаёт профессии и зоны клиента (поля ru),
 --  не меняются. Тексты в данных (заметки, описания) переводит LocaleData.lua.
 --  Выбор хранится в EasyCraftDB, а он загружается после файлов аддона:
 --  до ADDON_LOADED язык - язык клиента, поэтому переводить строки при
 --  загрузке файлов нельзя, только в функциях.
 -------------------------------------------------------------------------------
-local ADDON, TJ = ...
+local ADDON, ns = ...
 
-TJ.LANGS = {
+ns.LANGS = {
   { code = "auto", label = "Авто (клиент)" },
   { code = "enUS", label = "English" },
   { code = "deDE", label = "Deutsch" },
@@ -26,11 +26,11 @@ TJ.LANGS = {
   { code = "zhTW", label = "繁體中文 (Traditional Chinese)" },
 }
 -- Готовые переводы. Остальные языки в списке серые. Русский и английский
--- - здесь же, остальные - в файлах Locales\*.lua: TJ.LOCALES[код] -
+-- - здесь же, остальные - в файлах Locales\*.lua: ns.LOCALES[код] -
 -- функция, которая строит таблицу «английская строка -> перевод». Строится
 -- только выбранный язык, остальные отдаются сборщику мусора.
-TJ.READY = { enUS = true, ruRU = true }
-TJ.LOCALES = {}
+ns.READY = { enUS = true, ruRU = true }
+ns.LOCALES = {}
 
 local function Normalize(code)
   if code == "enGB" then return "enUS" end
@@ -38,58 +38,58 @@ local function Normalize(code)
 end
 
 local function Ready(code)
-  return TJ.READY[code] or TJ.LOCALES[code] ~= nil or (code == "esMX" and TJ.LOCALES.esES ~= nil)
+  return ns.READY[code] or ns.LOCALES[code] ~= nil or (code == "esMX" and ns.LOCALES.esES ~= nil)
 end
 
 -- Выбор из настроек -> язык. «Авто»: язык клиента, если перевод готов,
 -- иначе английский.
-function TJ.ResolveLang(choice)
+function ns.ResolveLang(choice)
   if choice and choice ~= "auto" and Ready(choice) then return choice end
   local client = Normalize(GetLocale and GetLocale() or "enUS")
   return Ready(client) and client or "enUS"
 end
 
 -- Язык из настроек (на ADDON_LOADED, до него - язык клиента).
-function TJ:SetLang(choice)
-  local lang = TJ.ResolveLang(choice)
-  if lang ~= TJ.lang or not TJ.langSet then
-    TJ.lang, TJ.langSet = lang, true
-    TJ.IsRU = lang == "ruRU"
+function ns:SetLang(choice)
+  local lang = ns.ResolveLang(choice)
+  if lang ~= ns.lang or not ns.langSet then
+    ns.lang, ns.langSet = lang, true
+    ns.IsRU = lang == "ruRU"
     -- какие переводы есть - запомнить для списка языков, построить нужный
-    for code in pairs(TJ.LOCALES) do TJ.READY[code] = true end
-    if TJ.LOCALES.esES then TJ.READY.esMX = true end
-    local make = TJ.LOCALES[lang] or (lang == "esMX" and TJ.LOCALES.esES)
-    TJ.L = make and make() or nil
-    for code in pairs(TJ.LOCALES) do TJ.LOCALES[code] = nil end
+    for code in pairs(ns.LOCALES) do ns.READY[code] = true end
+    if ns.LOCALES.esES then ns.READY.esMX = true end
+    local make = ns.LOCALES[lang] or (lang == "esMX" and ns.LOCALES.esES)
+    ns.L = make and make() or nil
+    for code in pairs(ns.LOCALES) do ns.LOCALES[code] = nil end
   end
   -- названия предметов и зон - из игры, если язык аддона = язык клиента;
   -- иначе английские из своей базы
   local client = Normalize(GetLocale and GetLocale() or "enUS")
-  TJ.UseClient = client == TJ.lang or (client:sub(1, 2) == "es" and TJ.lang:sub(1, 2) == "es")
-  if not TJ.IsRU and TJ.ApplyLocaleData then TJ:ApplyLocaleData() end
+  ns.UseClient = client == ns.lang or (client:sub(1, 2) == "es" and ns.lang:sub(1, 2) == "es")
+  if not ns.IsRU and ns.ApplyLocaleData then ns:ApplyLocaleData() end
 end
-TJ.lang = TJ.ResolveLang(nil)
-TJ.IsRU = TJ.lang == "ruRU"
+ns.lang = ns.ResolveLang(nil)
+ns.IsRU = ns.lang == "ruRU"
 
--- Строка на выбранном языке: русская как есть, иначе английская из TJ.EN
--- и её перевод из TJ.L (если язык не английский).
-function TJ.T(s)
-  if s == nil or TJ.IsRU then return s end
-  local en = TJ.EN[s] or s
-  local L = TJ.L
+-- Строка на выбранном языке: русская как есть, иначе английская из ns.EN
+-- и её перевод из ns.L (если язык не английский).
+function ns.T(s)
+  if s == nil or ns.IsRU then return s end
+  local en = ns.EN[s] or s
+  local L = ns.L
   return L and L[en] or en
 end
 
 -- Имя для показа: русское поле ru или английское en (если его нет - перевод ru).
-function TJ:N(o)
+function ns:N(o)
   if not o then return nil end
-  if TJ.IsRU then return o.ru end
-  local en = o.en or TJ.T(o.ru)
-  local L = TJ.L
+  if ns.IsRU then return o.ru end
+  local en = o.en or ns.T(o.ru)
+  local L = ns.L
   return L and L[en] or en
 end
 
-TJ.EN = {
+ns.EN = {
   ["Наложение чар"] = "Enchanting",
   ["|cffff5555ошибка:|r "] = "|cffff5555error:|r ",
   ["Предмет "] = "Item ",
@@ -1393,7 +1393,7 @@ for k, v in pairs({
   ["Реагентов в сумках нет"] = "No reagents in your bags",
   ["Перенесёт в банк все ремесленные товары из сумок: руду, травы, ткань, кожу и прочие реагенты."] = "Moves all trade goods from your bags to the bank: ore, herbs, cloth, leather and other reagents.",
   ["С %d навыка"] = "From skill %d",
-}) do TJ.EN[k] = v end
+}) do ns.EN[k] = v end
 
 -- 1.2: вкладка «Рецепты» (книга, выгода, очередь, откаты, лучшее)
 for k, v in pairs({
@@ -1449,7 +1449,7 @@ for k, v in pairs({
   ["Показать все (%d)"] = "Show all (%d)",
   ["Среди рецептов твоих профессий такого нет."] = "None of your professions' recipes match.",
   ["У твоих профессий нет рецептов создания."] = "Your professions have no crafting recipes.",
-}) do TJ.EN[k] = v end
+}) do ns.EN[k] = v end
 
 -- 1.2: очередь крафта в подсказке у окна профессии
 for k, v in pairs({
@@ -1458,7 +1458,7 @@ for k, v in pairs({
   ["Щелчок - создать. Крестик справа уберёт из очереди."] = "Click to craft. The cross on the right removes it from the queue.",
   ["Все рецепты и очередь"] = "All recipes and the queue",
   ["Откроет вкладку «Рецепты»: там вся очередь, что докупить и новые рецепты в неё."] = "Opens the \"Recipes\" tab: the whole queue, what to buy, and more recipes to add.",
-}) do TJ.EN[k] = v end
+}) do ns.EN[k] = v end
 
 -- 1.2: выбор профессии открывается всегда
 for k, v in pairs({
@@ -1466,7 +1466,7 @@ for k, v in pairs({
   ["Мои профессии"] = "My professions",
   ["Назад к маршрутам твоих профессий."] = "Back to the routes of your professions.",
   ["Что делает каждая профессия и какой сбор к ней нужен. Пригодится, если решишь сменить профессию."] = "What each profession does and which gathering goes with it. Handy if you decide to switch.",
-}) do TJ.EN[k] = v end
+}) do ns.EN[k] = v end
 
 -- 1.2: окно выбора профессии
 for k, v in pairs({
@@ -1523,7 +1523,7 @@ for k, v in pairs({
   ["Открыть маршрут"] = "Open the route",
   ["Маршрут прокачки этой профессии в окне EasyCraft."] = "This profession's leveling route in the EasyCraft window.",
   ["Основных можно взять две, вторичные - все три. Посмотри, что даёт каждая."] = "You can have two primary professions and all three secondary ones. See what each one gives.",
-}) do TJ.EN[k] = v end
+}) do ns.EN[k] = v end
 
 -- 1.2: знакомство отдельным окном
 for k, v in pairs({
@@ -1534,24 +1534,24 @@ for k, v in pairs({
   ["Понятно"] = "Got it",
   ["Дальше"] = "Next",
   ["Назад"] = "Back",
-}) do if TJ.EN[k] == nil then TJ.EN[k] = v end end
+}) do if ns.EN[k] == nil then ns.EN[k] = v end end
 
 -- 1.2: короткие подписи вкладки «Рецепты»
 for k, v in pairs({
   ["Пусто. Щёлкни по рецепту ниже."] = "Empty. Click a recipe below.",
   ["Пусто. Создай предмет с откатом - аддон его запомнит."] = "Empty. Craft an item with a cooldown and the addon remembers it.",
   ["Открой окно профессии - аддон прочитает рецепты."] = "Open the profession window and the addon reads your recipes.",
-}) do TJ.EN[k] = v end
+}) do ns.EN[k] = v end
 
 -- 1.2: подписи под значками первой страницы знакомства
 for k, v in pairs({
   ["что делать сейчас"] = "what to do now",
   ["что есть и что докупить"] = "what you have and what to buy",
   ["одной кнопкой"] = "with one button",
-}) do TJ.EN[k] = v end
+}) do ns.EN[k] = v end
 
 -- 1.2: окно выбора профессии - пометка у названия
-TJ.EN["Основная"] = "Primary"
+ns.EN["Основная"] = "Primary"
 
 -- 1.2: знакомство одним экраном
 for k, v in pairs({
@@ -1574,13 +1574,13 @@ for k, v in pairs({
   ["Учителя"] = "Trainers",
   ["Напомнит о новом ранге и поставит метку."] = "Reminds you of the next rank and sets a waypoint.",
   ["Поехали"] = "Let's go",
-}) do if TJ.EN[k] == nil then TJ.EN[k] = v end end
+}) do if ns.EN[k] == nil then ns.EN[k] = v end end
 
 -- 1.2: окно выбора профессии - заголовок
-TJ.EN["Какую профессию выбрать"] = "Which profession to pick"
+ns.EN["Какую профессию выбрать"] = "Which profession to pick"
 
 -- 1.2: окно выбора профессии - кнопка перехода
-TJ.EN["Перейти к аддону"] = "Go to the addon"
+ns.EN["Перейти к аддону"] = "Go to the addon"
 
 -- 1.2: свои цены аукциона, свой учёт альтов, цена пути и просмотр маршрута
 for k, v in pairs({
@@ -1601,7 +1601,7 @@ for k, v in pairs({
   ["Все шаги до 300 и цена пути - до того, как учить профессию."] = "Every step to 300 and the cost of the path - before you learn the profession.",
   ["Маршрут: %s"] = "Route: %s",
   ["Маршрута пока нет."] = "No route yet.",
-}) do if TJ.EN[k] == nil then TJ.EN[k] = v end end
+}) do if ns.EN[k] == nil then ns.EN[k] = v end end
 
 -- 1.2: режимы маршрута и настройка альтов
 for k, v in pairs({
@@ -1615,7 +1615,7 @@ for k, v in pairs({
   ["Середина: дешёвые рецепты, но без долгого битья по зелёным."] = "In between: cheap recipes, but no long grind on green ones.",
   ["Для этого режима нужны цены: открой аукцион. Пока показан обычный маршрут."] = "This mode needs prices: open the auction house. The standard route is shown for now.",
   ["Считать реагенты у других моих персонажей"] = "Count reagents on my other characters",
-}) do if TJ.EN[k] == nil then TJ.EN[k] = v end end
+}) do if ns.EN[k] == nil then ns.EN[k] = v end end
 
 -- 1.2: опыт в «Лагере» и спальник
 for k, v in pairs({
@@ -1664,7 +1664,7 @@ for k, v in pairs({
   ["Нагорье Арати у Стены Торадина (23, 24)"] = "Arathi Highlands at Thoradin's Wall (23, 24)",
   ["Свёрнутый ранец прямо под сумкой гонца. Награда - «Уютный спальник»."] = "A Hastily Rolled-Up Satchel right below the Messenger Bag. Rewards the Cozy Sleeping Bag.",
   ["Путь взят из гайдов; названия заданий в игре могут отличаться."] = "The route comes from guides; quest names in game may differ.",
-}) do if TJ.EN[k] == nil then TJ.EN[k] = v end end
+}) do if ns.EN[k] == nil then ns.EN[k] = v end end
 
 -- 1.2: что создать себе сейчас
 for k, v in pairs({
@@ -1673,13 +1673,13 @@ for k, v in pairs({
   ["Уровень предмета выше надетого на %d"] = "Item level is %d above what you wear",
   ["Ячейка пустая"] = "The slot is empty",
   ["реагенты есть"] = "reagents on hand",
-}) do if TJ.EN[k] == nil then TJ.EN[k] = v end end
+}) do if ns.EN[k] == nil then ns.EN[k] = v end end
 
 -- 1.2: свои наблюдения цветов рецептов
 for k, v in pairs({
   ["наблюдений пока нет: открой окно профессии."] = "no observations yet: open a profession window.",
   ["Цвета рецептов (%d). Скопируй код (Ctrl+C) и отправь автору аддона:"] = "Recipe colours (%d). Copy the code (Ctrl+C) and send it to the addon author:",
-}) do if TJ.EN[k] == nil then TJ.EN[k] = v end end
+}) do if ns.EN[k] == nil then ns.EN[k] = v end end
 
 -- 1.2: просьба поделиться наблюдениями
 for k, v in pairs({
@@ -1687,7 +1687,7 @@ for k, v in pairs({
   ["Аддон запомнил цвета рецептов: %d. Отправь их автору - маршруты станут точнее у всех. Личного в коде нет: только рецепты и навык."] = "The addon has recorded recipe colours: %d. Send them to the author - routes get more accurate for everyone. Nothing personal in the code: only recipes and skill.",
   ["Отправить данные"] = "Send data",
   ["Напоминать поделиться данными о рецептах"] = "Remind me to share recipe data",
-}) do if TJ.EN[k] == nil then TJ.EN[k] = v end end
+}) do if ns.EN[k] == nil then ns.EN[k] = v end end
 
 -- 1.2: больше не напоминать
-if TJ.EN["Больше не напоминать"] == nil then TJ.EN["Больше не напоминать"] = "Don't remind me again" end
+if ns.EN["Больше не напоминать"] == nil then ns.EN["Больше не напоминать"] = "Don't remind me again" end

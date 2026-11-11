@@ -1,8 +1,8 @@
-local ADDON, TJ = ...
-local W = TJ.W
+local ADDON, ns = ...
+local W = ns.W
 local C = {}
-TJ.Content = C
-local T = TJ.T
+ns.Content = C
+local T = ns.T
 local format, floor, ceil, max, min = string.format, math.floor, math.ceil, math.max, math.min
 
 -------------------------------------------------------------------------------
@@ -59,10 +59,10 @@ end
 -- Сколько стоит докупить buy штук на аукционе (медь) или nil; вторым -
 -- возраст цены в днях (Auctionator), если она старая.
 local function buyCost(id, buy)
-  if TJ:IsVendorItem(id) then return nil end
-  local p, age = TJ:AuctionPrice(id)
+  if ns:IsVendorItem(id) then return nil end
+  local p, age = ns:AuctionPrice(id)
   if not p then return nil end
-  return p * buy, (age and age >= TJ.PRICE_OLD_DAYS) and age or nil
+  return p * buy, (age and age >= ns.PRICE_OLD_DAYS) and age or nil
 end
 
 -- Возраст цены словами: «5 дн.» или «больше 3 нед.».
@@ -80,7 +80,7 @@ end
 local function vendorMoney(id, buy, cost, approx)
   if not cost then
     local p
-    p, approx = TJ:VendorPrice(id)
+    p, approx = ns:VendorPrice(id)
     cost = p and p * buy
   end
   return cost and ((approx and "~" or "") .. W.Money(cost)) or nil
@@ -88,16 +88,16 @@ end
 
 local function buyText(id, buy, cost, age, alts, mail, approx)
   local parts = {}
-  if mail and mail > 0 then tinsert(parts, TJ.MAIL_COLOR .. format(T("на почте %d"), mail) .. "|r") end
+  if mail and mail > 0 then tinsert(parts, ns.MAIL_COLOR .. format(T("на почте %d"), mail) .. "|r") end
   if alts and alts > 0 then tinsert(parts, format(T("у альтов %d"), alts)) end
   local altPart = #parts > 0 and (table.concat(parts,  ", ") .. (buy > 0 and  ", " or "")) or ""
   if buy <= 0 then return altPart ~= "" and altPart or nil end
-  if TJ:IsVendorItem(id) then
+  if ns:IsVendorItem(id) then
     local money = vendorMoney(id, buy, cost, approx)
     return altPart .. format(T("купить %d у торговца"), buy) .. (money and (": " .. money) or "")
   end
   if cost then return altPart .. format(T("докупить %d: %s на аукционе"), buy, W.Money(cost)) .. ageText(age) end
-  if TJ:PriceSource() then return altPart .. format(T("докупить %d, цены на аукционе пока нет"), buy) end
+  if ns:PriceSource() then return altPart .. format(T("докупить %d, цены на аукционе пока нет"), buy) end
   return altPart .. format(T("докупить %d"), buy)
 end
 
@@ -112,10 +112,10 @@ end
 -- Навык отстал от уровня персонажа: «Отстаёшь на 15 уровней» и подсказка
 -- (на каком уровне такой навык и до скольки поднять).
 local function lagInfo(key)
-  local lag = TJ:Lag(key)
+  local lag = ns:Lag(key)
   if not lag then return nil end
   local n = max(1, lag.level - lag.skillLevel)
-  local rank = TJ:GetSkill(key)
+  local rank = ns:GetSkill(key)
   -- значок-предупреждение перед текстом (чуть выше: буквы сидят высоко)
   local text = "|TInterface\\DialogFrame\\UI-Dialog-Icon-AlertNew:15:15:0:1|t " .. ORANGE
     .. format(T("Отстаёшь на %d %s"), n, levelWord(n)) .. "|r"
@@ -127,7 +127,7 @@ end
 
 -- Уровни зоны цветом: красным, если зона заметно выше персонажа.
 local function zoneLevels(area)
-  local z = TJ.Zones[area]
+  local z = ns.Zones[area]
   if not (z and z.lo and z.hi) then return "" end
   local my = UnitLevel and UnitLevel("player") or 0
   local col = (z.lo > my + 3) and RED or "|cff9d9d9d"
@@ -138,40 +138,40 @@ end
 -- levelsFirst: «15-27  Когтистые горы» - уровни в начале, столбиком.
 function C:ZoneText(area, levelsFirst)
   if levelsFirst then
-    local z = TJ.Zones[area]
+    local z = ns.Zones[area]
     local lv = ""
     if z and z.lo and z.hi then
       local my = UnitLevel and UnitLevel("player") or 0
       lv = ((z.lo > my + 3) and RED or "|cff9d9d9d") .. format("%d-%d", z.lo, z.hi) .. "|r  "
     end
-    return lv .. TJ:ZoneColor(area) .. TJ:ZoneName(area) .. "|r"
+    return lv .. ns:ZoneColor(area) .. ns:ZoneName(area) .. "|r"
   end
-  return TJ:ZoneColor(area) .. TJ:ZoneName(area) .. "|r" .. zoneLevels(area)
+  return ns:ZoneColor(area) .. ns:ZoneName(area) .. "|r" .. zoneLevels(area)
 end
 
 -- Показать зону на карте с областями нужного. Тот же щелчок ещё раз (карта
 -- открыта на этой зоне) - убрать подсветку.
 function C:ShowOnMap(area, nodeKeys)
-  local z = TJ.Zones[area]
+  local z = ns.Zones[area]
   local ui = z and (z.uiMap or z.ui)
   local map = WorldMapFrame
-  if TJ.mapFocus and TJ.mapFocusArea == area and map and map:IsShown() then
-    TJ.mapFocus, TJ.mapFocusArea = nil, nil
-    if TJ.MapOverlay then TJ.MapOverlay:Refresh() end
+  if ns.mapFocus and ns.mapFocusArea == area and map and map:IsShown() then
+    ns.mapFocus, ns.mapFocusArea = nil, nil
+    if ns.MapOverlay then ns.MapOverlay:Refresh() end
     return
   end
-  TJ.mapFocus = nodeKeys and #nodeKeys > 0 and nodeKeys or nil
-  TJ.mapFocusArea = TJ.mapFocus and area or nil
-  TJ.settings.mapShow = true -- просили показать - включаем, даже если выключали
-  if TJ.MapOverlay then TJ.MapOverlay:OpenMap(ui) end
+  ns.mapFocus = nodeKeys and #nodeKeys > 0 and nodeKeys or nil
+  ns.mapFocusArea = ns.mapFocus and area or nil
+  ns.settings.mapShow = true -- просили показать - включаем, даже если выключали
+  if ns.MapOverlay then ns.MapOverlay:OpenMap(ui) end
 end
 
 -- Название шага с цветом рецепта (как в окне профессии).
 local function stepColor(s, rank, state)
   if state == "done" then return W.GREY end
   if s.k == "craft" and s.sk and state == "current" then
-    local col = TJ:RecipeColor(s, rank)
-    return col and TJ.ColorRGB[col] or W.LIGHT
+    local col = ns:RecipeColor(s, rank)
+    return col and ns.ColorRGB[col] or W.LIGHT
   end
   return W.LIGHT
 end
@@ -190,7 +190,7 @@ end
 
 -- Черты следующего ранга на полосе навыка нет: когда учить ранг,
 -- показывают значок книги у профессии и цели в рангах.
-function TJ:MarkNextRank(bar)
+function ns:MarkNextRank(bar)
   W.SetBarMark(bar, nil)
 end
 
@@ -198,7 +198,7 @@ end
 local function rankBar(c, rank, maxRank, key)
   local cap = (maxRank and maxRank > 0) and maxRank or 300
   local bar = c:Bar(rank, cap, format(T("%d из %d"), rank, cap))
-  if key then TJ:MarkNextRank(bar, key, rank, cap) else W.SetBarMark(bar, nil) end
+  if key then ns:MarkNextRank(bar, key, rank, cap) else W.SetBarMark(bar, nil) end
 end
 
 -- Можно ли уже учить ранг и что мешает.
@@ -219,7 +219,7 @@ local function rankStatus(s, rank)
 end
 
 -- Одна строка о том, что осталось по шагу (для мини-окна у верстака).
-function TJ:ShortStatus(key, s, rank, state)
+function ns:ShortStatus(key, s, rank, state)
   if state == "done" then return GREEN .. T("Шаг выполнен.") .. "|r" end
   if isRankStep(s) then return rankStatus(s, rank) end
   if s.k == "craft" then
@@ -231,10 +231,10 @@ function TJ:ShortStatus(key, s, rank, state)
 end
 
 local function missingTools(c, key, rank)
-  local missing = TJ:MissingTools(key, rank)
+  local missing = ns:MissingTools(key, rank)
   if #missing == 0 then return end
   local names = {}
-  for _, id in ipairs(missing) do tinsert(names, TJ:ItemName(id)) end
+  for _, id in ipairs(missing) do tinsert(names, ns:ItemName(id)) end
   c:Text(RED .. T("Нет в сумках: ") .. "|r" .. table.concat(names, ", "), "body")
 end
 
@@ -243,21 +243,21 @@ end
 local function fieldHints(c, key, s, rank)
   if s.k == "gather" then
     -- в классике поиск один на всё: если включён любой (руда или травы), не просим
-    local t = TJ:FindTracking(key)
-    if t and not t.active and not TJ:AnyFindActive() then
-      c:Items({ { tex = t.icon or TJ.Icon(nil), text = format(T("Включи «%s»"), t.name),
-        tip = T("Щелчок включит поиск на миникарте."), onClick = function() TJ:EnableFindTracking(key) end } }, 1, 26)
+    local t = ns:FindTracking(key)
+    if t and not t.active and not ns:AnyFindActive() then
+      c:Items({ { tex = t.icon or ns.Icon(nil), text = format(T("Включи «%s»"), t.name),
+        tip = T("Щелчок включит поиск на миникарте."), onClick = function() ns:EnableFindTracking(key) end } }, 1, 26)
     end
   end
   if key == "mining" and s.k == "gather" then
     -- одна строка; цвет и сколько хватит - в мини-окне у плавильни
-    local sm = TJ:SmeltNow(rank)
+    local sm = ns:SmeltNow(rank)
     if sm then c:Text(T("Плавить сейчас: ") .. (sm.name or "?") .. T(" - это тоже растит навык."), "small", { gap = 6 }) end
   end
   if key == "fishing" then
-    local lure, bonus = TJ:LureHint(rank)
+    local lure, bonus = ns:LureHint(rank)
     if lure then
-      c:Text(YELLOW .. format(T("Наживи «%s» на удочку: +%d к ловле."), TJ:ItemName(lure), bonus) .. "|r", "small", { gap = 6 })
+      c:Text(YELLOW .. format(T("Наживи «%s» на удочку: +%d к ловле."), ns:ItemName(lure), bonus) .. "|r", "small", { gap = 6 })
     end
   end
 end
@@ -268,14 +268,14 @@ end
 local MAP_ICON, SCROLL_ICON = "Interface\\Icons\\INV_Misc_Map_01", "Interface\\Icons\\INV_Scroll_03"
 local function npcItems(npcs, limit, what, right)
   local items = {}
-  local list, sorted = TJ:NpcsFor(npcs, limit or 4)
+  local list, sorted = ns:NpcsFor(npcs, limit or 4)
   for k, id in ipairs(list) do
     -- «ближайший» и звезда - только когда знаем, где игрок (не в подземелье)
     local near = k == 1 and sorted
-    tinsert(items, { tex = MAP_ICON, text = TJ:NpcName(id), sub = TJ:NpcZone(id) .. (near and (", " .. T("ближайший")) or ""),
+    tinsert(items, { tex = MAP_ICON, text = ns:NpcName(id), sub = ns:NpcZone(id) .. (near and (", " .. T("ближайший")) or ""),
       icons = { what or SCROLL_ICON }, right = k == 1 and right or nil, star = near, hot = near,
-      tip = { title = TJ:NpcName(id), lines = { TJ:NpcZone(id) }, hint = T("Щелчок поставит метку и откроет карту.") },
-      onClick = function() TJ:Waypoint(id, true) end })
+      tip = { title = ns:NpcName(id), lines = { ns:NpcZone(id) }, hint = T("Щелчок поставит метку и откроет карту.") },
+      onClick = function() ns:Waypoint(id, true) end })
   end
   return items
 end
@@ -292,7 +292,7 @@ local GREY_C = "|cff9d9d9d"
 
 -- Значок предмета в строке текста.
 local function itemTag(id, size)
-  return format("|T%s:%d:%d:0:0:64:64:5:59:5:59|t", tostring(TJ:ItemIcon(id) or 134400), size or 14, size or 14)
+  return format("|T%s:%d:%d:0:0:64:64:5:59:5:59|t", tostring(ns:ItemIcon(id) or 134400), size or 14, size or 14)
 end
 
 -- Сколько всего докупить (штук) по итогу StepBuy.
@@ -317,7 +317,7 @@ local function rankShort(s, rank, short)
     if s.k == "quest" then return RED .. T("возьми задание") .. "|r" end
     return RED .. T("пора к учителю") .. "|r"
   end
-  if TJ:CanLearnRank(s, rank) then return YELLOW .. T("уже можно") .. "|r" end
+  if ns:CanLearnRank(s, rank) then return YELLOW .. T("уже можно") .. "|r" end
   -- на плитке коротко: навык и так в ромбе над ней
   local t = short and format("%d", s.learn or s.at) or format(T("с %d навыка"), s.learn or s.at)
   if short then return s.lvl and format(T("с %s, %d ур."), t, s.lvl) or format(T("с %s"), t) end
@@ -332,14 +332,14 @@ local function tileFoot(key, s, st, rank, isCur, b, cost)
     return GREEN .. T("выполнено") .. "|r"
   end
   if isRankStep(s) then
-    if s.k == "book" and s.id and rank < s.at and not TJ:CanLearnRank(s, rank) then
-      local price, approx = TJ:VendorPrice(s.id)
+    if s.k == "book" and s.id and rank < s.at and not ns:CanLearnRank(s, rank) then
+      local price, approx = ns:VendorPrice(s.id)
       if price then return (approx and "~" or "") .. W.Money(price) end
     end
     return rankShort(s, rank, true)
   end
   if s.k == "craft" then
-    if isCur and s.spell and TJ:RecipeKnown(key, s.spell) == false then return ORANGE .. T("выучи рецепт") .. "|r" end
+    if isCur and s.spell and ns:RecipeKnown(key, s.spell) == false then return ORANGE .. T("выучи рецепт") .. "|r" end
     if b and #b.items > 0 then
       if b.allHave then return GREEN .. T("всё есть") .. "|r" end
       if buyCount(b) == 0 then return YELLOW .. fetchWord(b) .. "|r" end
@@ -354,7 +354,7 @@ end
 -- что докупить, где учить или собирать.
 local function stepTip(key, s, st, rank, isCur, b, cost, hint)
   local lines = {}
-  local title = TJ:StepName(s)
+  local title = ns:StepName(s)
   local color = isCur and W.GOLD or (st == "done" and W.GREEN or W.LIGHT)
   if isRankStep(s) then
     tinsert(lines, { format(T("Предел навыка станет %d"), s.max), color = W.GREY })
@@ -362,13 +362,13 @@ local function stepTip(key, s, st, rank, isCur, b, cost, hint)
       tinsert(lines, GREEN .. T("Ранг выучен.") .. "|r")
     else
       tinsert(lines, rankStatus(s, rank))
-      local npc = s.npcs and TJ:NpcsFor(s.npcs, 1)[1]
+      local npc = s.npcs and ns:NpcsFor(s.npcs, 1)[1]
       if npc then
         local who = s.k == "book" and T("Торговец:") or (s.k == "quest" and T("Задание:") or T("Учитель:"))
-        tinsert(lines, { who .. " " .. TJ:NpcName(npc), TJ:NpcZone(npc) })
+        tinsert(lines, { who .. " " .. ns:NpcName(npc), ns:NpcZone(npc) })
       end
       if s.k == "book" and s.id then
-        local price, approx = TJ:VendorPrice(s.id)
+        local price, approx = ns:VendorPrice(s.id)
         if price then tinsert(lines, { T("Книга стоит"), (approx and "~" or "") .. W.Money(price) }) end
       end
     end
@@ -377,15 +377,15 @@ local function stepTip(key, s, st, rank, isCur, b, cost, hint)
     if st == "done" then
       tinsert(lines, GREEN .. T("Шаг выполнен.") .. "|r")
     elseif s.k == "craft" then
-      local left = TJ:RemainingCrafts(s, rank)
+      local left = ns:RemainingCrafts(s, rank)
       if left > 0 then tinsert(lines, { T("Сделать ещё"), "|cffffffff" .. left .. "|r" }) end
-      if isCur and s.spell and TJ:RecipeKnown(key, s.spell) == false then
-        tinsert(lines, ORANGE .. TJ:RecipeSourceHead(TJ:RecipeSource(key, s)) .. "|r")
+      if isCur and s.spell and ns:RecipeKnown(key, s.spell) == false then
+        tinsert(lines, ORANGE .. ns:RecipeSourceHead(ns:RecipeSource(key, s)) .. "|r")
       end
       if b then
         for _, e in ipairs(b.items) do
           -- «есть» - то, что досталось этому шагу (раньше по маршруту могли забрать)
-          tinsert(lines, { itemTag(e.id) .. " " .. TJ:ItemName(e.id), haveNeed(min(e.have, e.stock or e.have), e.need) })
+          tinsert(lines, { itemTag(e.id) .. " " .. ns:ItemName(e.id), haveNeed(min(e.have, e.stock or e.have), e.need) })
         end
         if not b.allHave then
           if buyCount(b) == 0 then
@@ -398,13 +398,13 @@ local function stepTip(key, s, st, rank, isCur, b, cost, hint)
       end
     elseif s.k == "gather" then
       for _, nk in ipairs(s.nodes or {}) do
-        local n = TJ.Nodes[nk]
-        if n then tinsert(lines, { itemTag(n.item) .. " " .. TJ:N(n), format(T("с %d"), n.req) }) end
+        local n = ns.Nodes[nk]
+        if n then tinsert(lines, { itemTag(n.item) .. " " .. ns:N(n), format(T("с %d"), n.req) }) end
       end
-      local z = TJ:StepGatherZones(s, rank, 1)[1]
-      if z then tinsert(lines, { T("Где лучше:"), TJ:ZoneColor(z.area) .. TJ:ZoneName(z.area) .. "|r" }) end
+      local z = ns:StepGatherZones(s, rank, 1)[1]
+      if z then tinsert(lines, { T("Где лучше:"), ns:ZoneColor(z.area) .. ns:ZoneName(z.area) .. "|r" }) end
     elseif s.k == "zone" and s.areas and s.areas[1] then
-      tinsert(lines, { T("Где ловить:"), TJ:ZoneColor(s.areas[1]) .. TJ:ZoneName(s.areas[1]) .. "|r" })
+      tinsert(lines, { T("Где ловить:"), ns:ZoneColor(s.areas[1]) .. ns:ZoneName(s.areas[1]) .. "|r" })
     end
   end
   if hint and (s.id or s.k == "gather") and not isRankStep(s) then hint = hint .. " " .. T("Shift - ссылка на предмет.") end
@@ -415,25 +415,25 @@ end
 -- порядку: что ушло одному, другому не достанется). opts.hint, opts.onClick.
 local function stepTile(key, p, i, rank, maxRank, cur, sel, pool, opts)
   local s = p.steps[i]
-  local st = TJ:StepState(key, i, rank, maxRank)
+  local st = ns:StepState(key, i, rank, maxRank)
   local isCur = i == cur
   local b, cost
-  local left = (s.k == "craft" and st ~= "done") and TJ:RemainingCrafts(s, rank) or 0
+  local left = (s.k == "craft" and st ~= "done") and ns:RemainingCrafts(s, rank) or 0
   if left > 0 and (s.rc or s.m) then
-    b = TJ:StepBuy(s, left, pool)
+    b = ns:StepBuy(s, left, pool)
     cost = b.total + b.vendorCost
   end
-  local icon = s.id or (s.k == "gather" and s.nodes and s.nodes[1] and TJ.Nodes[s.nodes[1]].item) or nil
+  local icon = s.id or (s.k == "gather" and s.nodes and s.nodes[1] and ns.Nodes[s.nodes[1]].item) or nil
   local tex
   if not icon then
-    tex = TJ:StepIcon(s, p)
+    tex = ns:StepIcon(s, p)
     if s.k == "quest" then tex = QUEST_ICON end
   end
   return {
     item = icon, tex = tex,
     badge = tostring(isRankStep(s) and (s.learn or s.at) or s.t),
     count = left > 0 and left or nil,
-    text = TJ:StepName(s) .. (s.approx and (ORANGE .. " ~|r") or ""),
+    text = ns:StepName(s) .. (s.approx and (ORANGE .. " ~|r") or ""),
     foot = tileFoot(key, s, st, rank, isCur, b, cost),
     state = st, cur = isCur, sel = sel == i and i ~= cur,
     -- подсказку считаем при наведении: зоны сбора и NPC искать дорого
@@ -461,7 +461,7 @@ end
 
 -- Гайды вкладок снова (кнопка «?», настройки, /ec помощь): показать на
 -- главной и прокрутить к началу.
--- TJ:ShowIntro() - в UI/Intro.lua: знакомство отдельным окном.
+-- ns:ShowIntro() - в UI/Intro.lua: знакомство отдельным окном.
 
 -- Свёрнутый блок-подсказка: строка с «+», щелчок раскрывает.
 local function foldHead(c, title, open, onToggle)
@@ -525,31 +525,31 @@ local function headButtons(UI, tab, data)
     -- «Выбор профессии» есть всегда: профессии меняют. У персонажа без
     -- профессий страница выбора открыта и так - кнопка не нужна.
     local choose
-    if #TJ:LearnedList() > 0 then
-      choose = { text = T("Выбор профессии"), onClick = function() TJ:ShowChoose() end,
+    if #ns:LearnedList() > 0 then
+      choose = { text = T("Выбор профессии"), onClick = function() ns:ShowChoose() end,
         tip = T("Что делает каждая профессия и какой сбор к ней нужен. Пригодится, если решишь сменить профессию.") }
     end
     local list = {
       { text = T("Покупки до учителя"), onClick = goTab(4), tip = T("Что докупить до следующего учителя по всем профессиям.") },
       { text = T("Карта сбора"), onClick = goTab(2), tip = T("Руда и травы, которые сейчас дают навык.") },
-      { text = T("Настройки"), onClick = function() TJ:OpenSettings() end },
+      { text = T("Настройки"), onClick = function() ns:OpenSettings() end },
     }
     if choose then tinsert(list, 1, choose) end
     return list
   elseif tab == 2 then
     return {
-      { text = T("Открыть карту"), onClick = function() if TJ.MapOverlay then TJ.MapOverlay:OpenMap() end end,
+      { text = T("Открыть карту"), onClick = function() if ns.MapOverlay then ns.MapOverlay:OpenMap() end end,
         tip = T("Карта мира с местами сбора.") },
     }
   elseif tab == 4 then
     local list = data and data.toAuction or {}
-    local open = TJ:IsAuctionOpen()
-    local has = TJ:HasAuctionator()
+    local open = ns:IsAuctionOpen()
+    local has = ns:HasAuctionator()
     return {
       { text = open and T("Найти на аукционе") or T("В список Auctionator"), enabled = #list > 0 and has,
         tip = has and (open and T("Найдёт всё нужное на аукционе.") or T("Добавит всё нужное в список «EasyCraft» в Auctionator."))
           or T("Нужен аддон Auctionator: через него EasyCraft ищет сразу весь список."),
-        onClick = function() TJ:SendToAuction(list) end },
+        onClick = function() ns:SendToAuction(list) end },
     }
   end
 end
@@ -557,14 +557,14 @@ end
 function C:GuideCard(UI, tab)
   local rows = GUIDE[tab]
   if not rows then return end
-  local hidden = TJ.db.guideHidden
+  local hidden = ns.db.guideHidden
   if type(hidden) == "table" and hidden[tab] then return end
   local PAD, CW = UI.PAD, UI.CARD_W
   local c = UI:Card("normal")
   local y0 = c.y
   c:CornerButtons({ { text = T("Скрыть"), w = 90, onClick = function()
-    if type(TJ.db.guideHidden) ~= "table" then TJ.db.guideHidden = {} end
-    TJ.db.guideHidden[tab] = true
+    if type(ns.db.guideHidden) ~= "table" then ns.db.guideHidden = {} end
+    ns.db.guideHidden[tab] = true
     UI:Render(true)
   end } }, y0 - 4)
   c:Text(T("Как пользоваться?"), "title", { gap = 12, w = CW - PAD * 2 - 100 })
@@ -580,7 +580,7 @@ function C:GuideCard(UI, tab)
     for i = first, min(first + cols - 1, #rows) do
       local r = rows[i]
       local x = PAD + (i - first) * (colW + GX)
-      c:IconAt(x, rowTop, size, TJ.Icon(r[1]))
+      c:IconAt(x, rowTop, size, ns.Icon(r[1]))
       -- длинный заголовок занимает больше строк, чем высота значка: пояснение ниже него
       local th = c:TextBlock(x + size + 8, rowTop, size, colW - size - 8, { { T(r[2]), "head", W.GOLD, true } })
       local top = max(size, th or 0)
@@ -607,7 +607,7 @@ end
 function C:BuildHome(UI, tab)
   tab = tab or 1
   local how = HOW[tab] or HOW[1]
-  if tab == 1 then TJ.db.introDone = true end -- главную видели: дальше окно открывается там, где было
+  if tab == 1 then ns.db.introDone = true end -- главную видели: дальше окно открывается там, где было
   local shop = tab == 4 and self:ShoppingData() or nil
   UI:PageHeader(T(how.title), T(how.text), headButtons(UI, tab, shop))
   -- «Как пользоваться» - не на каждой вкладке, а отдельным окном (UI/Intro.lua)
@@ -638,11 +638,11 @@ end
 local HOME_COLS, HOME_GAP, HOME_BAR_W, HOME_RING = 8, 6, 210, 34
 
 function C:ProfCard(UI, key, pool)
-  local p = TJ.Profs[key]
-  local rank, maxRank = TJ:GetSkill(key)
-  local cur, _, train = TJ:CurrentStep(key)
+  local p = ns.Profs[key]
+  local rank, maxRank = ns:GetSkill(key)
+  local cur, _, train = ns:CurrentStep(key)
   local order = routeOrder(p)
-  local hide = TJ.settings.hideDone
+  local hide = ns.settings.hideDone
   local PAD, CW = UI.PAD, UI.CARD_W
   local c = UI:Card("normal")
   local cap = (maxRank and maxRank > 0) and maxRank or 300
@@ -654,11 +654,11 @@ function C:ProfCard(UI, key, pool)
   local headH = HOME_RING + rp * 2
   c:Zone(6, 6, CW - 12, headH + 10, open, function()
     local lines = { { T("Навык"), format("%d / %d", rank, cap) } }
-    local nr = TJ:NextRank(key)
-    if nr then tinsert(lines, { format(T("Ранг «%s»"), TJ:RankName(nr.max)), rankShort(nr.s, rank) }) end
-    return { title = TJ:N(p), lines = lines, hint = T("Щелчок - открыть профессию: все шаги подробно.") }
+    local nr = ns:NextRank(key)
+    if nr then tinsert(lines, { format(T("Ранг «%s»"), ns:RankName(nr.max)), rankShort(nr.s, rank) }) end
+    return { title = ns:N(p), lines = lines, hint = T("Щелчок - открыть профессию: все шаги подробно.") }
   end)
-  c:Ring(HOME_RING, UI.ICON_X + rp, top + rp):SetIcon(TJ.Icon(p.icon))
+  c:Ring(HOME_RING, UI.ICON_X + rp, top + rp):SetIcon(ns.Icon(p.icon))
   local tx = UI.ICON_X + HOME_RING + rp * 2 + UI.ICON_GAP
   local barX = CW - PAD - HOME_BAR_W
   -- слева две строки по центру кольца: название; где ты на маршруте и
@@ -666,30 +666,30 @@ function C:ProfCard(UI, key, pool)
   local nameH, lineH, gap = 17, 14, 1
   local y1 = top + floor((headH - (nameH + gap + lineH)) / 2)
   local y2 = y1 + nameH + gap
-  c:Text(TJ:N(p), "title", { x = tx, y = y1, w = barX - tx - 10, nowrap = true })
-  local bar = c:BarAt(barX, y1 - 3, HOME_BAR_W, rank, cap, TJ:RankName(maxRank), format("%d/%d", rank, cap))
-  TJ:MarkNextRank(bar)
+  c:Text(ns:N(p), "title", { x = tx, y = y1, w = barX - tx - 10, nowrap = true })
+  local bar = c:BarAt(barX, y1 - 3, HOME_BAR_W, rank, cap, ns:RankName(maxRank), format("%d/%d", rank, cap))
+  ns:MarkNextRank(bar)
   local nx = tx
   local pos, total = C:StepPos(p, cur or 0)
   local where = cur and format(T("Шаг %d из %d"), pos or 1, total) or (GREEN .. T("Маршрут пройден") .. "|r")
   local _, ww = c:Note(nx, y2, where, cur and { title = format(T("Шаг %d из %d"), pos or 1, total),
-    lines = { TJ:StepName(p.steps[cur]) }, hint = T("Щелчок - открыть профессию на этом шаге.") } or nil, open)
+    lines = { ns:StepName(p.steps[cur]) }, hint = T("Щелчок - открыть профессию на этом шаге.") } or nil, open)
   -- отставание - табличкой посередине верхнего края карточки
   local lag, lagTip = lagInfo(key)
   if lag then c:EdgeBadge(0, lag, { center = true, edge = { 0.85, 0.45, 0.1 }, tip = lagTip, onClick = open }) end
   -- справа под полосой: следующий ранг (можно учить - жёлтым, щелчок - метка)
-  local nr = TJ:NextRank(key)
+  local nr = ns:NextRank(key)
   if nr then
     local rs = nr.s
-    local can = TJ:CanLearnRank(rs, rank)
-    local npc = rs.npcs and TJ:NpcsFor(rs.npcs, 1)[1]
-    local text = can and (YELLOW .. format(T("Можно учить «%s»"), TJ:RankName(nr.max)) .. "|r")
-      or (format(T("«%s»: "), TJ:RankName(nr.max)) .. rankShort(rs, rank))
+    local can = ns:CanLearnRank(rs, rank)
+    local npc = rs.npcs and ns:NpcsFor(rs.npcs, 1)[1]
+    local text = can and (YELLOW .. format(T("Можно учить «%s»"), ns:RankName(nr.max)) .. "|r")
+      or (format(T("«%s»: "), ns:RankName(nr.max)) .. rankShort(rs, rank))
     -- под полосой - с просветом, чтобы не слипалось с её рамкой
-    c:Note(PAD, y2 + 3, text, { title = format(T("Ранг «%s» (до %d)"), TJ:RankName(nr.max), nr.max),
-      lines = { rankStatus(rs, rank), npc and { TJ:NpcName(npc), TJ:NpcZone(npc) } or nil },
+    c:Note(PAD, y2 + 3, text, { title = format(T("Ранг «%s» (до %d)"), ns:RankName(nr.max), nr.max),
+      lines = { rankStatus(rs, rank), npc and { ns:NpcName(npc), ns:NpcZone(npc) } or nil },
       hint = npc and T("Щелчок поставит метку на ближайшего.") or nil },
-      npc and function() TJ:Waypoint(npc, true) end or open, true)
+      npc and function() ns:Waypoint(npc, true) end or open, true)
   end
 
   -- текущий шаг - строкой во всю ширину над плитками (подпись, название,
@@ -726,13 +726,13 @@ function C:ProfCard(UI, key, pool)
 end
 
 function C:BuildProfList(UI)
-  local learned = TJ:LearnedList()
+  local learned = ns:LearnedList()
   if #learned == 0 then
     self:BuildChoose(UI) -- UI/Choose.lua
     return
   end
   local pool = {} -- общий запас реагентов на все профессии
-  for _, key in ipairs(learned) do TJ:Safe(self.ProfCard, self, UI, key, pool) end
+  for _, key in ipairs(learned) do ns:Safe(self.ProfCard, self, UI, key, pool) end
 end
 
 -------------------------------------------------------------------------------
@@ -741,7 +741,7 @@ end
 function C:MapCard(UI)
   local c = UI:Card()
   c:Head({ ring = "Interface\\Icons\\INV_Misc_Map_01" }, T("Карта мира"), nil, 32)
-  c:Check(T("Показывать мои находки"), TJ.settings.mapMine, function(v) TJ.settings.mapMine = v; TJ:RefreshAll() end,
+  c:Check(T("Показывать мои находки"), ns.settings.mapMine, function(v) ns.settings.mapMine = v; ns:RefreshAll() end,
     T("Где ты уже собирал или ловил рыбу, яркими значками."))
   c:Space(2)
   c:Text(T("На карте видны руда и травы, которые сейчас дают навык твоим профессиям сбора."), "small")
@@ -750,7 +750,7 @@ end
 
 function C:MyPointsCard(UI)
   local total = 0
-  for _, list in pairs(TJ.db.nodes) do
+  for _, list in pairs(ns.db.nodes) do
     if type(list) == "table" then total = total + #list end
   end
   local c = UI:Card()
@@ -766,9 +766,9 @@ function C:MyPointsCard(UI)
       return
     end
     UI.armClear = nil
-    wipe(TJ.db.nodes)
-    TJ.nodeGen = (TJ.nodeGen or 0) + 1 -- карта: свои точки убрать
-    TJ:RefreshAll()
+    wipe(ns.db.nodes)
+    ns.nodeGen = (ns.nodeGen or 0) + 1 -- карта: свои точки убрать
+    ns:RefreshAll()
   end } })
   UI:End(c)
 end
@@ -777,21 +777,21 @@ end
 --  Лагерь
 -------------------------------------------------------------------------------
 function C:BuildCamp(UI)
-  if self.XpCard then TJ:Safe(self.XpCard, self, UI) end
+  if self.XpCard then ns:Safe(self.XpCard, self, UI) end
   -- как устроен лагерь - в «Как это работает» над этим; здесь - галочка и
   -- предметы профессий блоками в ряд
   local f = UI:Card("flat")
-  f:Check(T("Показать предметы всех профессий"), TJ.settings.campAll, function(v) TJ.settings.campAll = v; UI:Render(true) end,
+  f:Check(T("Показать предметы всех профессий"), ns.settings.campAll, function(v) ns.settings.campAll = v; UI:Render(true) end,
     T("Не только твоих профессий: что дают предметы лагеря других и где взять рецепты."))
-  local _, finds = TJ:BlueprintReport()
+  local _, finds = ns:BlueprintReport()
   if finds > 0 then
-    f:Buttons({ { text = format(T("Поделиться находками (%d)"), finds), w = 240, onClick = function() TJ:ShareBlueprints() end,
+    f:Buttons({ { text = format(T("Поделиться находками (%d)"), finds), w = 240, onClick = function() ns:ShareBlueprints() end,
       tip = T("Чертежи, которые тебе выпадали, а где они падают, аддон ещё не знает. Отправь код автору - место появится у всех.") } })
   end
   UI:End(f, 6)
-  local list = TJ.settings.campAll and TJ.ProfOrder or TJ:LearnedList()
+  local list = ns.settings.campAll and ns.ProfOrder or ns:LearnedList()
   for _, key in ipairs(list) do
-    local p = TJ.Profs[key]
+    local p = ns.Profs[key]
     if p.camp and #p.camp > 0 then self:CampCard(UI, key) end
   end
 end
@@ -813,41 +813,41 @@ local BP_PLACE = {
 -- Возвращает список строк.
 function C:CampSource(p, e)
   if e.bp then
-    local bpName = TJ:ItemNameIfCached(e.bp) or T("Чертёж")
+    local bpName = ns:ItemNameIfCached(e.bp) or T("Чертёж")
     local list = (e.how or ""):match(":%s*(.+)$")
     if not list then
       -- источник пока неизвестен; если чертёж уже выпадал тебе - где
-      local f = TJ.db.bpFound and TJ.db.bpFound[e.bp]
+      local f = ns.db.bpFound and ns.db.bpFound[e.bp]
       if f then
         local ui = f.map
         return { { tex = MAP_ICON, text = T("Чертёж: ") .. (f.who or "?"), sub = (f.where or "") .. ", " .. T("тебе уже выпадал"),
-          icons = { TJ:ItemIcon(e.bp) },
+          icons = { ns:ItemIcon(e.bp) },
           tip = { title = bpName, lines = { T("Источник в базах пока неизвестен - это место из твоей добычи.") },
             hint = (ui and f.x) and T("Щелчок поставит метку и откроет карту.") or nil },
-          onClick = function() if ui and f.x then TJ:MapPoint(ui, f.x, f.y, f.who or bpName, f.where, true) end end } }
+          onClick = function() if ui and f.x then ns:MapPoint(ui, f.x, f.y, f.who or bpName, f.where, true) end end } }
       end
       -- неизвестно где - такая же кнопка: щелчок объяснит, что аддон запомнит
       return { { tex = QUESTION_ICON, text = T("Чертёж: где падает?"), sub = T("пока неизвестно"),
-        icons = { TJ:ItemIcon(e.bp) },
+        icons = { ns:ItemIcon(e.bp) },
         tip = { title = bpName, lines = { T("Где падает этот чертёж, пока никто не знает."),
           T("Выпадет тебе - аддон запомнит место и покажет его здесь.") } },
-        onClick = function() TJ:Print(format(T("где падает «%s», пока неизвестно. Выпадет тебе - аддон запомнит место."), bpName)) end } }
+        onClick = function() ns:Print(format(T("где падает «%s», пока неизвестно. Выпадет тебе - аддон запомнит место."), bpName)) end } }
     end
     local rows = {}
     for part in (list:gsub("%.%s*$", "") .. " / "):gmatch("(.-)%s*/%s*") do
       local boss, place = part:match("^(.-),%s*(.+)$")
       boss, place = boss or part, place or ""
       local pl = BP_PLACE[place]
-      local z = pl and TJ.Zones[pl[1]]
-      local zoneName = z and TJ:ZoneName(pl[1]) or nil
+      local z = pl and ns.Zones[pl[1]]
+      local zoneName = z and ns:ZoneName(pl[1]) or nil
       local sub = (z and zoneName ~= place) and (place .. ", " .. zoneName) or place
       local onClick
       if pl and pl[2] then
-        onClick = function() TJ:MapPoint(z.ui, pl[2], pl[3], place, zoneName, true) end
+        onClick = function() ns:MapPoint(z.ui, pl[2], pl[3], place, zoneName, true) end
       elseif z then
         onClick = function() C:ShowOnMap(pl[1]) end
       end
-      tinsert(rows, { tex = MAP_ICON, text = T("Чертёж: ") .. boss, sub = sub, icons = { TJ:ItemIcon(e.bp) },
+      tinsert(rows, { tex = MAP_ICON, text = T("Чертёж: ") .. boss, sub = sub, icons = { ns:ItemIcon(e.bp) },
         tip = { title = bpName, lines = { format(T("Падает с: %s"), boss), sub },
           hint = onClick and (pl[2] and T("Щелчок поставит метку у входа и откроет карту.") or T("Щелчок откроет карту на этой зоне.")) or nil },
         onClick = onClick or function() end })
@@ -857,12 +857,12 @@ function C:CampSource(p, e)
   if e.tier == 1 then -- первый уровень - у учителя
     for _, st in ipairs(p.steps) do
       if st.k == "train" and st.npcs then
-        local id = TJ:NpcsFor(st.npcs, 1)[1]
+        local id = ns:NpcsFor(st.npcs, 1)[1]
         if id then
-          return { { tex = MAP_ICON, text = T("Учитель: ") .. TJ:NpcName(id), icons = { SCROLL_ICON },
-            sub = (TJ:NpcZone(id) or "") ..  ", " .. T("или за задание «Лагерь 101»"),
-            tip = { title = TJ:NpcName(id), lines = { TJ:NpcZone(id) }, hint = T("Щелчок поставит метку и откроет карту.") },
-            onClick = function() TJ:Waypoint(id, true) end } }
+          return { { tex = MAP_ICON, text = T("Учитель: ") .. ns:NpcName(id), icons = { SCROLL_ICON },
+            sub = (ns:NpcZone(id) or "") ..  ", " .. T("или за задание «Лагерь 101»"),
+            tip = { title = ns:NpcName(id), lines = { ns:NpcZone(id) }, hint = T("Щелчок поставит метку и откроет карту.") },
+            onClick = function() ns:Waypoint(id, true) end } }
         end
       end
     end
@@ -875,16 +875,16 @@ end
 -- даже если где падает - неизвестно) и «Использовать», если он в сумках.
 local CAMP_COLS, CAMP_GAP, CAMP_ICON = 3, 20, 32
 function C:CampCard(UI, key)
-  local p = TJ.Profs[key]
-  local rank, _, learned = TJ:GetSkill(key)
+  local p = ns.Profs[key]
+  local rank, _, learned = ns:GetSkill(key)
   local PAD, CW = UI.PAD, UI.CARD_W
   local c = UI:Card()
   -- шапка карточки: кольцо и название профессии по центру кольца
   local ring = 26
   local rp = W.RingPad(ring)
   local IX, IY = UI.ICON_X, UI.ICON_Y
-  c:Ring(ring, IX + rp, IY + rp):SetIcon(TJ.Icon(p.icon))
-  c:TextBlock(IX + ring + rp * 2 + UI.ICON_GAP, IY, ring + rp * 2, CW - PAD * 2 - 60, { { TJ:N(p), "title" } })
+  c:Ring(ring, IX + rp, IY + rp):SetIcon(ns.Icon(p.icon))
+  c:TextBlock(IX + ring + rp * 2 + UI.ICON_GAP, IY, ring + rp * 2, CW - PAD * 2 - 60, { { ns:N(p), "title" } })
   local y = IY + ring + rp * 2 + 10
   local colW = floor((CW - PAD * 2 - CAMP_GAP * (CAMP_COLS - 1)) / CAMP_COLS)
   local ip = W.IconPad(CAMP_ICON)
@@ -904,14 +904,14 @@ function C:CampCard(UI, key)
       -- значок и название по центру значка
       local by = rowTop + 2
       local icon = c:Icon(CAMP_ICON, x + ip, by + ip)
-      if e.out then icon:SetItem(e.out) else icon:SetPlain(TJ.Icon("Spell_Fire_Fire")) end
+      if e.out then icon:SetItem(e.out) else icon:SetPlain(ns.Icon("Spell_Fire_Fire")) end
       -- у кольца редкости прозрачные края: текст ближе к значку
       local tx = x + outer + 3 -- просвет как у шапок: ~10 от видимого кольца
-      c:TextBlock(tx, by, outer, colW - outer - 3, { { (e.out and TJ:ItemNameIfCached(e.out)) or TJ:N(e), "head", W.LIGHT, true } })
+      c:TextBlock(tx, by, outer, colW - outer - 3, { { (e.out and ns:ItemNameIfCached(e.out)) or ns:N(e), "head", W.LIGHT, true } })
       by = by + outer + 4
       -- вторая строка: что даёт и с какого навыка
       local can = learned and rank >= e.skill
-      local have = e.out and TJ:InBags(e.out) or 0
+      local have = e.out and ns:InBags(e.out) or 0
       local desc = (e.effect and e.effect ~= "" and (e.effect .. " ") or "")
         .. (can and GREEN or RED) .. format(T("Навык %d."), e.skill) .. "|r"
         .. (have > 0 and ("  " .. GREEN .. format(T("В сумках: %d."), have) .. "|r") or "")
@@ -956,14 +956,14 @@ end
 -------------------------------------------------------------------------------
 -- Что докупить по всем профессиям: карточки, общий список для аукциона, итоги.
 function C:ShoppingData()
-  local source = TJ:PriceSource()
+  local source = ns:PriceSource()
   local cards, toAuction = {}, {}
   local grand, noPrice, count, oldPrices, vendorCount = 0, 0, 0, 0, 0
   -- Один запас на все профессии: что ушло на одну, другой уже не достанется.
   local pool = {}
-  for _, key in ipairs(TJ:LearnedList()) do
-    local cap = TJ:ShoppingCap(key)
-    local list = TJ:ShoppingList(key, cap)
+  for _, key in ipairs(ns:LearnedList()) do
+    local cap = ns:ShoppingCap(key)
+    local list = ns:ShoppingList(key, cap)
     if #list > 0 then
       local card = { key = key, cap = cap, rows = {}, total = 0 }
       for _, e in ipairs(list) do
@@ -978,11 +978,11 @@ function C:ShoppingData()
           if cost then
             card.total = card.total + cost
             if age then oldPrices = oldPrices + 1 end
-          elseif not TJ:IsVendorItem(e.id) then
+          elseif not ns:IsVendorItem(e.id) then
             noPrice = noPrice + 1
           end
-          if TJ:IsVendorItem(e.id) then vendorCount = vendorCount + 1 end
-          if not TJ:IsVendorItem(e.id) then tinsert(toAuction, e) end
+          if ns:IsVendorItem(e.id) then vendorCount = vendorCount + 1 end
+          if not ns:IsVendorItem(e.id) then tinsert(toAuction, e) end
           tinsert(card.rows, e)
           count = count + 1
         end
@@ -1010,7 +1010,7 @@ function C:BuildShopping(UI, d)
     if not source then
       c:Text(RED .. T("Цен нет: открой аукцион - EasyCraft прочитает их сам.") .. "|r", "small")
     elseif noPrice > 0 or oldPrices > 0 then
-      c:Text(format(T("Цены из %s. Открой аукцион, чтобы обновить: без цены %d, старше %d дн. - %d."), source, noPrice, TJ.PRICE_OLD_DAYS, oldPrices), "small")
+      c:Text(format(T("Цены из %s. Открой аукцион, чтобы обновить: без цены %d, старше %d дн. - %d."), source, noPrice, ns.PRICE_OLD_DAYS, oldPrices), "small")
     else
       c:Text(format(T("Цены из %s."), source), "small")
     end
@@ -1019,27 +1019,27 @@ function C:BuildShopping(UI, d)
 
   -- По профессиям
   for _, card in ipairs(cards) do
-    local p = TJ.Profs[card.key]
+    local p = ns.Profs[card.key]
     local pc = UI:Card(#card.rows == 0 and "done" or "normal")
     local py = pc.y
     if card.total > 0 then pc:Corner(W.Money(card.total), "body", py + 8, W.LIGHT) end
-    pc:Head({ ring = TJ.Icon(p.icon) }, TJ:N(p), { { format(T("до %d навыка"), card.cap), "small" } }, 32)
+    pc:Head({ ring = ns.Icon(p.icon) }, ns:N(p), { { format(T("до %d навыка"), card.cap), "small" } }, 32)
     if #card.rows == 0 then
       pc:Text(GREEN .. format(T("Всё есть для шагов до %d."), card.cap) .. "|r", "body")
     else
       for _, e in ipairs(card.rows) do
         -- «у торговца» уже справа вместо цены, здесь только «можно собрать»
-        local tag = TJ:OwnGather(e.id) and T("можно собрать") or nil
+        local tag = ns:OwnGather(e.id) and T("можно собрать") or nil
         local right
         if e.cost then right = W.Money(e.cost) .. (e.age and ("|cff9d9d9d ~" .. ageWord(e.age) .. "|r") or "")
-        elseif TJ:IsVendorItem(e.id) then
+        elseif ns:IsVendorItem(e.id) then
           local money = vendorMoney(e.id, e.buy)
           right = (money and (money .. " ") or "") .. "|cff9d9d9d" .. T("у торговца") .. "|r"
         else right = "|cff9d9d9d" .. T("нет цены") .. "|r" end
         local id, buy = e.id, e.buy
         pc:Row({
           id = id, hoverItem = true,
-          text = format("%d × %s", buy, TJ:ItemName(id))
+          text = format("%d × %s", buy, ns:ItemName(id))
             .. "  |cff9d9d9d" .. format(T("есть %d из %d"), e.have, e.need)
             .. ((e.mail or 0) > 0 and (", " .. format(T("на почте %d"), e.mail)) or "")
             .. (e.alts > 0 and (", " .. format(T("у альтов %d"), e.alts)) or "") .. (tag and (", " .. tag) or "") .. "|r",
@@ -1048,14 +1048,14 @@ function C:BuildShopping(UI, d)
             if IsModifiedClick and IsModifiedClick("CHATLINK") then
               local _, link = C_Item.GetItemInfo(id)
               W.InsertLink(link)
-            elseif TJ:IsAuctionOpen() and not TJ:IsVendorItem(id) then
-              TJ:SendToAuction({ { id = id, buy = buy } })
+            elseif ns:IsAuctionOpen() and not ns:IsVendorItem(id) then
+              ns:SendToAuction({ { id = id, buy = buy } })
             end
           end,
         })
       end
     end
-    local route, routeNoPrice = TJ:RouteCost(card.key)
+    local route, routeNoPrice = ns:RouteCost(card.key)
     if route > 0 then
       pc:Text(format(T("Весь путь до 300: около %s"), W.Money(route))
         .. (routeNoPrice > 0 and ("  |cff9d9d9d" .. format(T("(и ещё %d без цены)"), routeNoPrice) .. "|r") or ""), "small")
@@ -1074,9 +1074,9 @@ end
 local INK_RANGE = "|cff7a5c3a" -- диапазон навыка в заголовке ранга
 
 local function nodeItem(nk, rank)
-  local n = TJ.Nodes[nk]
-  local col = TJ:GatherColor(max(rank, 1), n.req)
-  return { id = n.item, text = TJ:Hex(col) .. TJ:N(n) .. "|r", sub = format(T("С %d навыка"), n.req) }
+  local n = ns.Nodes[nk]
+  local col = ns:GatherColor(max(rank, 1), n.req)
+  return { id = n.item, text = ns:Hex(col) .. ns:N(n) .. "|r", sub = format(T("С %d навыка"), n.req) }
 end
 
 -- Строка под названием шага: навык и коротко, что осталось.
@@ -1091,10 +1091,10 @@ local function stepSub(key, s, st, rank, left)
   if s.k == "craft" then
     -- цвет рецепта: из окна профессии точнее данных маршрута
     if rank >= (s.f or 0) then
-      local col = TJ:RealColor(key, s.spell, rank) or (s.sk and TJ:RecipeColor(s, rank))
+      local col = ns:RealColor(key, s.spell, rank) or (s.sk and ns:RecipeColor(s, rank))
       if col then
-        t = t .. ", " .. T("рецепт ") .. TJ:Hex(col) .. (TJ.ColorName[col] or "") .. "|r"
-        local chance = TJ:ChanceText(s, rank, col)
+        t = t .. ", " .. T("рецепт ") .. ns:Hex(col) .. (ns.ColorName[col] or "") .. "|r"
+        local chance = ns:ChanceText(s, rank, col)
         if chance then t = t .. " (" .. chance .. ")" end
       end
     end
@@ -1123,21 +1123,21 @@ function C:RankHead(UI, bk, done, total)
     end)
     ok:SetPoint("RIGHT", fs, "LEFT", -4, 1)
   end
-  c:Text(TJ:RankName(hi) .. "  " .. INK_RANGE .. format("%d-%d", lo, hi) .. "|r", "title", { y = y, nowrap = true })
+  c:Text(ns:RankName(hi) .. "  " .. INK_RANGE .. format("%d-%d", lo, hi) .. "|r", "title", { y = y, nowrap = true })
   c.y = y + 24
   UI:End(c, 4)
 end
 
 function C:BuildRoute(UI, key)
-  local p = TJ.Profs[key]
-  local rank, maxRank = TJ:GetSkill(key)
-  local cur, _, train = TJ:CurrentStep(key)
+  local p = ns.Profs[key]
+  local rank, maxRank = ns:GetSkill(key)
+  local cur, _, train = ns:CurrentStep(key)
   local order = routeOrder(p)
-  local hide = TJ.settings.hideDone
+  local hide = ns.settings.hideDone
   local states, nDone = {}, 0
   local inRank, doneInRank = {}, {}
   for _, i in ipairs(order) do
-    local st = TJ:StepState(key, i, rank, maxRank)
+    local st = ns:StepState(key, i, rank, maxRank)
     local bk = stepRank(p.steps[i])
     states[i] = st
     inRank[bk] = (inRank[bk] or 0) + 1
@@ -1148,15 +1148,15 @@ function C:BuildRoute(UI, key)
   end
 
   -- режим маршрута: игрок выбирает сам
-  if TJ.HasRouteModes and TJ:HasRouteModes(key) then
+  if ns.HasRouteModes and ns:HasRouteModes(key) then
     local mc = UI:Card("flat")
-    local mode = TJ:RouteMode()
+    local mode = ns:RouteMode()
     local list = {}
-    for _, m in ipairs(TJ.ROUTE_MODES) do
+    for _, m in ipairs(ns.ROUTE_MODES) do
       local on = m == mode
-      tinsert(list, { text = (on and "|cffffd100" or "") .. T(TJ.ROUTE_MODE_NAME[m]) .. (on and "|r" or ""),
-        tip = T(TJ.ROUTE_MODE_TIP[m]), enabled = not on,
-        onClick = function() TJ:SetRouteMode(m); UI:Render(true) end })
+      tinsert(list, { text = (on and "|cffffd100" or "") .. T(ns.ROUTE_MODE_NAME[m]) .. (on and "|r" or ""),
+        tip = T(ns.ROUTE_MODE_TIP[m]), enabled = not on,
+        onClick = function() ns:SetRouteMode(m); UI:Render(true) end })
     end
     mc:Buttons(list)
     if mode ~= "guide" and p.routeMode ~= mode then
@@ -1169,7 +1169,7 @@ function C:BuildRoute(UI, key)
   local bar = UI:Card("flat")
   local y0 = bar.y
   bar:Check(T("Скрывать выполненные"), hide, function(v)
-    TJ.settings.hideDone = v
+    ns.settings.hideDone = v
     UI:Render(true)
   end, T("Убрать шаги, которые уже сделаны. И здесь, и на главной."))
   bar:Corner(format(T("Сделано шагов: %d из %d"), nDone, #order), "body", y0 + 5)
@@ -1187,9 +1187,9 @@ function C:BuildRoute(UI, key)
   for n, i in ipairs(order) do
     local s = p.steps[i]
     local st = states[i]
-    local left = (s.k == "craft" and st ~= "done") and TJ:RemainingCrafts(s, rank) or 0
+    local left = (s.k == "craft" and st ~= "done") and ns:RemainingCrafts(s, rank) or 0
     local b
-    if left > 0 and (s.rc or s.m) then b = TJ:StepBuy(s, left, pool) end
+    if left > 0 and (s.rc or s.m) then b = ns:StepBuy(s, left, pool) end
     if not (hide and st == "done") then
       local bk = stepRank(s)
       if bk ~= lastB then
@@ -1197,13 +1197,13 @@ function C:BuildRoute(UI, key)
         self:RankHead(UI, bk, doneInRank[bk] or 0, inRank[bk] or 0)
       end
       if focus == i then UI.jumpY = max(0, UI.y - 6) end
-      TJ:Safe(self.StepCard, self, UI, key, i, n, st, cur, train, rank, maxRank, b, left)
+      ns:Safe(self.StepCard, self, UI, key, i, n, st, cur, train, rank, maxRank, b, left)
       shown = shown + 1
     end
   end
   if shown == 0 then
     local c = UI:Card("done")
-    c:Head({ ring = TJ.Icon(p.icon) }, T("Маршрут пройден"), { { T("Все шаги до 300 выполнены."), "body" } })
+    c:Head({ ring = ns.Icon(p.icon) }, T("Маршрут пройден"), { { T("Все шаги до 300 выполнены."), "body" } })
     UI:End(c)
   end
 end
@@ -1215,7 +1215,7 @@ local STEP_ICON, NUM_ICON = 36, 20
 -- навыка; у правого края - метка («Выполнено», «Можно сейчас») или
 -- табличка «Текущий шаг» на том же месте. Сделанный шаг - без тела.
 function C:StepCard(UI, key, i, n, st, cur, train, rank, maxRank, b, left)
-  local p = TJ.Profs[key]
+  local p = ns.Profs[key]
   local s = p.steps[i]
   local isCur = i == cur
   local done = st == "done"
@@ -1230,8 +1230,8 @@ function C:StepCard(UI, key, i, n, st, cur, train, rank, maxRank, b, left)
   local ix = UI.ICON_X
   local ic = c:Icon(STEP_ICON, ix + ip, y0 + ip)
   ic.gold = true
-  local item = s.id or (s.k == "gather" and s.nodes and s.nodes[1] and TJ.Nodes[s.nodes[1]].item) or nil
-  if item then ic:SetItem(item) else ic:SetPlain(s.k == "quest" and QUEST_ICON or TJ:StepIcon(s, p), s.spell) end
+  local item = s.id or (s.k == "gather" and s.nodes and s.nodes[1] and ns.Nodes[s.nodes[1]].item) or nil
+  if item then ic:SetItem(item) else ic:SetPlain(s.k == "quest" and QUEST_ICON or ns:StepIcon(s, p), s.spell) end
   ic:SetAlpha(done and 0.6 or 1)
   -- номер шага - кружком на нижнем крае значка
   local nrp = W.RingPad(NUM_ICON)
@@ -1271,7 +1271,7 @@ function C:StepCard(UI, key, i, n, st, cur, train, rank, maxRank, b, left)
   end
   local nameCol = isCur and W.GOLD or (done and { 0.75, 0.85, 0.75 } or W.LIGHT)
   c:TextBlock(tx, y0, outer, CW - tx - PAD - tagW, {
-    { TJ:StepName(s) .. (s.approx and (ORANGE .. " ~|r") or ""), "title", nameCol },
+    { ns:StepName(s) .. (s.approx and (ORANGE .. " ~|r") or ""), "title", nameCol },
     { stepSub(key, s, st, rank, left), "small" },
   })
   c.y = bottom + 6
@@ -1305,15 +1305,15 @@ function C:CurrentWarnings(UI, c, key, s, st, rank, maxRank)
   local mismatch = self:Mismatch(s, rank, maxRank, st)
   if mismatch then c:Text(mismatch, "small", { gap = 6 }) end
   if s.k == "craft" then
-    local real = TJ:RealColor(key, s.spell, rank)
+    local real = ns:RealColor(key, s.spell, rank)
     if s.approx and not real then
       c:Text(ORANGE .. T("Отрезок примерный: смотри на цвет рецепта в окне профессии.") .. "|r", "small", { gap = 6 })
     end
-    if rank >= (s.f or 0) and (real or (s.sk and TJ:RecipeColor(s, rank))) == "gray" then
+    if rank >= (s.f or 0) and (real or (s.sk and ns:RecipeColor(s, rank))) == "gray" then
       c:Text(RED .. T("Рецепт уже серый, навык не растёт: переходи дальше.") .. "|r", "small", { gap = 6 })
     end
   end
-  local check = TJ:StepCheck(key, s)
+  local check = ns:StepCheck(key, s)
   if check and check.missing then
     c:Text(ORANGE .. T("Этого рецепта в игре нет: пропусти шаг кнопкой «Пропустить шаг».") .. "|r", "small", { gap = 6 })
   end
@@ -1335,13 +1335,13 @@ end
 -- Создание: если рецепт не выучен - где его взять; картинка «реагенты ->
 -- результат» (есть/нужно), справа - что докупить или «Всё есть».
 function C:CraftBody(UI, c, key, s, rank, isCur, b, left)
-  local known = TJ:RecipeKnown(key, s.spell)
+  local known = ns:RecipeKnown(key, s.spell)
   if known == false then
     if isCur then self:TrainerBlock(UI, c, key, s)
-    else c:Text(ORANGE .. recipeShort(TJ:RecipeSource(key, s)) .. "|r", "small", { gap = 6 }) end
+    else c:Text(ORANGE .. recipeShort(ns:RecipeSource(key, s)) .. "|r", "small", { gap = 6 }) end
   elseif known == nil and s.src == "recipe" and isCur then
     c:Text(T("Рецепт нужно купить") .. (s.info and (": " .. s.info) or "."), "small", { gap = 6 })
-    local items = npcItems(s.npcs, 2, s.recipe and TJ:ItemIcon(s.recipe) or nil)
+    local items = npcItems(s.npcs, 2, s.recipe and ns:ItemIcon(s.recipe) or nil)
     if #items > 0 then c:Items(items, 2, 22) end
   end
   if not b then return end
@@ -1359,12 +1359,12 @@ function C:CraftBody(UI, c, key, s, rank, isCur, b, left)
     end
     tinsert(inputs, it)
   end
-  local out = s.id and { id = s.id } or { tex = TJ:StepIcon(s, TJ.Profs[key]), spell = s.spell }
+  local out = s.id and { id = s.id } or { tex = ns:StepIcon(s, ns.Profs[key]), spell = s.spell }
   if left and left > 0 then out.text = "|cffffffff" .. left .. "|r" end
   local lines
   if b.allHave then lines = { GREEN .. T("Всё есть") .. "|r" }
   else
-    lines = TJ:StepBuyLines(b)
+    lines = ns:StepBuyLines(b)
     if isCur then UI.stepBuy = b end -- для «Найти на аукционе»
   end
   c:Flow(inputs, out, 32, c.indent - 2, lines)
@@ -1375,10 +1375,10 @@ function C:RankBody(UI, c, s, isCur)
   if s.text and isCur then c:Text(s.text, "small", { gap = 6 }) end
   local money
   if s.k == "book" and s.id then
-    local price, approx = TJ:VendorPrice(s.id)
+    local price, approx = ns:VendorPrice(s.id)
     if price then money = (approx and "~" or "") .. W.Money(price) end
   end
-  local what = s.k == "book" and s.id and TJ:ItemIcon(s.id) or (s.k == "quest" and QUEST_ICON or nil)
+  local what = s.k == "book" and s.id and ns:ItemIcon(s.id) or (s.k == "quest" and QUEST_ICON or nil)
   local items = npcItems(s.npcs, isCur and 4 or 2, what, money)
   if #items > 0 then c:Items(items, 2, 22) end
 end
@@ -1389,16 +1389,16 @@ function C:GatherBody(UI, c, s, rank, isCur)
   for _, nk in ipairs(s.nodes or {}) do tinsert(nodes, nodeItem(nk, rank)) end
   -- что собирать - крупными значками в два столбца
   if #nodes > 0 then c:Items(nodes, 2, 30) end
-  local best = TJ:StepGatherZones(s, rank, isCur and 4 or 2)
+  local best = ns:StepGatherZones(s, rank, isCur and 4 or 2)
   if #best == 0 then return end
   local zones = {}
   for _, z in ipairs(best) do
     local area = z.area
-    local _, what = TJ:ZoneNodesText(z, 14, 3)
+    local _, what = ns:ZoneNodesText(z, 14, 3)
     -- лучшая для своей фракции - со звездой (без подписи: лишний текст)
-    tinsert(zones, { tex = MAP_ICON, text = C:ZoneText(area, true), icons = TJ:ZoneNodeIcons(z, 3),
+    tinsert(zones, { tex = MAP_ICON, text = C:ZoneText(area, true), icons = ns:ZoneNodeIcons(z, 3),
       star = z.rec, hot = z.rec,
-      tip = { title = TJ:ZoneName(area), lines = { TJ:ZoneWhy(z), what ~= "" and what or nil },
+      tip = { title = ns:ZoneName(area), lines = { ns:ZoneWhy(z), what ~= "" and what or nil },
         hint = T("Щелчок откроет карту на этой зоне: места сбора отмечены.") },
       onClick = function() C:ShowOnMap(area, s.nodes) end })
   end
@@ -1409,7 +1409,7 @@ end
 function C:ZoneBody(UI, c, s, isCur)
   local items = {}
   -- сначала лучшие зоны своей фракции (из маршрута), потом остальные
-  local me = TJ:PlayerFaction()
+  local me = ns:PlayerFaction()
   local areas, seen = {}, {}
   for _, area in ipairs(s[me == "A" and "recA" or "recH"] or {}) do
     if not seen[area] then seen[area] = true; tinsert(areas, area) end
@@ -1419,10 +1419,10 @@ function C:ZoneBody(UI, c, s, isCur)
     if not seen[area] then seen[area] = true; tinsert(areas, area) end
   end
   for k, area in ipairs(areas) do
-    if TJ:ZoneAllowed(area) and #items < (isCur and 6 or 2) then
+    if ns:ZoneAllowed(area) and #items < (isCur and 6 or 2) then
       local best = #items == 0
       tinsert(items, { tex = MAP_ICON, text = C:ZoneText(area, true), star = best, hot = best,
-        tip = { title = TJ:ZoneName(area), hint = T("Щелчок откроет карту на этой зоне.") }, onClick = function() C:ShowOnMap(area) end })
+        tip = { title = ns:ZoneName(area), hint = T("Щелчок откроет карту на этой зоне.") }, onClick = function() C:ShowOnMap(area) end })
     end
   end
   c:Items(items, 2, 22)
@@ -1434,22 +1434,22 @@ end
 -- пропускали вручную.
 function C:CurrentActions(UI, c, key, i, s, st, train, rank, maxRank, left)
   if s.k == "craft" then
-    local offers = TJ:BestRecipes(key, s, rank, 3)
+    local offers = ns:BestRecipes(key, s, rank, 3)
     if #offers > 0 then self:BestBlock(UI, c, key, offers) end
-    local rs = s.spell and TJ:RecipeState(key, s.spell)
+    local rs = s.spell and ns:RecipeState(key, s.spell)
     if rs and rs.enchant then c:Text(T("Чары накладываются из окна профессии: выбери там вещь."), "small", { gap = 6 }) end
   end
-  local p = TJ.Profs[key]
-  if train and train ~= i and TJ:CanLearnRank(p.steps[train], rank) then
-    c:Text(YELLOW .. T("Уже можно выучить ранг: ") .. "|r" .. TJ:RankName(p.steps[train].max), "body", { gap = 6 })
+  local p = ns.Profs[key]
+  if train and train ~= i and ns:CanLearnRank(p.steps[train], rank) then
+    c:Text(YELLOW .. T("Уже можно выучить ранг: ") .. "|r" .. ns:RankName(p.steps[train].max), "body", { gap = 6 })
   end
   missingTools(c, key, max(rank, s.f or 0))
-  TJ:Safe(fieldHints, c, key, s, rank)
+  ns:Safe(fieldHints, c, key, s, rank)
 
-  local check = TJ:StepCheck(key, s)
-  local manual = TJ.char.manual[key] and TJ.char.manual[key][i]
+  local check = ns:StepCheck(key, s)
+  local manual = ns.char.manual[key] and ns.char.manual[key][i]
   local stuck = (check and check.missing)
-    or (s.k == "craft" and rank >= (s.f or 0) and (TJ:RealColor(key, s.spell, rank) or (s.sk and TJ:RecipeColor(s, rank))) == "gray")
+    or (s.k == "craft" and rank >= (s.f or 0) and (ns:RealColor(key, s.spell, rank) or (s.sk and ns:RecipeColor(s, rank))) == "gray")
   local craft = s.k == "craft" and s.spell
   if not (manual ~= nil or stuck or craft) then return end
   local y = c.y + 4
@@ -1460,7 +1460,7 @@ function C:CurrentActions(UI, c, key, i, s, st, train, rank, maxRank, left)
       tip = manual ~= nil and T("Шаг снова будет засчитываться сам, по навыку.")
         or T("Шаг засчитывается сам, когда навык дорастёт. Пропусти его, если сделать его нельзя."),
       onClick = function()
-        TJ:ToggleManual(key, i)
+        ns:ToggleManual(key, i)
         UI:Render(true)
       end }, c.indent or UI.PAD, y)
   end
@@ -1489,21 +1489,21 @@ end
 -- заголовок и строка в золотой рамке: слева значок карты, имя и зона,
 -- справа цена и что взять (рецепт или свиток учителя). Щелчок - метка и карта.
 function C:TrainerBlock(UI, c, key, s)
-  local src = TJ:RecipeSource(key, s)
+  local src = ns:RecipeSource(key, s)
   local id = src.npc
   if not id then
-    c:Text(YELLOW .. TJ:RecipeSourceHead(src) .. "|r", "body", { gap = 8 })
+    c:Text(YELLOW .. ns:RecipeSourceHead(src) .. "|r", "body", { gap = 8 })
     return
   end
   local vendor = src.kind == "vendor"
   c:Text(vendor and T("Купи рецепт") or T("Выучи рецепт у учителя"), "head", { gap = 6 })
   local money = vendor and (src.copper and W.Money(src.copper) or src.price) or nil
   local which = src.count == 1 and T("Единственный.") or (src.count and src.count > 1 and format(T("Ближайший из %d."), src.count)) or nil
-  c:Items({ { tex = MAP_ICON, text = TJ:NpcName(id), sub = TJ:NpcZone(id) .. (src.extra and (", " .. src.extra) or ""),
-    right = money, icons = { vendor and src.item and TJ:ItemIcon(src.item) or SCROLL_ICON }, hot = true,
-    tip = { title = TJ:NpcName(id), lines = { vendor and T("Ближайший торговец этим рецептом.") or T("Ближайший учитель."), which },
+  c:Items({ { tex = MAP_ICON, text = ns:NpcName(id), sub = ns:NpcZone(id) .. (src.extra and (", " .. src.extra) or ""),
+    right = money, icons = { vendor and src.item and ns:ItemIcon(src.item) or SCROLL_ICON }, hot = true,
+    tip = { title = ns:NpcName(id), lines = { vendor and T("Ближайший торговец этим рецептом.") or T("Ближайший учитель."), which },
       hint = T("Щелчок поставит метку и откроет карту.") },
-    onClick = function() TJ:Waypoint(id, true) end } }, 1, 26)
+    onClick = function() ns:Waypoint(id, true) end } }, 1, 26)
 end
 
 -- Другие рецепты, как в подсказке у окна профессии: «Можно качать и на
@@ -1526,19 +1526,19 @@ function C:BestBlock(UI, c, key, offers)
       tinsert(lines, format(T("Самый дешёвый из рецептов этого цвета: на %s дешевле «%s»."), W.Money(o.cheaperBy), o.cheaperThan or "?"))
     end
     local id = o.id
-    local col = TJ:Hex(o.color) .. (TJ.ColorName[o.color] or "") .. "|r" .. (o.chance and (", " .. o.chance) or "")
-    tinsert(rows, { tex = o.icon or TJ.Icon(nil), text = TJ:Hex(o.color) .. (o.name or "?") .. "|r", sub = col,
+    local col = ns:Hex(o.color) .. (ns.ColorName[o.color] or "") .. "|r" .. (o.chance and (", " .. o.chance) or "")
+    tinsert(rows, { tex = o.icon or ns.Icon(nil), text = ns:Hex(o.color) .. (o.name or "?") .. "|r", sub = col,
       right = (o.cost and (W.Money(o.cost) .. "  ") or "") .. (o.a > 0 and format(T("хватит на %d"), o.a) or (GREY_C .. T("нет реагентов") .. "|r")),
       star = k == 1, hot = k == 1,
       tip = { title = o.name or "?", lines = lines, hint = T("Щелчок откроет его в окне профессии.") },
-      onClick = function() TJ:OpenRecipe(key, id) end })
+      onClick = function() ns:OpenRecipe(key, id) end })
   end
   c:Items(rows, 1, 28)
   -- «Создать N» для лучшего - когда на него есть реагенты, а на шаг нет
   if best.a > 0 and best.n > 0 then
     c:Buttons({ { text = format(T("Создать %d: %s"), best.n, best.name or "?"), w = 300,
       tip = format(T("Создаст «%s»: %d шт. (не больше, чем осталось до конца шага)."), best.name or "?", best.n),
-      onClick = function() TJ:CraftOrOpen(key, best.id, best.n) end } })
+      onClick = function() ns:CraftOrOpen(key, best.id, best.n) end } })
   end
 end
 
@@ -1547,13 +1547,13 @@ end
 function C:AuctionButton(UI, c, y)
   local b = UI.stepBuy
   if not (b and #b.auction > 0) then return end
-  local has = TJ:HasAuctionator()
-  local open = TJ:IsAuctionOpen()
+  local has = ns:HasAuctionator()
+  local open = ns:IsAuctionOpen()
   c:Button({ text = open and T("Найти на аукционе") or T("В список Auctionator"), w = 190, enabled = has,
     tip = has and (open and T("Найдёт недостающие реагенты на аукционе.")
       or T("Добавит недостающие реагенты в список «EasyCraft» в Auctionator: на аукционе останется нажать «Искать»."))
       or T("Нужен аддон Auctionator: через него EasyCraft ищет сразу весь список."),
-    onClick = function() TJ:SendToAuction(b.auction) end }, UI.PAD, y, true)
+    onClick = function() ns:SendToAuction(b.auction) end }, UI.PAD, y, true)
   return true
 end
 
@@ -1561,10 +1561,10 @@ end
 -- «Создать все», число со стрелками, «Создать». При закрытом окне кнопки
 -- сами откроют профессию; для чар и неизвестных рецептов - «Открыть рецепт».
 function C:CraftButtons(UI, c, key, s, left, y)
-  if TJ:RecipeKnown(key, s.spell) == false then
+  if ns:RecipeKnown(key, s.spell) == false then
     -- сначала выучить; окно закрыто - может, уже выучил: окно обновит скан
-    if not TJ:IsProfOpen(key) then
-      c:Button({ text = T("Открыть рецепт"), w = 160, onClick = function() TJ:OpenRecipe(key, s.spell) end,
+    if not ns:IsProfOpen(key) then
+      c:Button({ text = T("Открыть рецепт"), w = 160, onClick = function() ns:OpenRecipe(key, s.spell) end,
         tip = T("Откроет окно профессии. Тогда здесь появятся кнопки создания.") }, UI.PAD, y, true)
       return true
     end
@@ -1572,18 +1572,18 @@ function C:CraftButtons(UI, c, key, s, left, y)
   end
   UI.craftCount = UI.craftCount or {}
   local R = UI.CARD_W - UI.PAD -- правый край
-  local open = TJ:IsProfOpen(key)
+  local open = ns:IsProfOpen(key)
   local n, tip
   if open then
-    local st = TJ:RecipeState(key, s.spell)
+    local st = ns:RecipeState(key, s.spell)
     if st and not st.unknown and st.known and not st.enchant then n = st.count or 0 end
   elseif key ~= "enchanting" or s.id then
     -- Окно закрыто: считаем по сумкам, кнопка сама откроет профессию.
-    n = TJ:CanMake(s)
-    tip = TJ:NoAutoCraft() and T("Откроет окно профессии на этом рецепте.") or T("Откроет окно профессии и сразу начнёт создавать.")
+    n = ns:CanMake(s)
+    tip = ns:NoAutoCraft() and T("Откроет окно профессии на этом рецепте.") or T("Откроет окно профессии и сразу начнёт создавать.")
   end
   if not n then
-    c:Button({ text = T("Открыть рецепт"), w = 160, onClick = function() TJ:OpenRecipe(key, s.spell) end,
+    c:Button({ text = T("Открыть рецепт"), w = 160, onClick = function() ns:OpenRecipe(key, s.spell) end,
       tip = T("Откроет окно профессии. Тогда здесь появятся кнопки создания.") }, UI.PAD, y, true)
     return true
   end
@@ -1593,7 +1593,7 @@ function C:CraftButtons(UI, c, key, s, left, y)
   local spinX = createX - gap - spinW
   local allX = spinX - gap - allW
   -- Кнопки откроют окно профессии (если закрыто) и начнут создавать.
-  local function Go(count) TJ:CraftOrOpen(key, s.spell, count) end
+  local function Go(count) ns:CraftOrOpen(key, s.spell, count) end
   -- «Создать все» - сколько нужно до конца шага (не больше, чем хватит)
   local all = (left and left > 0) and min(n, left) or n
   -- не из чего - кнопок создания нет: что докупить и чем заняться пока,

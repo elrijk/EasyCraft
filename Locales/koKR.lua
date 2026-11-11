@@ -1,7 +1,7 @@
-local _, TJ = ...
+local _, ns = ...
 -- EasyCraft: перевод на koKR (английская строка -> перевод).
--- Таблица строится только если выбран этот язык (TJ.SetLang).
-TJ.LOCALES.koKR = function() return {
+-- Таблица строится только если выбран этот язык (ns.SetLang).
+ns.LOCALES.koKR = function() return {
   ["  |cffff5555Missing: |r"] = "  |cffff5555부족: |r",
   [" (%d each)"] = " (각 %d개)",
   [" - it raises the skill too."] = " - 숙련도도 오릅니다.",

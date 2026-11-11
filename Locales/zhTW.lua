@@ -1,7 +1,7 @@
-local _, TJ = ...
+local _, ns = ...
 -- EasyCraft: перевод на zhTW (английская строка -> перевод).
--- Таблица строится только если выбран этот язык (TJ.SetLang).
-TJ.LOCALES.zhTW = function() return {
+-- Таблица строится только если выбран этот язык (ns.SetLang).
+ns.LOCALES.zhTW = function() return {
   ["  |cffff5555Missing: |r"] = "  |cffff5555缺少：|r",
   [" (%d each)"] = " （每個 %d）",
   [" - it raises the skill too."] = " - 也能提升技能。",

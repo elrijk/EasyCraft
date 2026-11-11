@@ -1,4 +1,4 @@
-local _, TJ = ...
+local _, ns = ...
 
 -------------------------------------------------------------------------------
 --  Режимы маршрута. Игрок выбирает сам:
@@ -16,9 +16,9 @@ local _, TJ = ...
 -------------------------------------------------------------------------------
 local ceil, huge = math.ceil, math.huge
 
-TJ.ROUTE_MODES = { "guide", "cheap", "fast" }
-TJ.ROUTE_MODE_NAME = { guide = "Обычный", cheap = "Дешевле", fast = "Быстрее" }
-TJ.ROUTE_MODE_TIP = {
+ns.ROUTE_MODES = { "guide", "cheap", "fast" }
+ns.ROUTE_MODE_NAME = { guide = "Обычный", cheap = "Дешевле", fast = "Быстрее" }
+ns.ROUTE_MODE_TIP = {
   guide = "Проверенный маршрут из гайда.",
   cheap = "Меньше золота: дольше держимся за дешёвый рецепт, даже когда он желтеет.",
   fast = "Меньше созданий: всегда рецепт, который даёт навык почти наверняка.",
@@ -27,7 +27,7 @@ TJ.ROUTE_MODE_TIP = {
 local MIN_CHANCE = { cheap = 0.25, fast = 0.5 }
 local KEEP = 1.05 -- текущий рецепт не меняем, пока новый не лучше на 5%
 
-function TJ:RouteMode()
+function ns:RouteMode()
   local m = self.settings and self.settings.routeMode
   return self.ROUTE_MODE_NAME[m] and m or "guide"
 end
@@ -35,7 +35,7 @@ end
 local function baseSteps(p) return p.baseSteps or p.steps end
 
 -- У профессии есть из чего выбирать (ремесло с порогами цветов).
-function TJ:HasRouteModes(key)
+function ns:HasRouteModes(key)
   local p = self.Profs[key]
   if not p or not p.steps then return false end
   local n = 0
@@ -191,7 +191,7 @@ local function signature(steps)
 end
 
 -- Пересчитать маршруты под выбранный режим. Возвращает, изменилось ли что-то.
-function TJ:ApplyRoutes()
+function ns:ApplyRoutes()
   local mode = self:RouteMode()
   local changed = false
   self.char.routeSig = self.char.routeSig or {}
@@ -223,7 +223,7 @@ function TJ:ApplyRoutes()
   return changed
 end
 
-function TJ:SetRouteMode(mode)
+function ns:SetRouteMode(mode)
   if not self.ROUTE_MODE_NAME[mode] then return end
   self.settings.routeMode = mode
   self:ApplyRoutes()
@@ -235,9 +235,9 @@ local ev = CreateFrame("Frame")
 pcall(ev.RegisterEvent, ev, "PLAYER_ENTERING_WORLD")
 ev:SetScript("OnEvent", function()
   local function run()
-    if not (TJ.db and TJ.char) then return end
-    local ok, changed = pcall(TJ.ApplyRoutes, TJ)
-    if ok and changed then TJ:RefreshAll() end
+    if not (ns.db and ns.char) then return end
+    local ok, changed = pcall(ns.ApplyRoutes, ns)
+    if ok and changed then ns:RefreshAll() end
   end
   C_Timer.After(4, run)
 end)

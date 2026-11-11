@@ -1,7 +1,7 @@
-local _, TJ = ...
+local _, ns = ...
 -- EasyCraft: перевод на ptBR (английская строка -> перевод).
--- Таблица строится только если выбран этот язык (TJ.SetLang).
-TJ.LOCALES.ptBR = function() return {
+-- Таблица строится только если выбран этот язык (ns.SetLang).
+ns.LOCALES.ptBR = function() return {
   ["  |cffff5555Missing: |r"] = "  |cffff5555Falta: |r",
   [" (%d each)"] = " (%d cada)",
   [" - it raises the skill too."] = " - também aumenta a perícia.",

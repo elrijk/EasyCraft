@@ -1,5 +1,5 @@
-local _, TJ = ...
-local W, T = TJ.W, TJ.T
+local _, ns = ...
+local W, T = ns.W, ns.T
 local floor, max = math.floor, math.max
 
 -------------------------------------------------------------------------------
@@ -142,7 +142,7 @@ local function show(f)
   local h = 0
   for i, c in ipairs(f.killer) do
     local d = KILLER[i]
-    c.icon:SetIcon(TJ.Icon(d[1]))
+    c.icon:SetIcon(ns.Icon(d[1]))
     c.head:SetWidth(colW - 24)
     c.head:SetText(T(d[2]))
     c.text:SetWidth(colW - 28)
@@ -175,7 +175,7 @@ local function show(f)
   local mh = 0
   for i, c in ipairs(f.more) do
     local d = MORE[i]
-    c.icon:SetIcon(TJ.Icon(d[1]))
+    c.icon:SetIcon(ns.Icon(d[1]))
     c.head:SetWidth(cellW - 8)
     c.head:SetText(T(d[2]))
     mh = max(mh, 44 + 8 + c.head:GetStringHeight())
@@ -192,14 +192,14 @@ end
 
 -- Показать знакомство (кнопка «?», настройки, первое открытие аддона).
 -- after - что сделать, когда окно закроют (любым способом), один раз.
-function TJ:ShowIntro(after)
+function ns:ShowIntro(after)
   local UI = self.UI
   if not win then
     win = build()
     win:SetScript("OnHide", function(s)
       local fn = s.after
       s.after = nil
-      if fn then TJ:Safe(fn) end
+      if fn then ns:Safe(fn) end
     end)
   end
   local main = UI.frame and UI.frame:IsShown() and UI.frame
@@ -220,20 +220,20 @@ local TEST_ALWAYS = true
 -- Первое открытие аддона: сначала знакомство; когда его закроют - выбор
 -- профессии (если профессий ещё нет), и только потом само окно EasyCraft.
 -- Возвращает true, если знакомство показано и окно открывать пока не надо.
-function TJ:IntroFirst()
+function ns:IntroFirst()
   if not self.db then return false end
   if self.skipIntro then self.skipIntro = nil; return false end -- открываем окно после знакомства
   if self.db.onboarded and not TEST_ALWAYS then return false end
   local function openMain()
-    local UI = TJ.UI
+    local UI = ns.UI
     if not (UI.frame and UI.frame:IsShown()) then
-      TJ.skipIntro = true
-      TJ:ToggleFrame()
+      ns.skipIntro = true
+      ns:ToggleFrame()
     end
   end
   self:ShowIntro(function()
-    if (TEST_ALWAYS or #TJ:LearnedList() == 0) and TJ.ShowChoose then
-      TJ:ShowChoose(nil, openMain)
+    if (TEST_ALWAYS or #ns:LearnedList() == 0) and ns.ShowChoose then
+      ns:ShowChoose(nil, openMain)
     else
       openMain()
     end

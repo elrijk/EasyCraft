@@ -1,5 +1,5 @@
-local _, TJ = ...
-local T = TJ.T
+local _, ns = ...
+local T = ns.T
 
 -------------------------------------------------------------------------------
 --  Поделиться находками: чертежи лагеря, источник которых в данных аддона
@@ -15,7 +15,7 @@ local unknown
 local function unknownBlueprints()
   if unknown then return unknown end
   unknown = {}
-  for _, p in pairs(TJ.Profs) do
+  for _, p in pairs(ns.Profs) do
     for _, e in ipairs(p.camp or {}) do
       -- у известного источника в описании после двоеточия идёт место
       if e.bp and not (e.how or ""):match(":%s*(.+)$") then unknown[e.bp] = true end
@@ -27,7 +27,7 @@ end
 local function clean(s) return (tostring(s or ""):gsub("[;|]", " ")) end
 
 -- Находки, которыми стоит поделиться: { код, сколько записей }.
-function TJ:BlueprintReport()
+function ns:BlueprintReport()
   local parts, want = { HEADER }, unknownBlueprints()
   local ids = {}
   for id in pairs(self.db.bpFound or {}) do if want[id] then ids[#ids + 1] = id end end
@@ -60,7 +60,7 @@ StaticPopupDialogs.EASYCRAFT_SHARE = {
   preferredIndex = 3,
 }
 
-function TJ:ShareBlueprints()
+function ns:ShareBlueprints()
   local code, n = self:BlueprintReport()
   if n == 0 then return end
   StaticPopup_Show("EASYCRAFT_SHARE", T("Скопируй код (Ctrl+C) и отправь автору аддона:") .. "\n" .. ISSUES, nil, code)

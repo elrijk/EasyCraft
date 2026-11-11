@@ -1,6 +1,6 @@
-local ADDON, TJ = ...
+local ADDON, ns = ...
 local W = {}
-TJ.W = W
+ns.W = W
 
 -------------------------------------------------------------------------------
 --  Оформление в стиле MacroCoach: рамка окна игры, пергамент книги
@@ -326,7 +326,7 @@ function W.ItemQuality(id)
   end
   if GetItemInfoFn then
     local name, _, q = GetItemInfoFn(id)
-    if not name then TJ:WantItem(id) end
+    if not name then ns:WantItem(id) end
     if type(q) == "number" then return q end
   end
 end
@@ -401,7 +401,7 @@ function W.ItemIcon(parent, size)
   -- Предмет: значок, рамка по редкости, подсказка, Shift-клик - ссылка в чат.
   function b:SetItem(id, count)
     self.itemID, self.spellID = id, nil
-    self.icon:SetTexture(TJ:ItemIcon(id))
+    self.icon:SetTexture(ns:ItemIcon(id))
     self:SetQuality(W.ItemQuality(id) or 1)
     self.count:SetText(count and count > 1 and tostring(count) or "")
   end
@@ -472,7 +472,7 @@ function W.Slot(parent, size)
   b.mark:SetPoint("TOPRIGHT", size * 0.18, size * 0.18) -- галочка - в правом верхнем углу
   b.mark:Hide()
   function b:Set(tex, count, mark, grey, glow)
-    self.tex:SetTexture(tex or TJ.Icon(nil))
+    self.tex:SetTexture(tex or ns.Icon(nil))
     self.tex:SetDesaturated(grey and true or false)
     self.tex:SetAlpha(grey and 0.75 or 1)
     self.count:SetText(count and count > 0 and tostring(count) or "")
@@ -519,7 +519,7 @@ local LOCK_OFF = { "Interface\\CURSOR\\UI-Cursor-Move", "Interface\\CURSOR\\Poin
 local movers = {}
 
 function W.UpdateLocks()
-  local locked = TJ.settings and TJ.settings.hintsLocked
+  local locked = ns.settings and ns.settings.hintsLocked
   for _, f in ipairs(movers) do
     local b = f.lockBtn
     if b then
@@ -533,7 +533,7 @@ end
 -- Поставить подсказку туда, куда её перетащили (true), или ничего (false).
 function W.PlaceSaved(f, key)
   if f.dragging then return true end -- тащат прямо сейчас: не мешать
-  local p = TJ.db and TJ.db.hintPos and TJ.db.hintPos[key]
+  local p = ns.db and ns.db.hintPos and ns.db.hintPos[key]
   if not p then return false end
   local s = f:GetScale() or 1
   f:ClearAllPoints()
@@ -549,7 +549,7 @@ function W.Movable(f, key, corner, ox, oy, size)
   f:EnableMouse(true)
   f:RegisterForDrag("LeftButton")
   f:SetScript("OnDragStart", function(s)
-    if TJ.settings.hintsLocked then return end
+    if ns.settings.hintsLocked then return end
     s.dragging = true
     s:StartMoving()
   end)
@@ -559,8 +559,8 @@ function W.Movable(f, key, corner, ox, oy, size)
     local sc = s:GetScale() or 1
     local l, t = s:GetLeft(), s:GetTop()
     if l and t then
-      TJ.db.hintPos = TJ.db.hintPos or {}
-      TJ.db.hintPos[key] = { x = l * sc, y = t * sc }
+      ns.db.hintPos = ns.db.hintPos or {}
+      ns.db.hintPos[key] = { x = l * sc, y = t * sc }
       W.PlaceSaved(s, key)
     end
   end)
@@ -574,21 +574,21 @@ function W.Movable(f, key, corner, ox, oy, size)
   if b.RegisterForClicks then b:RegisterForClicks("LeftButtonUp", "RightButtonUp") end
   b:SetScript("OnClick", function(_, button)
     if button == "RightButton" then
-      if TJ.db.hintPos then TJ.db.hintPos[key] = nil end
-      TJ:RefreshAll()
+      if ns.db.hintPos then ns.db.hintPos[key] = nil end
+      ns:RefreshAll()
       return
     end
-    TJ.settings.hintsLocked = not TJ.settings.hintsLocked
+    ns.settings.hintsLocked = not ns.settings.hintsLocked
     W.UpdateLocks()
-    if TJ.RefreshOptions then TJ:RefreshOptions() end
+    if ns.RefreshOptions then ns:RefreshOptions() end
   end)
   b:SetScript("OnEnter", function(s)
     GameTooltip:SetOwner(s, "ANCHOR_RIGHT")
-    local locked = TJ.settings.hintsLocked
-    GameTooltip:SetText(locked and TJ.T("Подсказки закреплены") or TJ.T("Подсказки можно двигать"), 1, 0.82, 0)
-    GameTooltip:AddLine(locked and TJ.T("Щелчок - открепить: тогда их можно перетащить мышкой.")
-      or TJ.T("Перетащи подсказку мышкой - место запомнится. Щелчок - закрепить."), 1, 1, 1, true)
-    GameTooltip:AddLine(TJ.T("Правый щелчок - вернуть эту подсказку на место."), 0.6, 0.6, 0.6, true)
+    local locked = ns.settings.hintsLocked
+    GameTooltip:SetText(locked and ns.T("Подсказки закреплены") or ns.T("Подсказки можно двигать"), 1, 0.82, 0)
+    GameTooltip:AddLine(locked and ns.T("Щелчок - открепить: тогда их можно перетащить мышкой.")
+      or ns.T("Перетащи подсказку мышкой - место запомнится. Щелчок - закрепить."), 1, 1, 1, true)
+    GameTooltip:AddLine(ns.T("Правый щелчок - вернуть эту подсказку на место."), 0.6, 0.6, 0.6, true)
     GameTooltip:Show()
   end)
   b:SetScript("OnLeave", function() GameTooltip:Hide() end)
@@ -629,7 +629,7 @@ function W.Brand(f)
   local icon = box:CreateTexture(nil, "ARTWORK")
   icon:SetSize(20, 20)
   icon:SetPoint("LEFT", 0, 0)
-  icon:SetTexture(TJ.ICON)
+  icon:SetTexture(ns.ICON)
   if box.CreateMaskTexture and icon.AddMaskTexture then
     -- круглый, как значок у миникарты
     local mask = box:CreateMaskTexture()
@@ -773,16 +773,16 @@ function W.HintPanel(name, width, title, key)
     r:ClearAllPoints()
     r:SetPoint("TOPLEFT", self, "TOPLEFT", W.HINT_PAD - 4, -y)
     r:SetSize(self.w - W.HINT_PAD * 2 + 8, W.HINT_ROW)
-    r.icon:SetTexture(d.id and TJ:ItemIcon(d.id) or d.tex or TJ.Icon(nil))
+    r.icon:SetTexture(d.id and ns:ItemIcon(d.id) or d.tex or ns.Icon(nil))
     r.icon:SetDesaturated(d.dim and true or false)
     r:SetAlpha(d.dim and 0.6 or 1)
     if d.id then
-      local qr, qg, qb = TJ:ItemQualityColor(d.id)
+      local qr, qg, qb = ns:ItemQualityColor(d.id)
       r.text:SetTextColor(qr or 1, qg or 1, qb or 1)
     else
       r.text:SetTextColor(0.92, 0.92, 0.92)
     end
-    r.text:SetText(d.text or (d.id and TJ:ItemName(d.id)) or "")
+    r.text:SetText(d.text or (d.id and ns:ItemName(d.id)) or "")
     r.right:SetText(d.right or "")
     if d.mark then r.mark:SetTexture(d.mark); r.mark:Show() else r.mark:Hide() end
     r.mark:SetDesaturated(d.markGrey and true or false)
@@ -851,7 +851,7 @@ function W.ItemRow(parent, size)
   b.hl:Hide()
   function b:Set(it)
     self.itemID, self.tip, self.onClick = it.id, it.tip, it.onClick
-    if it.id then self.icon:SetItem(it.id) else self.icon:SetPlain(it.tex or TJ.Icon(nil)) end
+    if it.id then self.icon:SetItem(it.id) else self.icon:SetPlain(it.tex or ns.Icon(nil)) end
     self.text:SetText(it.text or "")
     self.sub:SetText(it.sub or "")
     self.text:ClearAllPoints()
@@ -1016,9 +1016,9 @@ function W.Money(copper)
   end
   local g, s, c = math.floor(copper / 10000), math.floor(copper / 100) % 100, copper % 100
   local out = {}
-  if g > 0 then out[#out + 1] = "|cffffd700" .. g .. TJ.T("з") .. "|r" end
-  if s > 0 or g > 0 then out[#out + 1] = "|cffc7c7cf" .. s .. TJ.T("с") .. "|r" end
-  out[#out + 1] = "|cffeda55f" .. c .. TJ.T("м") .. "|r"
+  if g > 0 then out[#out + 1] = "|cffffd700" .. g .. ns.T("з") .. "|r" end
+  if s > 0 or g > 0 then out[#out + 1] = "|cffc7c7cf" .. s .. ns.T("с") .. "|r" end
+  out[#out + 1] = "|cffeda55f" .. c .. ns.T("м") .. "|r"
   return table.concat(out, NBSP)
 end
 
@@ -1072,7 +1072,7 @@ function W.Flow(parent, size)
     local right = 0
     local function place(i, it, x)
       local b, l = self.ins[i], self.labels[i]
-      if it.id then b:SetItem(it.id) else b:SetPlain(it.tex or TJ.Icon(nil), it.spell) end
+      if it.id then b:SetItem(it.id) else b:SetPlain(it.tex or ns.Icon(nil), it.spell) end
       b.tip, b.onClick = it.tip, it.onClick
       -- реагента хватает - зелёная галочка в углу
       if not b.check then
@@ -1162,12 +1162,12 @@ local function UseOverlay()
 end
 
 function W.UseButton(parent)
-  local b = W.Button(parent, TJ.T("Использовать"), 120, 22)
+  local b = W.Button(parent, ns.T("Использовать"), 120, 22)
   b:SetScript("OnEnter", function(self)
     if not self.itemID then return end
     if InCombatLockdown() then
       GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
-      GameTooltip:SetText(TJ.T("В бою предметы отсюда не применить."), 1, 1, 1, 1, true)
+      GameTooltip:SetText(ns.T("В бою предметы отсюда не применить."), 1, 1, 1, 1, true)
       GameTooltip:Show()
       return
     end

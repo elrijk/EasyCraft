@@ -1,12 +1,12 @@
-local _, TJ = ...
-local W, C, T = TJ.W, TJ.Content, TJ.T
+local _, ns = ...
+local W, C, T = ns.W, ns.Content, ns.T
 local format, min = string.format, math.min
 
 -------------------------------------------------------------------------------
 --  Вкладка «Рецепты» главной: очередь крафта, откаты по персонажам и книга
 --  рецептов каждой профессии. Всё из тех же карточек, что и остальное окно:
 --  шапка Card:Head, строки-кнопки Card:Items, строки списка Card:Row.
---  Порядок в книге и в очереди - по выгоде на аукционе (TJ.ByProfit).
+--  Порядок в книге и в очереди - по выгоде на аукционе (ns.ByProfit).
 --  Фильтр сверху: всё или лучшее для подземелий, рейдов, PvP (Data\Best.lua),
 --  по желанию - только для своего класса.
 -------------------------------------------------------------------------------
@@ -44,8 +44,8 @@ local function bestLine(e)
 end
 
 local function nameText(e)
-  local col = e.d and TJ.COLOR_BY_D[e.d]
-  return col and (TJ:Hex(col) .. (e.name or "?") .. "|r") or (e.name or "?")
+  local col = e.d and ns.COLOR_BY_D[e.d]
+  return col and (ns:Hex(col) .. (e.name or "?") .. "|r") or (e.name or "?")
 end
 
 local function priceLines(e)
@@ -56,7 +56,7 @@ local function priceLines(e)
     lines[#lines + 1] = { T("Выгода за создание"), profitText(e.profit) }
     lines[#lines + 1] = T("Без комиссии аукциона.")
   else
-    lines[#lines + 1] = TJ:PriceSource() and T("Цены на аукционе пока нет") or T("Цен нет: открой аукцион - EasyCraft прочитает их сам")
+    lines[#lines + 1] = ns:PriceSource() and T("Цены на аукционе пока нет") or T("Цен нет: открой аукцион - EasyCraft прочитает их сам")
   end
   if e.best then
     lines[#lines + 1] = { T("Лучшее: ") .. bestWhere(e), color = W.GOLD }
@@ -96,7 +96,7 @@ end
 --  Очередь крафта
 -------------------------------------------------------------------------------
 function C:QueueCard(UI)
-  local q = TJ:QueueList()
+  local q = ns:QueueList()
   local c = UI:Card(#q > 0 and "current" or "normal")
   if #q == 0 then
     c:Head({ ring = "Interface\\Icons\\INV_Misc_Note_02" }, T("Очередь крафта"),
@@ -104,27 +104,27 @@ function C:QueueCard(UI)
     UI:End(c)
     return
   end
-  local needs = TJ:QueueNeeds(q)
+  local needs = ns:QueueNeeds(q)
   local total, priced = 0, false
   for _, e in ipairs(q) do
     if e.profit then total, priced = total + e.profit * e.n, true end
   end
   c:Head({ ring = "Interface\\Icons\\INV_Misc_Note_02" }, T("Очередь крафта"),
     { { T("Сверху - самое выгодное по ценам аукциона.") .. (priced and (" " .. T("Выгода всей очереди: ") .. profitText(total)) or ""), "small" } }, 32)
-  local nextUp = TJ:QueueNext(q)
+  local nextUp = ns:QueueNext(q)
   local rows = {}
   for _, e in ipairs(q) do
-    local p = TJ.Profs[e.key]
+    local p = ns.Profs[e.key]
     local state = not e.known and (RED .. T("рецепт не выучен") .. "|r")
       or (e.can > 0 and (GREEN .. format(T("хватит на %d"), e.can) .. "|r") or (GREY .. T("нет реагентов") .. "|r"))
     local lines = priceLines(e)
     rows[#rows + 1] = { id = e.out, tex = e.icon, text = format("%d × %s", e.n, nameText(e)),
-      sub = TJ:N(p) .. ", " .. state, right = profitText(e.profit and e.profit * e.n),
+      sub = ns:N(p) .. ", " .. state, right = profitText(e.profit and e.profit * e.n),
       star = e == nextUp, hot = e == nextUp,
       tip = { title = e.name or "?", lines = lines, hint = T("Щелчок - создать. Крестик справа уберёт из очереди.") },
-      onClick = function() TJ:QueueCraft(e) end,
+      onClick = function() ns:QueueCraft(e) end,
       onDelete = function()
-        TJ:QueueRemove(e.spell)
+        ns:QueueRemove(e.spell)
         UI:Render(true)
       end }
   end
@@ -135,18 +135,18 @@ function C:QueueCard(UI)
   else
     c:Text(GREEN .. T("Реагентов хватает на всю очередь.") .. "|r", "body")
   end
-  local has, open = TJ:HasAuctionator(), TJ:IsAuctionOpen()
+  local has, open = ns:HasAuctionator(), ns:IsAuctionOpen()
   c:Buttons({
     { text = T("Создать следующий"), w = 170, enabled = nextUp ~= nil,
       tip = nextUp and format(T("Создаст «%s»: %d шт."), nextUp.name or "?", min(nextUp.n, nextUp.can))
         or T("Ни на один рецепт очереди нет реагентов."),
-      onClick = function() if nextUp then TJ:QueueCraft(nextUp) end end },
+      onClick = function() if nextUp then ns:QueueCraft(nextUp) end end },
     { text = open and T("Найти на аукционе") or T("В список Auctionator"), w = 190, enabled = has and #needs.auction > 0,
       tip = has and (open and T("Найдёт недостающие реагенты на аукционе.")
         or T("Добавит недостающие реагенты в список «EasyCraft» в Auctionator: на аукционе останется нажать «Искать»."))
         or T("Нужен аддон Auctionator: через него EasyCraft ищет сразу весь список."),
-      onClick = function() TJ:SendToAuction(needs.auction) end },
-    { text = T("Очистить"), w = 110, onClick = function() TJ:QueueClear(); UI:Render(true) end,
+      onClick = function() ns:SendToAuction(needs.auction) end },
+    { text = T("Очистить"), w = 110, onClick = function() ns:QueueClear(); UI:Render(true) end,
       tip = T("Уберёт из очереди всё.") },
   })
   UI:End(c)
@@ -156,7 +156,7 @@ end
 --  Откаты по персонажам
 -------------------------------------------------------------------------------
 function C:CooldownCard(UI)
-  local list = TJ:CooldownList()
+  local list = ns:CooldownList()
   local c = UI:Card()
   c:Head({ ring = "Interface\\Icons\\INV_Misc_PocketWatch_01" }, T("Откаты по персонажам"),
     { { #list == 0 and T("Пусто. Создай предмет с откатом - аддон его запомнит.")
@@ -164,10 +164,10 @@ function C:CooldownCard(UI)
   for _, e in ipairs(list) do
     local who = e.who:match("^[^-]+") or e.who
     c:Row({ tex = e.icon, text = (e.name or "?") .. "  " .. GREY .. who .. "|r",
-      right = e.left == 0 and (GREEN .. T("готово") .. "|r") or TJ:TimeLeft(e.left),
+      right = e.left == 0 and (GREEN .. T("готово") .. "|r") or ns:TimeLeft(e.left),
       state = e.mine and e.left == 0 and "current" or nil,
       onDelete = function()
-        TJ:ForgetCooldown(e.who, e.spell)
+        ns:ForgetCooldown(e.who, e.spell)
         UI:Render(true)
       end })
   end
@@ -193,10 +193,10 @@ local function knownRow(UI, key, e, first)
       if e.out and IsModifiedClick and IsModifiedClick("CHATLINK") then
         chatLink(e.out)
       elseif e.out then
-        TJ:QueueAdd(key, e.spell, 1)
+        ns:QueueAdd(key, e.spell, 1)
         UI:Render(true)
       else
-        TJ:OpenRecipe(key, e.spell) -- чары: накладываются из окна профессии
+        ns:OpenRecipe(key, e.spell) -- чары: накладываются из окна профессии
       end
     end }
 end
@@ -204,14 +204,14 @@ end
 -- Строка невыученного рецепта: где его взять, щелчок - метка на карте.
 local function unknownRow(key, e)
   local s = e.step
-  local src = s and TJ:RecipeSource(key, s)
+  local src = s and ns:RecipeSource(key, s)
   local npc = src and src.npc
   local sub, right, icons
   if npc then
     local vendor = src.kind == "vendor"
-    sub = (vendor and T("Торговец: ") or T("Учитель: ")) .. TJ:NpcName(npc) .. ", " .. TJ:NpcZone(npc)
+    sub = (vendor and T("Торговец: ") or T("Учитель: ")) .. ns:NpcName(npc) .. ", " .. ns:NpcZone(npc)
     right = vendor and (src.copper and W.Money(src.copper) or src.price) or nil
-    icons = { MAP_ICON, vendor and src.item and TJ:ItemIcon(src.item) or SCROLL_ICON }
+    icons = { MAP_ICON, vendor and src.item and ns:ItemIcon(src.item) or SCROLL_ICON }
   elseif src and src.info and src.info ~= "" then
     sub = src.info
   else
@@ -225,7 +225,7 @@ local function unknownRow(key, e)
     tip = { title = e.name or "?", lines = lines, hint = npc and T("Щелчок поставит метку и откроет карту.") or nil },
     onClick = function()
       if npc then
-        TJ:Waypoint(npc, true)
+        ns:Waypoint(npc, true)
       elseif e.out and IsModifiedClick and IsModifiedClick("CHATLINK") then
         chatLink(e.out)
       end
@@ -233,16 +233,16 @@ local function unknownRow(key, e)
 end
 
 function C:BookCard(UI, key, known, unknown, scanned)
-  local p = TJ.Profs[key]
+  local p = ns.Profs[key]
   local PAD = UI.PAD
   UI.bookAll = UI.bookAll or {}
   local all = UI.bookAll[key]
   local c = UI:Card()
   local y0 = c.y
   if not scanned then
-    c.headRight = c:CornerButtons({ { text = T("Окно профессии"), w = 150, onClick = function() TJ:OpenProfession(key) end } }, y0 + 6)
+    c.headRight = c:CornerButtons({ { text = T("Окно профессии"), w = 150, onClick = function() ns:OpenProfession(key) end } }, y0 + 6)
   end
-  c:Head({ ring = TJ.Icon(p.icon) }, TJ:N(p),
+  c:Head({ ring = ns.Icon(p.icon) }, ns:N(p),
     { { scanned and format(T("Выучено рецептов: %d. Сверху - самые выгодные."), #known)
       or T("Открой окно профессии - аддон прочитает рецепты."), "small" } }, 32)
   local rows = {}
@@ -272,17 +272,17 @@ function C:BuildBook(UI)
   self:BookFilter(UI)
   local mode, mine = UI.bookMode, UI.bookMine
   if not mode then
-    if self.ForMeCard then TJ:Safe(self.ForMeCard, self, UI) end
+    if self.ForMeCard then ns:Safe(self.ForMeCard, self, UI) end
     self:QueueCard(UI)
     self:CooldownCard(UI)
   end
   local shown = 0
-  for _, key in ipairs(TJ:LearnedList()) do
-    local known, unknown, scanned = TJ:BookList(key)
+  for _, key in ipairs(ns:LearnedList()) do
+    local known, unknown, scanned = ns:BookList(key)
     if mode then
       local k2, u2 = {}, {}
-      for _, e in ipairs(known) do if TJ:IsBest(e, mode, mine) then k2[#k2 + 1] = e end end
-      for _, e in ipairs(unknown) do if TJ:IsBest(e, mode, mine) then u2[#u2 + 1] = e end end
+      for _, e in ipairs(known) do if ns:IsBest(e, mode, mine) then k2[#k2 + 1] = e end end
+      for _, e in ipairs(unknown) do if ns:IsBest(e, mode, mine) then u2[#u2 + 1] = e end end
       known, unknown = k2, u2
     end
     if #known + #unknown > 0 then

@@ -1,23 +1,23 @@
-local ADDON, TJ = ...
+local ADDON, ns = ...
 local floor, min = math.floor, math.min
 local format = string.format
 
 -------------------------------------------------------------------------------
 --  Окно профессии: открыть, создать предметы, ссылка на профессию в чат.
---  TJ.openKey - какая своя профессия сейчас открыта (ставит ScanTradeSkill).
+--  ns.openKey - какая своя профессия сейчас открыта (ставит ScanTradeSkill).
 -------------------------------------------------------------------------------
 local TS = C_TradeSkillUI
 
-function TJ:IsProfOpen(key)
+function ns:IsProfOpen(key)
   return key ~= nil and self.openKey == key
 end
 
 -- Открыть окно своей профессии.
-function TJ:OpenProfession(key)
+function ns:OpenProfession(key)
   local p = self.Profs[key]
   if not (p and TS and TS.OpenTradeSkill) then return false end
   if InCombatLockdown and InCombatLockdown() then
-    self:Print(TJ.T("в бою окно профессии не открыть."))
+    self:Print(ns.T("в бою окно профессии не открыть."))
     return false
   end
   local ok, opened = pcall(TS.OpenTradeSkill, p.skill)
@@ -26,7 +26,7 @@ end
 
 -- Открыть окно профессии сразу на рецепте. Если окно закрыто - сначала
 -- открываем его, рецепт выберем, когда игра его покажет.
-function TJ:OpenRecipe(key, spell)
+function ns:OpenRecipe(key, spell)
   if self:IsProfOpen(key) then
     if spell and TS and TS.OpenRecipe then pcall(TS.OpenRecipe, spell) end
     return true
@@ -37,7 +37,7 @@ end
 
 -- Рецепт в открытом окне: выучен ли и сколько можно сделать из того, что есть.
 -- Возвращает nil, если окно этой профессии не открыто.
-function TJ:RecipeState(key, spell)
+function ns:RecipeState(key, spell)
   if not (spell and self:IsProfOpen(key) and TS and TS.GetRecipeInfo) then return nil end
   local ok, info = pcall(TS.GetRecipeInfo, spell)
   if not ok or not info then return { unknown = true } end
@@ -51,7 +51,7 @@ end
 
 -- Выучен ли рецепт: по открытому окну, иначе по игре и прошлому скану окна.
 -- nil - не знаем (окно профессии ещё не открывали).
-function TJ:RecipeKnown(key, spell)
+function ns:RecipeKnown(key, spell)
   if not spell then return nil end
   local st = self:RecipeState(key, spell)
   if st then
@@ -71,7 +71,7 @@ end
 -- npc = ближайший учитель или торговец, item = предмет-рецепт,
 -- price = «12с», extra = «ограниченный запас», info = как есть }.
 -- Учитель - того ранга, на котором рецепт открывается.
-function TJ:RecipeSource(key, s)
+function ns:RecipeSource(key, s)
   if s.src == "recipe" then
     -- в английском виде заметка переведена: «price: 80s»
     local info = s.info or ""
@@ -92,7 +92,7 @@ function TJ:RecipeSource(key, s)
 end
 
 -- «1з 20с», «42м» (или «1g 20s», «42c» в английском виде) -> медь; nil - не цена.
-function TJ:ParseMoney(text)
+function ns:ParseMoney(text)
   if type(text) ~= "string" then return nil end
   local g = text:match("(%d+)%s*з") or text:match("(%d+)%s*g")
   local sv = text:match("(%d+)%s*с") or text:match("(%d+)%s*s")
@@ -104,7 +104,7 @@ end
 -- Следующий ранг и что для него сделать: у учителя (train), купить книгу
 -- (book), взять задание (quest). { s, kind, id = ближайший NPC, item,
 -- name, max, learn, can = можно уже сейчас, lvl } или nil (всё выучено).
-function TJ:RankAction(key)
+function ns:RankAction(key)
   local nr = self:NextRank(key)
   if not nr then return nil end
   local rank = self:GetSkill(key)
@@ -118,10 +118,10 @@ end
 -- учитель / торговец книгой / кто даёт задание - для следующего ранга,
 -- если его уже можно взять. Иначе nil и почему пока никто не нужен.
 -- Возвращает id, «зачем».
-function TJ:NeededTrainer(key)
+function ns:NeededTrainer(key)
   local p = self.Profs[key]
   if not p then return nil end
-  local T = TJ.T
+  local T = ns.T
   local rank, maxRank = self:GetSkill(key)
   local _, s = self:CurrentStep(key, rank, maxRank)
   if s and s.k == "craft" and self:RecipeKnown(key, s.spell) == false then
@@ -146,7 +146,7 @@ end
 
 
 -- Ближайший учитель профессии твоего ранга (учит следующий ранг и рецепты).
-function TJ:NearestTrainer(key)
+function ns:NearestTrainer(key)
   local rank = self:GetSkill(key)
   local pick, last
   for _, st in ipairs(self.Profs[key].steps) do
@@ -160,8 +160,8 @@ function TJ:NearestTrainer(key)
 end
 
 -- Заголовок «где выучить»: «Сначала выучи рецепт у учителя:» и т. п.
-function TJ:RecipeSourceHead(src)
-  local T = TJ.T
+function ns:RecipeSourceHead(src)
+  local T = ns.T
   if src.kind == "vendor" then
     -- цена монетами, как в игре
     local money = src.copper and self.W.Money(src.copper) or src.price
@@ -172,22 +172,22 @@ function TJ:RecipeSourceHead(src)
   return T("Сначала выучи этот рецепт.") .. (src.info and (" " .. src.info) or "")
 end
 
-function TJ:Craft(key, spell, count)
+function ns:Craft(key, spell, count)
   if not (spell and TS and TS.CraftRecipe) then return false end
   if InCombatLockdown and InCombatLockdown() then
-    self:Print(TJ.T("в бою создавать предметы нельзя."))
+    self:Print(ns.T("в бою создавать предметы нельзя."))
     return false
   end
   count = math.max(1, floor(tonumber(count) or 1))
   local ok, err = pcall(TS.CraftRecipe, spell, count)
-  if not ok then self:Print(TJ.T("не получилось создать: ") .. tostring(err)) end
+  if not ok then self:Print(ns.T("не получилось создать: ") .. tostring(err)) end
   return ok
 end
 
 -- Сколько раз можно создать шаг из того, что лежит в сумках (withBank -
 -- вместе с банком). Нужно, пока окно профессии закрыто и игра сама не
 -- считает. nil - не знаем реагентов.
-function TJ:CanMake(s, withBank)
+function ns:CanMake(s, withBank)
   local rc = s and s.rc
   if not rc or #rc < 2 then return nil end
   local n
@@ -205,24 +205,24 @@ end
 local PENDING_SEC = 15
 
 -- Игра раньше не дала создавать само (запоминаем до новой версии аддона).
-function TJ:NoAutoCraft()
-  return self.db ~= nil and self.db.noAutoCraft == TJ.version
+function ns:NoAutoCraft()
+  return self.db ~= nil and self.db.noAutoCraft == ns.version
 end
 
 -- Игра не дала начать создание само: окно уже открыто, просим нажать ещё раз.
 local function askAgain()
-  TJ:Print(TJ.T("игра не дала начать сразу. Окно открыто - нажми «Создать» ещё раз."))
+  ns:Print(ns.T("игра не дала начать сразу. Окно открыто - нажми «Создать» ещё раз."))
 end
 
-function TJ:CraftOrOpen(key, spell, count)
+function ns:CraftOrOpen(key, spell, count)
   if self:IsProfOpen(key) then return self:Craft(key, spell, count) end
   if InCombatLockdown and InCombatLockdown() then
-    self:Print(TJ.T("в бою создавать предметы нельзя."))
+    self:Print(ns.T("в бою создавать предметы нельзя."))
     return false
   end
   -- Игра уже раз не дала создавать само: просто открываем окно на рецепте.
   if self:NoAutoCraft() then
-    if self:OpenRecipe(key, spell) then self:Print(TJ.T("окно профессии открыто - нажми «Создать» ещё раз.")) end
+    if self:OpenRecipe(key, spell) then self:Print(ns.T("окно профессии открыто - нажми «Создать» ещё раз.")) end
     return false
   end
   local pc = { key = key, spell = spell, count = count, t = GetTime(), tries = 0 }
@@ -234,9 +234,9 @@ function TJ:CraftOrOpen(key, spell, count)
   end
   -- Не дождались рецептов: окно открыто - просим нажать самому.
   C_Timer.After(PENDING_SEC, function()
-    if TJ.pendingCraft ~= pc then return end
-    TJ.pendingCraft = nil
-    if TJ:IsProfOpen(pc.key) then askAgain() end
+    if ns.pendingCraft ~= pc then return end
+    ns.pendingCraft = nil
+    if ns:IsProfOpen(pc.key) then askAgain() end
   end)
   return true
 end
@@ -252,19 +252,19 @@ local watchGen = 0
 for _, e in ipairs({ "ADDON_ACTION_BLOCKED", "ADDON_ACTION_FORBIDDEN" }) do pcall(watch.RegisterEvent, watch, e) end
 watch:SetScript("OnEvent", function(_, event, addon)
   if event == "ADDON_ACTION_BLOCKED" or event == "ADDON_ACTION_FORBIDDEN" then
-    if addon == ADDON and TJ.autoCraftAt and GetTime() - TJ.autoCraftAt < 2 and TJ.db then TJ.db.noAutoCraft = TJ.version end
+    if addon == ADDON and ns.autoCraftAt and GetTime() - ns.autoCraftAt < 2 and ns.db then ns.db.noAutoCraft = ns.version end
     return
   end
-  TJ.autoCraftSeen = true
+  ns.autoCraftSeen = true
 end)
 
 local function stopWatch()
   for _, e in ipairs(WATCH_EVENTS) do pcall(watch.UnregisterEvent, watch, e) end
 end
 
-function TJ:AutoCraft(key, spell, count)
+function ns:AutoCraft(key, spell, count)
   if InCombatLockdown and InCombatLockdown() then
-    self:Print(TJ.T("в бою создавать предметы нельзя."))
+    self:Print(ns.T("в бою создавать предметы нельзя."))
     return
   end
   self.autoCraftSeen = nil
@@ -282,13 +282,13 @@ function TJ:AutoCraft(key, spell, count)
   local function check()
     if gen ~= watchGen then return end -- уже идёт новая попытка
     stopWatch()
-    if not TJ.autoCraftSeen then
+    if not ns.autoCraftSeen then
       -- создание не началось: игра не даёт делать это само - запомним
-      if TJ.db then TJ.db.noAutoCraft = TJ.version end
+      if ns.db then ns.db.noAutoCraft = ns.version end
       askAgain()
     end
   end
-  C_Timer.After(1.5, function() TJ:Safe(check) end)
+  C_Timer.After(1.5, function() ns:Safe(check) end)
 end
 
 local function flushPendingCraft(self)
@@ -305,23 +305,23 @@ local function flushPendingCraft(self)
     if pc.waiting then return end
     if pc.tries >= 4 then
       self.pendingCraft = nil
-      self:Print(TJ.T("не нашёл рецепт в окне профессии: выбери его там и нажми «Создать»."))
+      self:Print(ns.T("не нашёл рецепт в окне профессии: выбери его там и нажми «Создать»."))
       return
     end
     pc.tries, pc.waiting = pc.tries + 1, true
     C_Timer.After(0.5, function()
       pc.waiting = nil
-      if TJ.pendingCraft == pc then TJ:Safe(flushPendingCraft, TJ) end
+      if ns.pendingCraft == pc then ns:Safe(flushPendingCraft, ns) end
     end)
     return
   end
   self.pendingCraft = nil
   if not st.known then
-    self:Print(TJ.T("этот рецепт ещё не выучен: где его взять, написано в шаге."))
+    self:Print(ns.T("этот рецепт ещё не выучен: где его взять, написано в шаге."))
   elseif st.enchant then
-    self:Print(TJ.T("Чары накладываются из окна профессии: выбери там вещь."))
+    self:Print(ns.T("Чары накладываются из окна профессии: выбери там вещь."))
   elseif (st.count or 0) < 1 then
-    self:Print(TJ.T("не хватает реагентов."))
+    self:Print(ns.T("не хватает реагентов."))
   else
     self:AutoCraft(pc.key, pc.spell, min(math.max(1, tonumber(pc.count) or 1), st.count))
   end
@@ -341,7 +341,7 @@ local function OpenChatWith(text)
 end
 
 local function SendLink(link, chatType, channel, direct)
-  if not chatType then TJ.W.InsertLink(link); return end
+  if not chatType then ns.W.InsertLink(link); return end
   -- Сказать и каналы игра пускает только по щелчку игрока: если окно
   -- профессии открывалось само, ставим ссылку в строку чата нужного канала.
   if not direct and (chatType == "SAY" or chatType == "CHANNEL") then
@@ -352,7 +352,7 @@ local function SendLink(link, chatType, channel, direct)
   if not ok then OpenChatWith((CHAT_SLASH[chatType] or "") .. link) end
 end
 
-function TJ:LinkProfession(key, chatType, channel, fromPending)
+function ns:LinkProfession(key, chatType, channel, fromPending)
   if self:IsProfOpen(key) and TS and TS.GetTradeSkillListLink then
     local ok, link = pcall(TS.GetTradeSkillListLink)
     if ok and link then
@@ -363,7 +363,7 @@ function TJ:LinkProfession(key, chatType, channel, fromPending)
   self.pendingLink = { key = key, chatType = chatType, channel = channel }
   if not self:OpenProfession(key) then
     self.pendingLink = nil
-    self:Print(TJ.T("открой окно профессии, тогда ссылка встанет в чат."))
+    self:Print(ns.T("открой окно профессии, тогда ссылка встанет в чат."))
   end
 end
 
@@ -387,24 +387,24 @@ local function JoinedChannels()
 end
 
 -- Меню «Ссылка в чат»: куда отправить ссылку на профессию.
-function TJ:LinkMenu(key, anchor)
-  local T = TJ.T
+function ns:LinkMenu(key, anchor)
+  local T = ns.T
   local list = {
     { text = T("Вставить в строку чата"), tip = T("Ссылка встанет в строку чата: допиши текст и нажми Enter."),
-      onClick = function() TJ:LinkProfession(key) end },
-    { text = T("Сказать"), onClick = function() TJ:LinkProfession(key, "SAY") end },
-    { text = T("Группа"), enabled = IsInGroup and IsInGroup() or false, onClick = function() TJ:LinkProfession(key, "PARTY") end },
-    { text = T("Рейд"), enabled = IsInRaid and IsInRaid() or false, onClick = function() TJ:LinkProfession(key, "RAID") end },
-    { text = T("Гильдия"), enabled = IsInGuild and IsInGuild() or false, onClick = function() TJ:LinkProfession(key, "GUILD") end },
+      onClick = function() ns:LinkProfession(key) end },
+    { text = T("Сказать"), onClick = function() ns:LinkProfession(key, "SAY") end },
+    { text = T("Группа"), enabled = IsInGroup and IsInGroup() or false, onClick = function() ns:LinkProfession(key, "PARTY") end },
+    { text = T("Рейд"), enabled = IsInRaid and IsInRaid() or false, onClick = function() ns:LinkProfession(key, "RAID") end },
+    { text = T("Гильдия"), enabled = IsInGuild and IsInGuild() or false, onClick = function() ns:LinkProfession(key, "GUILD") end },
   }
   for _, ch in ipairs(JoinedChannels()) do
-    list[#list + 1] = { text = ch.id .. ". " .. ch.name, onClick = function() TJ:LinkProfession(key, "CHANNEL", ch.id) end }
+    list[#list + 1] = { text = ch.id .. ". " .. ch.name, onClick = function() ns:LinkProfession(key, "CHANNEL", ch.id) end }
   end
-  TJ.W.Menu(anchor, list)
+  ns.W.Menu(anchor, list)
 end
 
 -- Окно своей профессии открылось: доделать то, ради чего его открывали.
-function TJ:FlushPendingLink()
+function ns:FlushPendingLink()
   local spell = self.pendingRecipe
   if spell and self.openKey then
     self.pendingRecipe = nil
@@ -428,18 +428,18 @@ local function AuctionatorAPI()
 end
 
 -- Откуда цены: "Auctionator", "TSM" или nil (цен нет).
-function TJ:PriceSource()
+function ns:PriceSource()
   local A = AuctionatorAPI()
   if A and A.GetAuctionPriceByItemID then return "Auctionator" end
   if type(TSM_API) == "table" and TSM_API.GetCustomPriceValue then return "TSM" end
 end
 
 -- Цена старше стольких дней помечается как устаревшая.
-TJ.PRICE_OLD_DAYS = 3
+ns.PRICE_OLD_DAYS = 3
 
 -- Цена одной штуки на аукционе в меди или nil; вторым - сколько дней
 -- назад Auctionator видел предмет (nil - неизвестно или TSM).
-function TJ:AuctionPrice(id)
+function ns:AuctionPrice(id)
   if type(id) ~= "number" then return nil end
   local A = AuctionatorAPI()
   if A and A.GetAuctionPriceByItemID then
@@ -462,25 +462,25 @@ function TJ:AuctionPrice(id)
 end
 
 -- Продаётся у торговцев (колбы, нитки, соль): на аукционе не ищем.
-function TJ:IsVendorItem(id)
+function ns:IsVendorItem(id)
   local src = self.MatSources and self.MatSources[id]
   return src and src.src == "vendor" or false
 end
 
 -- Можно собрать своей профессией сбора: ключ этой профессии или nil.
 local GATHER_BY_SRC = { herb = "herbalism", ore = "mining", skin = "skinning", fish = "fishing" }
-function TJ:OwnGather(id)
+function ns:OwnGather(id)
   local src = self.MatSources and self.MatSources[id]
   local key = (src and GATHER_BY_SRC[src.src]) or self.ItemCategory[id]
   if key and self.char.profs[key] and self.Profs[key] and self.Profs[key].kind ~= "craft" then return key end
 end
 
-function TJ:IsAuctionOpen()
+function ns:IsAuctionOpen()
   return self.ahOpen or (AuctionHouseFrame and AuctionHouseFrame:IsShown()) or (AuctionFrame and AuctionFrame:IsShown()) or false
 end
 
 -- Название на языке клиента: по нему ищет аукцион.
-function TJ:ClientItemName(id)
+function ns:ClientItemName(id)
   local name = GetItemInfoFn and GetItemInfoFn(id)
   if not name then
     self:WantItem(id)
@@ -489,7 +489,7 @@ function TJ:ClientItemName(id)
   return name
 end
 
-function TJ:HasAuctionator()
+function ns:HasAuctionator()
   local A = AuctionatorAPI()
   return A and A.ConvertToSearchString and A.CreateShoppingList and true or false
 end
@@ -497,10 +497,10 @@ end
 -- Покупки в Auctionator: на открытом аукционе сразу поиск (вкладка «Покупки»
 -- Auctionator), иначе - список «EasyCraft» в Auctionator на потом.
 -- list = { { id = , buy = }, ... }
-function TJ:SendToAuction(list)
+function ns:SendToAuction(list)
   local A = AuctionatorAPI()
   if not self:HasAuctionator() then
-    self:Print(TJ.T("нужен аддон Auctionator: через него EasyCraft ищет реагенты на аукционе."))
+    self:Print(ns.T("нужен аддон Auctionator: через него EasyCraft ищет реагенты на аукционе."))
     return
   end
   local strings, terms, skipped = {}, {}, 0
@@ -520,32 +520,32 @@ function TJ:SendToAuction(list)
     end
   end
   if #strings == 0 then
-    self:Print(skipped > 0 and TJ.T("названия предметов ещё загружаются: нажми ещё раз через секунду.")
-      or TJ.T("на аукционе покупать нечего."))
+    self:Print(skipped > 0 and ns.T("названия предметов ещё загружаются: нажми ещё раз через секунду.")
+      or ns.T("на аукционе покупать нечего."))
     return
   end
   local ok, err
   if self:IsAuctionOpen() and A.MultiSearchAdvanced then
     ok, err = pcall(A.MultiSearchAdvanced, CALLER, terms)
-    if ok then self:Print(format(TJ.T("ищу на аукционе, позиций: %d (вкладка «Покупки» Auctionator)."), #terms)) end
+    if ok then self:Print(format(ns.T("ищу на аукционе, позиций: %d (вкладка «Покупки» Auctionator)."), #terms)) end
   else
     ok, err = pcall(A.CreateShoppingList, CALLER, "EasyCraft", strings)
-    if ok then self:Print(format(TJ.T("список «EasyCraft» в Auctionator готов (%d): открой аукцион, вкладка «Покупки»."), #strings)) end
+    if ok then self:Print(format(ns.T("список «EasyCraft» в Auctionator готов (%d): открой аукцион, вкладка «Покупки»."), #strings)) end
   end
   if not ok then
-    self:Print(TJ.T("Auctionator не принял список: ") .. tostring(err))
+    self:Print(ns.T("Auctionator не принял список: ") .. tostring(err))
     return
   end
   if skipped > 0 then
-    self:Print(format(TJ.T("не загрузились названия, позиций: %d. Нажми ещё раз через секунду."), skipped))
+    self:Print(format(ns.T("не загрузились названия, позиций: %d. Нажми ещё раз через секунду."), skipped))
   end
 end
 
 -- Цены обновились в Auctionator (скан аукциона) - перерисовать окно.
-function TJ:HookPriceUpdates()
+function ns:HookPriceUpdates()
   local A = AuctionatorAPI()
   if self.priceHooked or not (A and A.RegisterForDBUpdate) then return end
-  self.priceHooked = pcall(A.RegisterForDBUpdate, CALLER, function() TJ:RefreshAll() end)
+  self.priceHooked = pcall(A.RegisterForDBUpdate, CALLER, function() ns:RefreshAll() end)
 end
 
 -------------------------------------------------------------------------------
@@ -554,9 +554,9 @@ end
 --  1 жёлтый, 2 зелёный, 3 серый. Он годится, пока навык не изменился.
 -------------------------------------------------------------------------------
 local COLOR_BY_D = { [0] = "orange", [1] = "yellow", [2] = "green", [3] = "gray" }
-TJ.COLOR_BY_D = COLOR_BY_D
+ns.COLOR_BY_D = COLOR_BY_D
 
-function TJ:FreshScan(key, rank)
+function ns:FreshScan(key, rank)
   local sc = self.char.scan[key]
   if not (sc and sc.colors and sc.list) then return nil end
   if not self:IsProfOpen(key) and sc.rank ~= rank then return nil end
@@ -564,7 +564,7 @@ function TJ:FreshScan(key, rank)
 end
 
 -- Цвет рецепта по окну профессии; nil - неизвестно (окно не открывали).
-function TJ:RealColor(key, spell, rank)
+function ns:RealColor(key, spell, rank)
   local sc = spell and self:FreshScan(key, rank)
   local d = sc and sc.colors[spell]
   return d and COLOR_BY_D[d]
@@ -572,7 +572,7 @@ end
 
 -- Реагенты рецепта из открытого окна профессии: {id, кол-во, ...} или nil.
 local reagentCache = {} -- реагенты рецептов не меняются: спрашиваем игру один раз
-function TJ:RecipeReagents(spell)
+function ns:RecipeReagents(spell)
   if not spell then return nil end
   if reagentCache[spell] then return reagentCache[spell] end
   local rc = self:ReadRecipeReagents(spell)
@@ -580,7 +580,7 @@ function TJ:RecipeReagents(spell)
   return rc
 end
 
-function TJ:ReadRecipeReagents(spell)
+function ns:ReadRecipeReagents(spell)
   if not (TS and TS.GetRecipeSchematic) then return nil end
   local ok, sch = pcall(TS.GetRecipeSchematic, spell, false)
   if not ok or type(sch) ~= "table" or type(sch.reagentSlotSchematics) ~= "table" then return nil end
@@ -599,7 +599,7 @@ end
 -- Цена у торговца за штуку: настоящая, если видели этот товар у торговца
 -- (запоминаем), иначе примерно - торговец продаёт в 4 раза дороже, чем
 -- покупает. Второе значение true - цена примерная.
-function TJ:VendorPrice(id)
+function ns:VendorPrice(id)
   local v = self.db and self.db.vprice and self.db.vprice[id]
   if v then return v, false end
   if GetItemInfoFn then
@@ -613,7 +613,7 @@ end
 -- Книги рангов и рецепты маршрута, которые покупают у торговцев: их цену
 -- тоже запоминаем у торговца (на подсказке - «купить книгу за 10з»).
 local shopItems
-function TJ:IsRouteShopItem(id)
+function ns:IsRouteShopItem(id)
   if not shopItems then
     shopItems = {}
     for _, p in pairs(self.Profs) do
@@ -627,7 +627,7 @@ function TJ:IsRouteShopItem(id)
 end
 
 -- Торговец открыт: запомнить цены реагентов, которые продают торговцы.
-function TJ:RecordMerchantPrices()
+function ns:RecordMerchantPrices()
   if not (self.db and GetMerchantNumItems and GetMerchantItemID) then return end
   for i = 1, GetMerchantNumItems() or 0 do
     local id = GetMerchantItemID(i)
@@ -651,7 +651,7 @@ end
 -- (медь у торговцев), vendorApprox (цена примерная), auction
 -- ({id, buy} для Auctionator), bank/mail (часть лежит там), allHave.
 -- Банк, почта и альты не докупаются - их надо забрать.
-function TJ:StepBuy(s, left, pool)
+function ns:StepBuy(s, left, pool)
   local out = { items = {}, total = 0, noPrice = 0, vendor = {}, vendorCost = 0, auction = {}, allHave = true }
   local rc = s and (s.rc or s.m)
   if not rc then return out end
@@ -703,8 +703,8 @@ end
 
 -- Строки «где взять недостающее» для шага (без чисел - они на картинке):
 -- забрать из банка, у торговца, сколько докупить на аукционе, нет цен.
-function TJ:StepBuyLines(b)
-  local T, lines = TJ.T, {}
+function ns:StepBuyLines(b)
+  local T, lines = ns.T, {}
   if b.bank then tinsert(lines, "|cffffd100" .. T("Часть лежит в банке: забери у банкира") .. "|r") end
   if #b.vendor > 0 then
     -- сколько потратить у торговца и на что (сами количества - на картинке)
@@ -729,7 +729,7 @@ end
 -- Цена одного реагента для сравнения рецептов. Аукцион; для товаров
 -- торговца без цены на аукционе - примерно: торговец продаёт где-то в 4 раза
 -- дороже, чем покупает.
-function TJ:UnitPrice(id)
+function ns:UnitPrice(id)
   if self:IsVendorItem(id) then
     local p = self:VendorPrice(id)
     if p then return p end
@@ -739,7 +739,7 @@ end
 
 -- Стоимость одного создания по реагентам {id, кол-во, ...}; nil - есть
 -- реагент без цены.
-function TJ:RecipeCost(rc)
+function ns:RecipeCost(rc)
   if type(rc) ~= "table" or #rc < 2 then return nil end
   local total = 0
   for i = 1, #rc - 1, 2 do
@@ -759,12 +759,12 @@ end
 -- по порогам маршрута для рецептов, которые уже были в окне (выучены).
 -- Запас при закрытом окне считаем по сумкам: скан окна мог устареть.
 local D_BY_COLOR = { orange = 0, yellow = 1, green = 2, gray = 3 }
-function TJ:BestRecipe(key, s, rank)
+function ns:BestRecipe(key, s, rank)
   return (self:BestRecipes(key, s, rank, 1))[1]
 end
 
 -- То же, но несколько вариантов по порядку (первый - лучший).
-function TJ:BestRecipes(key, s, rank, limit)
+function ns:BestRecipes(key, s, rank, limit)
   local open = self:IsProfOpen(key)
   local sc = self:FreshScan(key, rank)
   local cands, cost, avail = {}, {}, {}
@@ -842,7 +842,7 @@ function TJ:BestRecipes(key, s, rank, limit)
 end
 
 -- Описание одного варианта для BestRecipes.
-function TJ:RecipeOffer(key, s, rank, cands, bi, avail, cost, stepD, known, stuck)
+function ns:RecipeOffer(key, s, rank, cands, bi, avail, cost, stepD, known, stuck)
   local best = cands[bi]
   local a = avail[best]
   local left = self:RemainingCrafts(s, rank)
@@ -868,19 +868,19 @@ end
 --  не купить второй раз. Ящик читаем, пока он открыт; покупку добавляем
 --  сразу, как аукцион её подтвердит.
 -------------------------------------------------------------------------------
-TJ.MAIL_COLOR = "|cff66b8ff" -- голубой: «на почте», как у почтовых писем
+ns.MAIL_COLOR = "|cff66b8ff" -- голубой: «на почте», как у почтовых писем
 
 local function secret(v) return issecretvalue ~= nil and issecretvalue(v) end
 -- Ящик открыт - по событиям игры, а не по окну: почтовые аддоны прячут MailFrame.
 local mailOpen = false
 local function MailOpen() return mailOpen end
 
-function TJ:MailCount(id)
+function ns:MailCount(id)
   local m = self.char and self.char.mail
   return m and m[id] or 0
 end
 
-function TJ:ScanMail()
+function ns:ScanMail()
   if not (self.char and MailOpen() and GetInboxNumItems and GetInboxItem) then return end
   local counts = {}
   for i = 1, GetInboxNumItems() or 0 do
@@ -905,7 +905,7 @@ function TJ:ScanMail()
 end
 
 -- Куплено на аукционе: уже наше, ждёт на почте.
-function TJ:AddBought(id, qty)
+function ns:AddBought(id, qty)
   if type(id) ~= "number" or type(qty) ~= "number" or qty <= 0 or not self.char then return end
   if MailOpen() then return end -- ящик открыт: его чтение посчитает само
   local m = self.char.mail or {}
@@ -916,7 +916,7 @@ function TJ:AddBought(id, qty)
   self.boughtSaid = self.boughtSaid or {}
   if self:AllNeeds()[id] and not self.boughtSaid[id] then
     self.boughtSaid[id] = true
-    self:Print(format(TJ.T("%s: покупка ждёт на почте."), self:ItemName(id)))
+    self:Print(format(ns.T("%s: покупка ждёт на почте."), self:ItemName(id)))
   end
   self:RefreshAll()
 end
@@ -924,19 +924,19 @@ end
 local mailEv = CreateFrame("Frame")
 local mailOn = {}
 local function onMail(e, fn) mailOn[e] = fn; pcall(mailEv.RegisterEvent, mailEv, e) end
-mailEv:SetScript("OnEvent", function(_, e, ...) local fn = mailOn[e]; if fn then TJ:Safe(fn, ...) end end)
+mailEv:SetScript("OnEvent", function(_, e, ...) local fn = mailOn[e]; if fn then ns:Safe(fn, ...) end end)
 
 local mailScanQueued
 local function queueMailScan(delay)
   if mailScanQueued then return end
   mailScanQueued = true
-  C_Timer.After(delay, function() mailScanQueued = nil; TJ:Safe(TJ.ScanMail, TJ) end)
+  C_Timer.After(delay, function() mailScanQueued = nil; ns:Safe(ns.ScanMail, ns) end)
 end
 onMail("MAIL_SHOW", function() mailOpen = true; queueMailScan(0.5) end)
 onMail("MAIL_INBOX_UPDATE", function() if mailOpen then queueMailScan(0.1) end end)
 -- закрыли ящик: прочитать его в последний раз сразу, пока игра помнит письма
 onMail("MAIL_CLOSED", function()
-  if mailOpen then TJ:Safe(TJ.ScanMail, TJ) end
+  if mailOpen then ns:Safe(ns.ScanMail, ns) end
   mailOpen = false
 end)
 
@@ -950,11 +950,11 @@ if AH and AH.ConfirmCommoditiesPurchase then
   end)
   -- клиенты шлют одно из двух: что пришло первым, то и считаем, один раз
   onMail("COMMODITY_PURCHASE_SUCCEEDED", function()
-    if last then TJ:AddBought(last.id, last.qty); last = nil end
+    if last then ns:AddBought(last.id, last.qty); last = nil end
   end)
   onMail("COMMODITY_PURCHASED", function(itemID, quantity)
     if last and not secret(itemID) and last.id == itemID then
-      TJ:AddBought(itemID, (not secret(quantity) and tonumber(quantity)) or last.qty); last = nil
+      ns:AddBought(itemID, (not secret(quantity) and tonumber(quantity)) or last.qty); last = nil
     end
   end)
   onMail("COMMODITY_PURCHASE_FAILED", function() last = nil end)
@@ -984,13 +984,13 @@ if AH and AH.PlaceBid and AH.GetAuctionInfoByID then
   end)
   onMail("AUCTION_HOUSE_PURCHASE_COMPLETED", function(auctionID)
     local b = not secret(auctionID) and buying[auctionID]
-    if b then buying[auctionID] = nil; TJ:AddBought(b.id, b.qty) end
+    if b then buying[auctionID] = nil; ns:AddBought(b.id, b.qty) end
   end)
 end
 
 -- Аукцион закрыли: сообщения о покупках в чат - заново.
 onMail("AUCTION_HOUSE_CLOSED", function()
-  TJ.boughtSaid = nil
+  ns.boughtSaid = nil
 end)
 
 -------------------------------------------------------------------------------
@@ -1000,7 +1000,7 @@ end)
 local function MerchantOpen() return MerchantFrame and MerchantFrame:IsShown() end
 
 -- Что из покупок продаёт этот торговец: { index, id, buy, stack, bundles, cost }.
-function TJ:MerchantNeeds()
+function ns:MerchantNeeds()
   local out = {}
   if not (MerchantOpen() and GetMerchantNumItems and GetMerchantItemID) then return out end
   local all = self:AllNeeds()
@@ -1024,10 +1024,10 @@ function TJ:MerchantNeeds()
   return out
 end
 
-function TJ:BuyFromMerchant()
+function ns:BuyFromMerchant()
   if not MerchantOpen() then return end
   if InCombatLockdown and InCombatLockdown() then
-    self:Print(TJ.T("в бою покупать нельзя."))
+    self:Print(ns.T("в бою покупать нельзя."))
     return
   end
   local list = self:MerchantNeeds()
@@ -1054,28 +1054,28 @@ function TJ:BuyFromMerchant()
     end
   end
   if bought > 0 then
-    self:Print(format(TJ.T("куплено у торговца: %d шт. за %s."), bought, TJ.W.Money(spent)))
+    self:Print(format(ns.T("куплено у торговца: %d шт. за %s."), bought, ns.W.Money(spent)))
   end
-  if short then self:Print(TJ.T("не хватило денег на всё: купил, сколько смог.")) end
+  if short then self:Print(ns.T("не хватило денег на всё: купил, сколько смог.")) end
   self.needCache = nil
 end
 
 local merchantButton
-function TJ:UpdateMerchantButton()
+function ns:UpdateMerchantButton()
   if not MerchantOpen() then
     if merchantButton then merchantButton:Hide() end
     return
   end
   if not merchantButton then
-    local b = TJ.W.Button(MerchantFrame, "", 280, 24)
+    local b = ns.W.Button(MerchantFrame, "", 280, 24)
     b:SetPoint("TOP", MerchantFrame, "BOTTOM", 0, -4)
-    b:SetScript("OnClick", function() TJ:BuyFromMerchant() end)
+    b:SetScript("OnClick", function() ns:BuyFromMerchant() end)
     b:SetScript("OnEnter", function(self)
       GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
       GameTooltip:SetText("|cff33ff99Easy|rCraft")
-      GameTooltip:AddLine(TJ.T("Докупит только то, чего не хватает до следующего учителя:"), 1, 1, 1, true)
+      GameTooltip:AddLine(ns.T("Докупит только то, чего не хватает до следующего учителя:"), 1, 1, 1, true)
       for _, e in ipairs(self.list or {}) do
-        GameTooltip:AddDoubleLine(format("%d × %s", e.bundles * e.stack, TJ:ItemName(e.id)), TJ.W.Money(e.cost), 0.9, 0.9, 0.9, 1, 1, 1)
+        GameTooltip:AddDoubleLine(format("%d × %s", e.bundles * e.stack, ns:ItemName(e.id)), ns.W.Money(e.cost), 0.9, 0.9, 0.9, 1, 1, 1)
       end
       GameTooltip:Show()
     end)
@@ -1087,7 +1087,7 @@ function TJ:UpdateMerchantButton()
   if #list == 0 then merchantButton:Hide() return end
   local total, count = 0, 0
   for _, e in ipairs(list) do total = total + e.cost; count = count + e.bundles * e.stack end
-  merchantButton:SetText(format(TJ.T("EasyCraft: купить для шагов (%d) - %s"), count, TJ.W.Money(total)))
+  merchantButton:SetText(format(ns.T("EasyCraft: купить для шагов (%d) - %s"), count, ns.W.Money(total)))
   merchantButton:SetWidth(math.max(280, (merchantButton:GetFontString() and merchantButton:GetFontString():GetStringWidth() or 240) + 30))
   merchantButton:Show()
 end
@@ -1168,7 +1168,7 @@ end
 
 -- Чего не хватает в сумках каждой профессии: key -> { id -> штук }.
 -- То, что уже в сумках, достаётся профессиям по порядку списка.
-function TJ:BankLacks()
+function ns:BankLacks()
   local lack = {}
   for id, a in pairs(self:AllNeeds()) do
     local bags = self:BagCount(id)
@@ -1186,11 +1186,11 @@ function TJ:BankLacks()
 end
 
 -- Выбор в окне у банка: снятые профессии и предметы (до перезахода).
-TJ.bankOff = TJ.bankOff or { prof = {}, item = {} }
+ns.bankOff = ns.bankOff or { prof = {}, item = {} }
 
 -- Какие стопки забрать: чего в сумках меньше, чем нужно отмеченным
 -- профессиям (и отмеченным предметам).
-function TJ:BankPlan()
+function ns:BankPlan()
   local off = self.bankOff
   local want = {}
   for key, ids in pairs(self:BankLacks()) do
@@ -1215,7 +1215,7 @@ function TJ:BankPlan()
   return plan, count
 end
 
-function TJ:TakeFromBank()
+function ns:TakeFromBank()
   if not (bankOpen and UseItem) then return end
   if InCombatLockdown and InCombatLockdown() then return end
   local plan = self:BankPlan()
@@ -1231,9 +1231,9 @@ function TJ:TakeFromBank()
   end
   if moved < #plan then
     if moved >= MAX_PER_CLICK then
-      self:Print(TJ.T("забрал часть - нажми кнопку ещё раз."))
+      self:Print(ns.T("забрал часть - нажми кнопку ещё раз."))
     else
-      self:Print(format(TJ.T("Сумки полны: забрал стопок %d из %d."), moved, #plan))
+      self:Print(format(ns.T("Сумки полны: забрал стопок %d из %d."), moved, #plan))
     end
   end
 end
@@ -1254,21 +1254,21 @@ local function BagReagents()
   return list
 end
 
-function TJ:DepositReagents(prev)
+function ns:DepositReagents(prev)
   if not (bankOpen and UseItem) then return end
   if InCombatLockdown and InCombatLockdown() then return end
   local list = BagReagents()
   if #list == 0 then
-    if prev then self:Print(TJ.T("все реагенты в банке.")) end
+    if prev then self:Print(ns.T("все реагенты в банке.")) end
     return
   end
   if prev and #list >= prev then
-    self:Print(TJ.T("банк полон: часть реагентов осталась в сумках."))
+    self:Print(ns.T("банк полон: часть реагентов осталась в сумках."))
     return
   end
   for i = 1, math.min(#list, 12) do UseItem(list[i].bag, list[i].slot) end
   local n = #list
-  C_Timer.After(0.4, function() TJ:DepositReagents(n) end)
+  C_Timer.After(0.4, function() ns:DepositReagents(n) end)
 end
 
 -- Окно банка: игры или Bagnon (он прячет окно игры). Нет - блок вверху экрана.
@@ -1287,18 +1287,18 @@ local BANK_W = 340 -- заголовок «Забрать нужные реаг�
 local bankPanel
 
 local function BankPanel()
-  if not bankPanel then bankPanel = TJ.W.HintPanel("EasyCraftBankPanel", BANK_W, TJ.T("Забрать нужные реагенты"), "bank") end
+  if not bankPanel then bankPanel = ns.W.HintPanel("EasyCraftBankPanel", BANK_W, ns.T("Забрать нужные реагенты"), "bank") end
   return bankPanel
 end
 
 local READY, NOT_READY = "Interface\\RaidFrame\\ReadyCheck-Ready", "Interface\\RaidFrame\\ReadyCheck-NotReady"
 
-function TJ:UpdateBankButton()
+function ns:UpdateBankButton()
   if not bankOpen then
     if bankPanel then bankPanel:Hide() end
     return
   end
-  local W, T = TJ.W, TJ.T
+  local W, T = ns.W, ns.T
   local lacks = self:BankLacks()
   local stock = BankStock()
   local off = self.bankOff
@@ -1341,7 +1341,7 @@ function TJ:UpdateBankButton()
     -- профессия: галочка, название и сколько всего - одной линией
     y = f:CheckHead(self:N(p), format(T("%d шт."), total), on, function(v)
       off.prof[key] = (not v) or nil
-      TJ:UpdateBankButton()
+      ns:UpdateBankButton()
     end, y)
     -- каждый предмет - своя строка: справа сколько и знак «беру / не беру»
     for _, it in ipairs(pr.items) do
@@ -1358,7 +1358,7 @@ function TJ:UpdateBankButton()
           else
             off.item[id] = (not off.item[id]) or nil
           end
-          TJ:UpdateBankButton()
+          ns:UpdateBankButton()
         end }, y)
     end
   end
@@ -1367,12 +1367,12 @@ function TJ:UpdateBankButton()
   if #profs > 0 then
     local _, count = self:BankPlan()
     h = f:Button(count > 0 and format(T("Забрать отмеченное (%d)"), count) or T("Ничего не отмечено"), count > 0,
-      function() TJ:TakeFromBank() end, T("Перенесёт в сумки отмеченное - целыми стопками."), y + 2)
+      function() ns:TakeFromBank() end, T("Перенесёт в сумки отмеченное - целыми стопками."), y + 2)
     h = h - 8
   end
   -- и обратно: все реагенты из сумок - в банк
   h = f:Button(inBags > 0 and format(T("Убрать все реагенты в банк (%d)"), inBags) or T("Реагентов в сумках нет"), inBags > 0,
-    function() TJ:DepositReagents() end, T("Перенесёт в банк все ремесленные товары из сумок: руду, травы, ткань, кожу и прочие реагенты."),
+    function() ns:DepositReagents() end, T("Перенесёт в банк все ремесленные товары из сумок: руду, травы, ткань, кожу и прочие реагенты."),
     h + 2, true)
   f:SetHeight(h)
   if not W.PlaceSaved(f, "bank") then
@@ -1388,7 +1388,7 @@ local bankQueued
 local function bankRefresh()
   if bankQueued then return end
   bankQueued = true
-  C_Timer.After(0.3, function() bankQueued = nil; TJ:Safe(TJ.UpdateBankButton, TJ) end)
+  C_Timer.After(0.3, function() bankQueued = nil; ns:Safe(ns.UpdateBankButton, ns) end)
 end
 for _, e in ipairs({ "BANKFRAME_OPENED", "BANKFRAME_CLOSED", "PLAYERBANKSLOTS_CHANGED", "BAG_UPDATE_DELAYED" }) do
   pcall(bankEv.RegisterEvent, bankEv, e)
@@ -1412,10 +1412,10 @@ local SEARCH_ICON = "Interface\\Common\\UI-Searchbox-Icon"
 local ahPanel
 
 -- Найти один предмет на аукционе: Auctionator, иначе поиск самой игры.
-function TJ:SearchAuction(id, buy)
+function ns:SearchAuction(id, buy)
   if self:HasAuctionator() then return self:SendToAuction({ { id = id, buy = buy or 1 } }) end
   local name = self:ClientItemName(id)
-  if not name then self:Print(TJ.T("названия предметов ещё загружаются: нажми ещё раз через секунду.")) return end
+  if not name then self:Print(ns.T("названия предметов ещё загружаются: нажми ещё раз через секунду.")) return end
   local ok = false
   local bar = AuctionHouseFrame and AuctionHouseFrame.SearchBar
   if bar and bar.SearchBox and bar.StartSearch then
@@ -1427,7 +1427,7 @@ function TJ:SearchAuction(id, buy)
       AuctionFrameBrowse_Search()
     end)
   end
-  if not ok then self:Print(format(TJ.T("найди на аукционе: %s"), name)) end
+  if not ok then self:Print(format(ns.T("найди на аукционе: %s"), name)) end
 end
 
 local function AuctionWindow()
@@ -1437,12 +1437,12 @@ local function AuctionWindow()
 end
 
 local function AhPanel()
-  if not ahPanel then ahPanel = TJ.W.HintPanel("EasyCraftAuctionPanel", AH_W, TJ.T("Купить нужные реагенты"), "ah") end
+  if not ahPanel then ahPanel = ns.W.HintPanel("EasyCraftAuctionPanel", AH_W, ns.T("Купить нужные реагенты"), "ah") end
   return ahPanel
 end
 
 -- Что купить на аукционе для текущих шагов: { {key, s, pos, b}, ... }.
-function TJ:AuctionNeeds()
+function ns:AuctionNeeds()
   local out, pool = {}, {}
   for _, key in ipairs(self:LearnedList()) do
     local rank, maxRank = self:GetSkill(key)
@@ -1458,13 +1458,13 @@ function TJ:AuctionNeeds()
   return out
 end
 
-function TJ:UpdateAuctionPanel()
+function ns:UpdateAuctionPanel()
   local win = AuctionWindow()
   if not win then
     if ahPanel then ahPanel:Hide() end
     return
   end
-  local W, T = TJ.W, TJ.T
+  local W, T = ns.W, ns.T
   local f = AhPanel()
   f:Reset()
   local y = f.top
@@ -1480,7 +1480,7 @@ function TJ:UpdateAuctionPanel()
     y = f:Row({ id = id, mark = SEARCH_ICON, markY = -2,
       right = "|cffffffff" .. buy .. "|r" .. (cost and ("  " .. W.Money(cost)) or ("  |cff9d9d9d" .. T("нет цены") .. "|r")),
       tip = format(T("Купить %d"), buy) .. (cost and (": " .. W.Money(cost)) or "") .. "\n" .. T("Щелчок - найти на аукционе."),
-      onClick = function() TJ:SearchAuction(id, buy) end }, y)
+      onClick = function() ns:SearchAuction(id, buy) end }, y)
   end
   -- 1. Текущие шаги: по профессиям
   local list = self:AuctionNeeds()
@@ -1519,7 +1519,7 @@ function TJ:UpdateAuctionPanel()
   end
   if sum then y = f:Head(sum, y + 3) + 2 end
   local has = self:HasAuctionator()
-  local h = f:Button(format(T("Найти всё (%d)"), #all), has, function() TJ:SendToAuction(all) end,
+  local h = f:Button(format(T("Найти всё (%d)"), #all), has, function() ns:SendToAuction(all) end,
     has and T("Найдёт всё сразу во вкладке «Покупки» Auctionator.")
       or T("Нужен аддон Auctionator. Без него ищи по одному - лупа у каждого предмета."), y)
   f:SetHeight(h)
@@ -1534,7 +1534,7 @@ end
 -- ещё догружает его код: пробуем несколько раз и ловим само появление окна.
 local function ahSoon()
   for _, t in ipairs({ 0.1, 0.5, 1.2 }) do
-    C_Timer.After(t, function() if not (ahPanel and ahPanel:IsShown()) then TJ:Safe(TJ.UpdateAuctionPanel, TJ) end end)
+    C_Timer.After(t, function() if not (ahPanel and ahPanel:IsShown()) then ns:Safe(ns.UpdateAuctionPanel, ns) end end)
   end
 end
 local hookedAH = {}
@@ -1560,7 +1560,7 @@ ahEv:SetScript("OnEvent", function(_, e, name)
   ahSoon()
 end)
 -- купил (ушло на почту), цены обновились, сумки изменились - пересчитать
-TJ:RegisterRefresh(function() if ahPanel and ahPanel:IsShown() then TJ:UpdateAuctionPanel() end end)
+ns:RegisterRefresh(function() if ahPanel and ahPanel:IsShown() then ns:UpdateAuctionPanel() end end)
 
 -------------------------------------------------------------------------------
 --  Напоминания в поле: поиск руды или трав выключен; есть наживка, а удочка
@@ -1576,7 +1576,7 @@ local function SpellNameByID(id)
 end
 
 -- Поиск на миникарте для профессии: {index, name, icon, active} или nil (нет такого поиска).
-function TJ:FindTracking(key)
+function ns:FindTracking(key)
   local spell = FIND[key]
   local M = C_Minimap
   if not (spell and M and M.GetNumTrackingTypes and M.GetTrackingInfo) then return nil end
@@ -1594,7 +1594,7 @@ end
 
 -- Включён ли хоть один поиск сбора: в классике отслеживать можно что-то одно,
 -- и у горняка-травника не надо просить включить второй.
-function TJ:AnyFindActive()
+function ns:AnyFindActive()
   for key in pairs(FIND) do
     local t = self:FindTracking(key)
     if t and t.active then return true end
@@ -1602,7 +1602,7 @@ function TJ:AnyFindActive()
   return false
 end
 
-function TJ:EnableFindTracking(key)
+function ns:EnableFindTracking(key)
   local t = self:FindTracking(key)
   if t and C_Minimap and C_Minimap.SetTracking then pcall(C_Minimap.SetTracking, t.index, true) end
 end
@@ -1611,14 +1611,14 @@ end
 local trackEv = CreateFrame("Frame")
 pcall(trackEv.RegisterEvent, trackEv, "MINIMAP_UPDATE_TRACKING")
 trackEv:SetScript("OnEvent", function()
-  C_Timer.After(0.3, function() TJ:RefreshAll() end)
+  C_Timer.After(0.3, function() ns:RefreshAll() end)
 end)
 
 -- Наживка: {id, +к ловле, с какого навыка}, лучшая первой.
 local LURES = { { 6533, 100, 100 }, { 6532, 75, 100 }, { 7307, 75, 100 }, { 6530, 50, 50 }, { 6811, 50, 50 }, { 6529, 25, 1 } }
 
 -- Есть подходящая наживка, удочка в руках и без неё: id наживки и прибавка.
-function TJ:LureHint(rank)
+function ns:LureHint(rank)
   local pole = GetInventoryItemID and GetInventoryItemID("player", 16)
   local info = C_Item.GetItemInfoInstant
   if not (pole and info) then return nil end
@@ -1638,7 +1638,7 @@ end
 -- серебро 105-120, железо до 135, золото 155-175» (заметка маршрута).
 local SMELT = { { 2840, 1, 65 }, { 3576, 65, 75 }, { 2841, 75, 105 }, { 2842, 105, 120 }, { 3575, 125, 135 }, { 3577, 155, 175 } }
 
-function TJ:SmeltNow(rank)
+function ns:SmeltNow(rank)
   local sc = self:FreshScan("mining", rank)
   if sc and sc.list then
     -- оранжевый или жёлтый; сначала то, на что есть руда, затем по цвету и запасу
@@ -1661,27 +1661,27 @@ end
 --  Строка в подсказке предмета: сколько его нужно до следующего учителя.
 -------------------------------------------------------------------------------
 local function AddNeedLine(tooltip, id, ours)
-  local a = TJ:AllNeeds()[id]
+  local a = ns:AllNeeds()[id]
   if not a then return end
   -- в окне EasyCraft «есть X из Y» уже написано в строке - там только «Где взять»
   for _, pr in ipairs(ours and {} or a.profs) do
     local have = a.have
     local col = have + (a.mail or 0) >= pr.need and "|cff33dd33" or "|cffff5555"
-    local line = format(TJ.T("%s: есть %s%d|r из %d до %d"), TJ:N(TJ.Profs[pr.key]), col, have, pr.need, pr.cap)
-    if a.alts > 0 then line = line .. format(TJ.T(", у альтов %d"), a.alts) end
+    local line = format(ns.T("%s: есть %s%d|r из %d до %d"), ns:N(ns.Profs[pr.key]), col, have, pr.need, pr.cap)
+    if a.alts > 0 then line = line .. format(ns.T(", у альтов %d"), a.alts) end
     tooltip:AddLine("|cff33ff99Easy|rCraft: " .. line, 0.9, 0.9, 0.9)
   end
   -- где взять - одной строкой, только для того, чего не хватает
-  local where = a.buy > 0 and TJ:SourceLine(id)
-  if where then tooltip:AddLine(TJ.T("Где взять: ") .. where, 0.65, 0.65, 0.65, true) end
+  local where = a.buy > 0 and ns:SourceLine(id)
+  if where then tooltip:AddLine(ns.T("Где взять: ") .. where, 0.65, 0.65, 0.65, true) end
   tooltip:Show() -- подогнать размер под новые строки
 end
 
 -- «Где взять» коротко: у торговца, трава или жила и где их больше, с кого падает.
-function TJ:SourceLine(id)
+function ns:SourceLine(id)
   local src = self.MatSources and self.MatSources[id]
   if not src then return nil end
-  if src.src == "vendor" then return TJ.T("у торговцев (ремесленные товары, снабженцы)") end
+  if src.src == "vendor" then return ns.T("у торговцев (ремесленные товары, снабженцы)") end
   if src.text then return src.text end -- описание из маршрута точнее (слитки, быстрорепей)
   if src.nodes then
     local names, zones = {}, {}
@@ -1689,7 +1689,7 @@ function TJ:SourceLine(id)
     for i, nk in ipairs(src.nodes) do
       local n = self.Nodes[nk]
       -- трава зовётся так же, как предмет: её имя не повторяем, хватит зон
-      if n and i <= 2 and TJ:N(n) ~= own then tinsert(names, TJ:N(n)) end
+      if n and i <= 2 and ns:N(n) ~= own then tinsert(names, ns:N(n)) end
     end
     for _, a in ipairs(self:MaterialAreas(id, 2)) do tinsert(zones, self:ZoneName(a[1])) end
     if #names == 0 then return #zones > 0 and table.concat(zones, ", ") or nil end
@@ -1701,7 +1701,7 @@ end
 -- Подсказка вызвана из окна EasyCraft: там «есть X из Y» уже написано в строке.
 local function OwnedByUs(tooltip)
   local f = tooltip.GetOwner and tooltip:GetOwner()
-  local main, mini = TJ.UI and TJ.UI.frame, TJ.Tracker and TJ.Tracker.f
+  local main, mini = ns.UI and ns.UI.frame, ns.Tracker and ns.Tracker.f
   for _ = 1, 25 do
     if not f then return false end
     if f == main or f == mini then return true end
@@ -1710,12 +1710,12 @@ local function OwnedByUs(tooltip)
   return false
 end
 
-function TJ:HookItemTooltips()
+function ns:HookItemTooltips()
   if self.tipHooked then return end
   self.tipHooked = true
   local function OnItem(tooltip, data)
     if tooltip ~= GameTooltip and tooltip ~= ItemRefTooltip then return end
-    if not (TJ.settings and TJ.settings.itemTips ~= false) then return end
+    if not (ns.settings and ns.settings.itemTips ~= false) then return end
     local ours = OwnedByUs(tooltip)
     local id = data and data.id
     if not id and tooltip.GetItem then
@@ -1739,13 +1739,13 @@ end
 -------------------------------------------------------------------------------
 local nodeByName
 -- «чёрного» и «черного» - одно и то же: ё сводим к е
-local function norm(s) return (TJ.Lower(s):gsub("\209\145", "\208\181")) end
+local function norm(s) return (ns.Lower(s):gsub("\209\145", "\208\181")) end
 -- «Покрытая слизью медная жила» - та же медная жила
 local OOZE = { "^покрыт[ао][яе] слизью ", "^ooze covered " }
 local function NodeByName(name)
   if not nodeByName then
     nodeByName = {}
-    for key, n in pairs(TJ.Nodes) do
+    for key, n in pairs(ns.Nodes) do
       for _, nm in ipairs({ n.ru or false, n.en or false }) do
         if nm then nodeByName[norm(nm)] = key end
       end
@@ -1759,7 +1759,7 @@ end
 -- Пороги цветов сбора (как в классике): жёлтый +25, зелёный +50, серый +100.
 local NEXT_COLOR = { orange = { "yellow", 25 }, yellow = { "green", 50 }, green = { "gray", 100 } }
 
-function TJ:NodeLine(name)
+function ns:NodeLine(name)
   if secret(name) or type(name) ~= "string" or name == "" then return nil end
   local key = NodeByName(name)
   local n = key and self.Nodes[key]
@@ -1771,26 +1771,26 @@ function TJ:NodeLine(name)
   if color == "red" then return nil end
   local head = "|cff33ff99Easy|rCraft: "
   if color == "gray" then
-    return head .. TJ.ColorRGBText("gray", TJ.T("серый - навык не растёт"))
+    return head .. ns.ColorRGBText("gray", ns.T("серый - навык не растёт"))
   end
   local nx = NEXT_COLOR[color]
   -- «зелёный · серый с навыка 101»
-  return head .. self:Hex(color) .. (TJ.ColorName[color] or "") .. "|r, "
-    .. self:Hex(nx[1]) .. (TJ.ColorName[nx[1]] or "") .. "|r" .. format(TJ.T(" с навыка %d"), n.req + nx[2])
+  return head .. self:Hex(color) .. (ns.ColorName[color] or "") .. "|r, "
+    .. self:Hex(nx[1]) .. (ns.ColorName[nx[1]] or "") .. "|r" .. format(ns.T(" с навыка %d"), n.req + nx[2])
 end
 
-function TJ:HookNodeTooltips()
+function ns:HookNodeTooltips()
   if self.nodeTipHooked then return end
   self.nodeTipHooked = true
   local function Add(tooltip, data)
     if tooltip ~= GameTooltip or tooltip.godNode then return end
-    if not (TJ.settings and TJ.settings.itemTips ~= false) then return end
+    if not (ns.settings and ns.settings.itemTips ~= false) then return end
     local name = type(data) == "table" and data.lines and data.lines[1] and data.lines[1].leftText
     if not name then
       local fs = _G.GameTooltipTextLeft1
       name = fs and fs:GetText()
     end
-    local line = TJ:NodeLine(name)
+    local line = ns:NodeLine(name)
     if not line then return end
     tooltip.godNode = true
     tooltip:AddLine(line, 0.9, 0.9, 0.9)
@@ -1820,7 +1820,7 @@ end
 --  сравниваем их с данными маршрута. Расхождения хранятся в EasyCraftDB.routeCheck
 --  (общие для персонажей) и видны в шаге и по команде /ec check.
 -------------------------------------------------------------------------------
-function TJ:CheckRoute(key, colors, rank)
+function ns:CheckRoute(key, colors, rank)
   local p = self.Profs[key]
   if not (p and colors and rank) then return end
   self.db.routeCheck = self.db.routeCheck or {}
@@ -1866,7 +1866,7 @@ local function sameReagents(a, b)
   return next(m) == nil
 end
 
-function TJ:CheckReagents(s)
+function ns:CheckReagents(s)
   local real = self:RecipeReagents(s.spell)
   if not real then return end
   self.db.realRC = self.db.realRC or {}
@@ -1882,7 +1882,7 @@ function TJ:CheckReagents(s)
 end
 
 -- При входе: реагенты, которые игра уже показала другими.
-function TJ:ApplyRealReagents()
+function ns:ApplyRealReagents()
   local fixed = self.db and self.db.realRC
   if not fixed then return end
   for _, p in pairs(self.Profs) do
@@ -1901,23 +1901,23 @@ function TJ:ApplyRealReagents()
 end
 
 -- Расхождение по шагу или nil.
-function TJ:StepCheck(key, s)
+function ns:StepCheck(key, s)
   local rc = s.spell and self.db.routeCheck and self.db.routeCheck[key]
   return rc and rc[s.spell]
 end
 
-function TJ:PrintRouteCheck()
+function ns:PrintRouteCheck()
   local any = false
   for _, key in ipairs(self.ProfOrder) do
     local rc = self.db.routeCheck and self.db.routeCheck[key]
     if rc and next(rc) then
       any = true
-      self:Print("|cffffd100" .. TJ:N(self.Profs[key]) .. "|r")
+      self:Print("|cffffd100" .. ns:N(self.Profs[key]) .. "|r")
       for i, s in ipairs(self.Profs[key].steps) do
         local c = s.spell and rc[s.spell]
         if c then
-          local what = c.missing and TJ.T("рецепта нет в игре")
-            or format(TJ.T("на навыке %d в игре %s, по маршруту %s"), c.rank, TJ.ColorName[c.real] or c.real, TJ.ColorName[c.data] or c.data)
+          local what = c.missing and ns.T("рецепта нет в игре")
+            or format(ns.T("на навыке %d в игре %s, по маршруту %s"), c.rank, ns.ColorName[c.real] or c.real, ns.ColorName[c.data] or c.data)
           print(format("  %d. %s (%d) - %s", i, self:StepTitle(s), s.spell, what))
         end
       end
@@ -1934,13 +1934,13 @@ function TJ:PrintRouteCheck()
     for i, s in ipairs(self.Profs[key].steps) do
       if s.rcData then
         any = true
-        if not header then header = true; self:Print("|cffffd100" .. TJ.T("Реагенты в игре другие (считаю по игре):") .. "|r") end
-        print(format("  %s %d. %s - %s %s; %s %s", TJ:N(self.Profs[key]), i, self:StepTitle(s),
-          TJ.T("по маршруту"), list(s.rcData), TJ.T("в игре"), list(s.rc)))
+        if not header then header = true; self:Print("|cffffd100" .. ns.T("Реагенты в игре другие (считаю по игре):") .. "|r") end
+        print(format("  %s %d. %s - %s %s; %s %s", ns:N(self.Profs[key]), i, self:StepTitle(s),
+          ns.T("по маршруту"), list(s.rcData), ns.T("в игре"), list(s.rc)))
       end
     end
   end
-  if not any then self:Print(TJ.T("расхождений маршрута с игрой нет (проверяется, когда открываешь окно профессии).")) end
+  if not any then self:Print(ns.T("расхождений маршрута с игрой нет (проверяется, когда открываешь окно профессии).")) end
 end
 
 -------------------------------------------------------------------------------
@@ -1965,7 +1965,7 @@ local function TrainerKey()
       if fn then
         local ok, name = pcall(fn, i)
         if ok and type(name) == "string" then
-          local k = TJ.NameToKey[name] or TJ.NameToKey[TJ.Lower(name)]
+          local k = ns.NameToKey[name] or ns.NameToKey[ns.Lower(name)]
           if k then return k end
         end
       end
@@ -1979,24 +1979,24 @@ local function TrainerState()
   trainerState = false
   if IsTradeskillTrainer and not IsTradeskillTrainer() then return nil end
   local key = TrainerKey()
-  local keys = key and { key } or TJ:LearnedList()
+  local keys = key and { key } or ns:LearnedList()
   local names = {}
   for _, k in ipairs(keys) do
-    local p = TJ.Profs[k]
-    local rank, maxRank, has = TJ:GetSkill(k)
+    local p = ns.Profs[k]
+    local rank, maxRank, has = ns:GetSkill(k)
     if p and has then
-      local cur = TJ:CurrentStep(k, rank, maxRank)
+      local cur = ns:CurrentStep(k, rank, maxRank)
       for i, s in ipairs(p.steps) do
-        if s.k == "craft" and s.spell and TJ:StepState(k, i, rank, maxRank) ~= "done" then
+        if s.k == "craft" and s.spell and ns:StepState(k, i, rank, maxRank) ~= "done" then
           local e = { key = k, i = i, s = s, now = (i == cur), rank = rank }
-          for _, n in ipairs({ SpellName(s.spell) or false, TJ:StepName(s) or false }) do
+          for _, n in ipairs({ SpellName(s.spell) or false, ns:StepName(s) or false }) do
             if n and not names[n] then names[n] = e end
           end
         end
       end
     end
   end
-  local nr = key and TJ:NextRank(key)
+  local nr = key and ns:NextRank(key)
   if not next(names) and not nr then return nil end
   trainerState = { key = key, names = names, nextRank = nr }
   return trainerState
@@ -2017,7 +2017,7 @@ end
 -- сама пишет «Требуется ...», а звезда (бледная) говорит, что пригодится.
 local function MarkText(index)
   local _, kind = GetTrainerServiceInfo(index)
-  if kind == "available" then return TJ.T("Нужен для прокачки"), true end
+  if kind == "available" then return ns.T("Нужен для прокачки"), true end
 end
 
 local function ApplyMark(button, on, text, ready)
@@ -2051,7 +2051,7 @@ end
 local function MarkButton(button, elementData)
   local data = type(elementData) == "table" and (elementData.data or elementData) or nil
   local index = data and data.skillIndex
-  local st = index and TJ.settings and TJ.settings.trainerStars ~= false and TrainerState()
+  local st = index and ns.settings and ns.settings.trainerStars ~= false and TrainerState()
   local w = st and Wanted(st, index)
   if not w then return ApplyMark(button, false) end
   ApplyMark(button, true, MarkText(index))
@@ -2061,31 +2061,31 @@ local function RefreshTrainer()
   local f = ClassTrainerFrame
   if not (trainerHooked and f and f:IsShown()) then return end
   if f.ScrollBox and f.ScrollBox.ForEachFrame then
-    f.ScrollBox:ForEachFrame(function(b) TJ:Safe(MarkButton, b, b.GetElementData and b:GetElementData()) end)
+    f.ScrollBox:ForEachFrame(function(b) ns:Safe(MarkButton, b, b.GetElementData and b:GetElementData()) end)
   end
   local rb = f.skillStepButton
-  if rb and rb:IsShown() then TJ:Safe(MarkButton, rb, { skillIndex = rb:GetID() }) end
+  if rb and rb:IsShown() then ns:Safe(MarkButton, rb, { skillIndex = rb:GetID() }) end
 end
 
 -- Под подсказкой рецепта у учителя: какой шаг маршрута его использует.
 local function TrainerTip(tip, index)
-  if TJ.settings and TJ.settings.trainerStars == false then return end
+  if ns.settings and ns.settings.trainerStars == false then return end
   local st = type(index) == "number" and TrainerState()
   local w = st and Wanted(st, index)
   if not w then return end
   tip:AddLine(" ")
   if w == "rank" then
-    tip:AddLine("|cff33ff99Easy|rCraft: " .. format(TJ.T("следующий ранг: предел навыка станет %d"), st.nextRank.max), 1, 0.82, 0)
+    tip:AddLine("|cff33ff99Easy|rCraft: " .. format(ns.T("следующий ранг: предел навыка станет %d"), st.nextRank.max), 1, 0.82, 0)
   else
     local s = w.s
     if w.now then
-      tip:AddLine("|cff33ff99Easy|rCraft: " .. TJ.T("это твой шаг сейчас"), 0.25, 1, 0.25)
-      local left = TJ:RemainingCrafts(s, w.rank)
-      if left > 0 then tip:AddLine(format(TJ.T("Сделать ещё ~%d шт., до навыка %d"), left, s.t), 1, 1, 1) end
+      tip:AddLine("|cff33ff99Easy|rCraft: " .. ns.T("это твой шаг сейчас"), 0.25, 1, 0.25)
+      local left = ns:RemainingCrafts(s, w.rank)
+      if left > 0 then tip:AddLine(format(ns.T("Сделать ещё ~%d шт., до навыка %d"), left, s.t), 1, 1, 1) end
     else
-      tip:AddLine("|cff33ff99Easy|rCraft: " .. format(TJ.T("понадобится на навыке %d-%d"), s.f, s.t), 1, 0.82, 0)
+      tip:AddLine("|cff33ff99Easy|rCraft: " .. format(ns.T("понадобится на навыке %d-%d"), s.f, s.t), 1, 0.82, 0)
     end
-    local colors = TJ:RecipeColorText(s)
+    local colors = ns:RecipeColorText(s)
     if colors then tip:AddLine(colors, 1, 1, 1, true) end
   end
   tip:Show()
@@ -2094,9 +2094,9 @@ end
 local function HookTrainer()
   if trainerHooked or not ClassTrainerFrame_InitServiceButton then return end
   trainerHooked = true
-  hooksecurefunc("ClassTrainerFrame_InitServiceButton", function(b, d) TJ:Safe(MarkButton, b, d) end)
+  hooksecurefunc("ClassTrainerFrame_InitServiceButton", function(b, d) ns:Safe(MarkButton, b, d) end)
   if GameTooltip.SetTrainerService then
-    hooksecurefunc(GameTooltip, "SetTrainerService", function(tip, i) TJ:Safe(TrainerTip, tip, i) end)
+    hooksecurefunc(GameTooltip, "SetTrainerService", function(tip, i) ns:Safe(TrainerTip, tip, i) end)
   end
 end
 
@@ -2106,15 +2106,15 @@ for _, e in ipairs({ "ADDON_LOADED", "TRAINER_SHOW", "TRAINER_UPDATE", "TRAINER_
 end
 trainerEv:SetScript("OnEvent", function(_, event, name)
   if event == "ADDON_LOADED" then
-    if name == "Blizzard_TrainerUI" then TJ:Safe(HookTrainer) end
+    if name == "Blizzard_TrainerUI" then ns:Safe(HookTrainer) end
     return
   end
   if event == "TRAINER_CLOSED" then trainerState = nil return end
   trainerState = nil
-  TJ:Safe(HookTrainer)
-  TJ:Safe(RefreshTrainer)
+  ns:Safe(HookTrainer)
+  ns:Safe(RefreshTrainer)
   -- список у учителя иногда заполняется чуть позже - пометим ещё раз
   if event == "TRAINER_SHOW" then
-    C_Timer.After(0.5, function() trainerState = nil; TJ:Safe(RefreshTrainer) end)
+    C_Timer.After(0.5, function() trainerState = nil; ns:Safe(RefreshTrainer) end)
   end
 end)
