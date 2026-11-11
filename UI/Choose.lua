@@ -1,47 +1,55 @@
 local _, TJ = ...
 local W, C, T = TJ.W, TJ.Content, TJ.T
-local format, floor = string.format, math.floor
+local format, floor, min = string.format, math.floor, math.min
 
 -------------------------------------------------------------------------------
---  Выбор профессии: отдельное окно-витрина. На весь фон - картинка выбранной
---  профессии, слева крупное название, одна строка «зачем она» и три
---  преимущества значками, ниже - что из неё получается (предметы с
---  подсказками). Внизу ряд из всех профессий: щелчок переключает.
---  Открывается кнопкой «Выбор профессии» на вкладке «Профессии» (всегда) и
---  с главной у персонажа без профессий.
---  Картинка: фон окна профессий игры, если он есть в клиенте; иначе крупный
---  значок профессии и её цвет.
+--  Выбор профессии: отдельное окно-витрина.
+--  Справа у окна - вкладки всех профессий: значок и название (изученные - с
+--  галочкой). В окне: вид профессии, крупное название, одна строка «зачем
+--  она», три строки преимуществ (что создаёт, с чем в паре, кому брать - со
+--  значками классов и профессий прямо в тексте), что из неё получается
+--  (предметы с подсказками), ниже - изучена ли и кнопки «учитель на карте» и
+--  «маршрут». Внизу окна - «Назад» и «Дальше».
+--  Фон - рисунок профессии из окна профессий игры: целиком, без обрезки,
+--  прижат к правому нижнему углу. Нет рисунка - крупный значок профессии.
+--  Открывается кнопкой «Выбор профессии» на вкладке «Профессии» и при
+--  первом открытии аддона (UI/Intro.lua).
 -------------------------------------------------------------------------------
-local WIDTH, HEIGHT = 940, 580
-local LEFT = 56 -- левый край текста
-local TEXT_W = 400
+local WIDTH, HEIGHT = 520, 640
+local LEFT = 36 -- левый край содержимого
+local ROW_W = WIDTH - LEFT * 2 -- ширина строк и линий
+local TAB_W, TAB_H, TAB_STEP = 178, 34, 37
 
--- Строка «зачем», что создаёт (добывает), кому нужна, цвет фона.
+-- Строка «зачем», что создаёт (добывает), кому брать (текст или список
+-- классов), цвет фона.
+local ALL = "Всем классам"
 local INFO = {
-  alchemy = { "Расходники нужны всем и всегда: варишь себе и на аукцион.", "Зелья, эликсиры, настои", "Всем классам", { 0.45, 0.2, 0.6 } },
-  blacksmithing = { "Куёшь оружие и тяжёлую броню, точишь клинки.", "Оружие, кольчуга, латы", "Воин, паладин", { 0.7, 0.3, 0.1 } },
-  enchanting = { "Усиливаешь экипировку чарами. Материалы - из распылённых вещей.", "Чары, масла, жезлы", "Всем классам", { 0.3, 0.3, 0.8 } },
+  alchemy = { "Расходники нужны всем и всегда: варишь себе и на аукцион.", "Зелья, эликсиры, настои", ALL, { 0.45, 0.2, 0.6 } },
+  blacksmithing = { "Куёшь оружие и тяжёлую броню, точишь клинки.", "Оружие, кольчуга, латы", { "WARRIOR", "PALADIN" }, { 0.7, 0.3, 0.1 } },
+  enchanting = { "Усиливаешь экипировку чарами. Материалы - из распылённых вещей.", "Чары, масла, жезлы", ALL, { 0.3, 0.3, 0.8 } },
   engineering = { "Бомбы и устройства, которых нет больше ни у кого.", "Бомбы, устройства, ружья", "Всем, особенно в PvP", { 0.7, 0.6, 0.1 } },
-  leatherworking = { "Шьёшь кожаную и кольчужную броню из шкур.", "Кожаная и кольчужная броня", "Разбойник, друид, охотник, шаман", { 0.5, 0.3, 0.15 } },
-  tailoring = { "Тканевая броня и сумки. Ткань падает с врагов.", "Тканевая броня, сумки", "Маг, жрец, чернокнижник", { 0.6, 0.2, 0.4 } },
-  mining = { "Руда и камень с жил по всему миру. Всегда в цене.", "Руда, слитки, камни", "Кузнецам и инженерам", { 0.35, 0.45, 0.55 } },
-  herbalism = { "Собираешь травы по пути - продаёшь алхимикам.", "Травы", "Алхимикам", { 0.2, 0.55, 0.2 } },
-  skinning = { "Снимаешь шкуры с убитых зверей. Золото с первого уровня.", "Кожа и шкуры", "Кожевникам", { 0.55, 0.4, 0.25 } },
-  cooking = { "Еда с бонусами и костёр для лагеря.", "Еда с «Сытостью»", "Всем классам", { 0.7, 0.4, 0.15 } },
-  firstaid = { "Лечишься сам, без лекаря и без маны.", "Бинты, лечебные зелья", "Всем классам", { 0.7, 0.15, 0.15 } },
-  fishing = { "Рыба для кулинарии и алхимии. Спокойный заработок.", "Рыба", "Всем классам", { 0.1, 0.45, 0.6 } },
+  leatherworking = { "Шьёшь кожаную и кольчужную броню из шкур.", "Кожаная и кольчужная броня", { "ROGUE", "DRUID", "HUNTER", "SHAMAN" }, { 0.5, 0.3, 0.15 } },
+  tailoring = { "Тканевая броня и сумки. Ткань падает с врагов.", "Тканевая броня, сумки", { "MAGE", "PRIEST", "WARLOCK" }, { 0.6, 0.2, 0.4 } },
+  mining = { "Руда и камень с жил по всему миру. Всегда в цене.", "Руда, слитки, камни", ALL, { 0.35, 0.45, 0.55 } },
+  herbalism = { "Собираешь травы по пути - продаёшь алхимикам.", "Травы", ALL, { 0.2, 0.55, 0.2 } },
+  skinning = { "Снимаешь шкуры с убитых зверей. Золото с первого уровня.", "Кожа и шкуры", ALL, { 0.55, 0.4, 0.25 } },
+  cooking = { "Еда с бонусами и костёр для лагеря.", "Еда с «Сытостью»", ALL, { 0.7, 0.4, 0.15 } },
+  firstaid = { "Лечишься сам, без лекаря и без маны.", "Бинты, лечебные зелья", ALL, { 0.7, 0.15, 0.15 } },
+  fishing = { "Рыба для кулинарии и алхимии. Спокойный заработок.", "Рыба", ALL, { 0.1, 0.45, 0.6 } },
 }
 local KIND = { craft = "Ремесло", gather = "Сбор", secondary = "Вторичная" }
 local SLOT = { craft = "основная, можно взять две", gather = "основная, можно взять две", secondary = "не занимает место основных" }
--- Фоны окна профессий игры: имя профессии в названии атласа.
+local CLASS_RU = { WARRIOR = "Воин", PALADIN = "Паладин", HUNTER = "Охотник", ROGUE = "Разбойник", PRIEST = "Жрец",
+  SHAMAN = "Шаман", MAGE = "Маг", WARLOCK = "Чернокнижник", DRUID = "Друид" }
+-- Рисунки окна профессий игры: имя профессии в названии атласа.
 local ART = { alchemy = "Alchemy", blacksmithing = "Blacksmithing", enchanting = "Enchanting", engineering = "Engineering",
   leatherworking = "Leatherworking", tailoring = "Tailoring", mining = "Mining", herbalism = "Herbalism",
   skinning = "Skinning", cooking = "Cooking", fishing = "Fishing" }
+local ART_ALT = { firstaid = { "FirstAid", "First-Aid", "Firstaid", "First Aid" } }
 local ART_KINDS = { "Professions-Specializations-Background-%s", "Professions-Recipe-Background-%s" }
 local MAKE_ICON, PAIR_ICON, WHO_ICON = "Interface\\Icons\\INV_Misc_Gear_01", "Interface\\Icons\\INV_Misc_Bag_08", "Interface\\Icons\\Achievement_Character_Human_Male"
+local CLASS_TEX = "Interface\\GLUES\\CHARACTERCREATE\\UI-CHARACTERCREATE-CLASSES"
 
--- У первой помощи название в клиенте может писаться по-разному.
-local ART_ALT = { firstaid = { "FirstAid", "First-Aid", "Firstaid", "First Aid" } }
 local function artAtlas(key)
   local names = ART_ALT[key] or { ART[key] }
   for _, n in ipairs(names) do
@@ -50,6 +58,44 @@ local function artAtlas(key)
       if W.HasAtlas(name) then return name end
     end
   end
+end
+
+-- Значок в строке текста: обычный (файл значка) и значок класса.
+local function iconTag(path)
+  return format("|T%s:16:16:0:0:64:64:5:59:5:59|t ", tostring(path))
+end
+local function classTag(token)
+  local c = CLASS_ICON_TCOORDS and CLASS_ICON_TCOORDS[token]
+  if not c then return "" end
+  return format("|T%s:16:16:0:0:256:256:%d:%d:%d:%d|t ", CLASS_TEX, c[1] * 256, c[2] * 256, c[3] * 256, c[4] * 256)
+end
+local function className(token)
+  if TJ.IsRU then return CLASS_RU[token] or token end
+  return (LOCALIZED_CLASS_NAMES_MALE and LOCALIZED_CLASS_NAMES_MALE[token]) or T(CLASS_RU[token] or token)
+end
+
+-- Кому брать: «[значок] Воин  [значок] Паладин» или строка как есть.
+local function whoText(who)
+  if type(who) ~= "table" then return T(who) end
+  local parts = {}
+  for _, token in ipairs(who) do parts[#parts + 1] = classTag(token) .. className(token) end
+  return table.concat(parts, "   ")
+end
+
+-- С чем профессия в паре: сбор для ремесла, ремёсла для сбора - со значками.
+local function pairText(key)
+  local p = TJ.Profs[key]
+  local function name(k)
+    local q = TJ.Profs[k]
+    return iconTag(TJ.Icon(q.icon)) .. TJ:N(q)
+  end
+  if p.pair and TJ.Profs[p.pair] then return name(p.pair) end
+  local users = {}
+  for _, k in ipairs(TJ.ProfOrder) do
+    if TJ.Profs[k].pair == key then users[#users + 1] = name(k) end
+  end
+  if #users > 0 then return table.concat(users, "   ") end
+  return p.kind == "craft" and T("сбор не нужен") or T("сама по себе")
 end
 
 -- Что получается из профессии: предметы маршрута, равномерно от начала до конца.
@@ -71,18 +117,6 @@ local function products(key, limit)
   return out
 end
 
--- С чем профессия в паре: сбор для ремесла, ремёсла для сбора.
-local function pairText(key)
-  local p = TJ.Profs[key]
-  if p.pair and TJ.Profs[p.pair] then return TJ:N(TJ.Profs[p.pair]) end
-  local users = {}
-  for _, k in ipairs(TJ.ProfOrder) do
-    if TJ.Profs[k].pair == key then users[#users + 1] = TJ:N(TJ.Profs[k]) end
-  end
-  if #users > 0 then return table.concat(users, ", ") end
-  return p.kind == "craft" and T("сбор не нужен") or T("сама по себе")
-end
-
 local function line(parent, w)
   local t = parent:CreateTexture(nil, "ARTWORK")
   t:SetSize(w, 1)
@@ -97,12 +131,35 @@ local function bigFont(fs, size)
   fs:SetShadowColor(0, 0, 0, 0.9)
 end
 
+local function tipButton(b)
+  b:SetScript("OnEnter", function(s)
+    if not s.tip then return end
+    GameTooltip:SetOwner(s, "ANCHOR_TOP")
+    GameTooltip:SetText(s.tip, 1, 1, 1, 1, true)
+    GameTooltip:Show()
+  end)
+  b:SetScript("OnLeave", function() GameTooltip:Hide() end)
+end
+
 local win
+
+local function turn(f, delta)
+  local order = TJ.ProfOrder
+  for i, k in ipairs(order) do
+    if k == f.key then
+      local n = i + delta
+      if n < 1 then n = #order elseif n > #order then n = 1 end
+      W.Sound("IG_ABILITY_PAGE_TURN")
+      TJ:ShowChoose(order[n])
+      return
+    end
+  end
+end
 
 local function build()
   local f = CreateFrame("Frame", "EasyCraftChooseFrame", UIParent, BackdropTemplateMixin and "BackdropTemplate" or nil)
   f:SetSize(WIDTH, HEIGHT)
-  f:SetPoint("CENTER", 0, 20)
+  f:SetPoint("CENTER", -TAB_W / 2, 20)
   f:SetFrameStrata("HIGH")
   f:SetToplevel(true)
   f:SetClampedToScreen(true)
@@ -112,120 +169,81 @@ local function build()
   f:SetScript("OnDragStart", f.StartMoving)
   f:SetScript("OnDragStop", f.StopMovingOrSizing)
   f:SetScale(TJ.settings.scale or 1)
-  W.Backdrop(f, "Interface\\Buttons\\WHITE8X8", nil, 16, 0.02, 0.02, 0.03, 1, 0.6, 0.48, 0.25, 1)
+  W.Backdrop(f, "Interface\\Buttons\\WHITE8X8", nil, 16, 0.02, 0.02, 0.03, 1, 0.75, 0.6, 0.3, 1)
   tinsert(UISpecialFrames, "EasyCraftChooseFrame")
 
-  -- фон: цвет профессии, картинка, затемнение слева под текст
+  -- фон: цвет профессии, рисунок целиком в правом нижнему углу, затемнение
   f.wash = f:CreateTexture(nil, "BORDER")
   f.wash:SetPoint("TOPLEFT", 4, -4)
   f.wash:SetPoint("BOTTOMRIGHT", -4, 4)
-  -- картинка - на всё окно, без искажения (обрезка по центру считается в fill)
   f.art = f:CreateTexture(nil, "BORDER", nil, 1)
-  f.art:SetPoint("TOPLEFT", 4, -4)
   f.art:SetPoint("BOTTOMRIGHT", -4, 4)
-  -- та же картинка вторым слоем со сложением цветов: рисунок в клиенте
-  -- бледный, так он заметнее
-  f.artGlow = f:CreateTexture(nil, "BORDER", nil, 2)
+  f.artGlow = f:CreateTexture(nil, "BORDER", nil, 2) -- второй слой сложением: бледный рисунок заметнее
   f.artGlow:SetAllPoints(f.art)
   f.artGlow:SetBlendMode("ADD")
-  f.artGlow:SetAlpha(0.6)
+  f.artGlow:SetAlpha(0.5)
   f.emblem = f:CreateTexture(nil, "BORDER", nil, 2)
-  f.emblem:SetSize(360, 360)
-  f.emblem:SetPoint("RIGHT", -70, 10)
+  f.emblem:SetSize(300, 300)
+  f.emblem:SetPoint("BOTTOMRIGHT", -20, 60)
   f.emblem:SetTexCoord(0.08, 0.92, 0.08, 0.92)
-  -- затемнение только под текстом слева: правая часть картинки открыта
-  f.shade = f:CreateTexture(nil, "BORDER", nil, 3)
+  f.shade = f:CreateTexture(nil, "BORDER", nil, 3) -- сверху темнее: там заголовок и название
   f.shade:SetPoint("TOPLEFT", 4, -4)
-  f.shade:SetPoint("BOTTOMLEFT", 4, 4)
-  f.shade:SetWidth(floor(WIDTH * 0.62))
+  f.shade:SetPoint("BOTTOMRIGHT", -4, 4)
   f.shade:SetColorTexture(1, 1, 1, 1)
-  local ok = CreateColor and pcall(f.shade.SetGradient, f.shade, "HORIZONTAL", CreateColor(0, 0, 0, 0.88), CreateColor(0, 0, 0, 0))
+  local ok = CreateColor and pcall(f.shade.SetGradient, f.shade, "VERTICAL", CreateColor(0, 0, 0, 0.25), CreateColor(0, 0, 0, 0.8))
   if not ok then f.shade:SetColorTexture(0, 0, 0, 0.5) end
-  f.floor = f:CreateTexture(nil, "BORDER", nil, 4) -- затемнение снизу под ряд профессий
-  f.floor:SetPoint("BOTTOMLEFT", 4, 4)
-  f.floor:SetPoint("BOTTOMRIGHT", -4, 4)
-  f.floor:SetHeight(130)
-  f.floor:SetColorTexture(1, 1, 1, 1)
-  ok = CreateColor and pcall(f.floor.SetGradient, f.floor, "VERTICAL", CreateColor(0, 0, 0, 0.9), CreateColor(0, 0, 0, 0))
-  if not ok then f.floor:SetColorTexture(0, 0, 0, 0.5) end
 
   local close = CreateFrame("Button", nil, f, "UIPanelCloseButton")
   close:SetPoint("TOPRIGHT", 0, 0)
 
   -- шапка окна
   f.head = W.Text(f, "huge", false)
-  f.head:SetPoint("TOP", 0, -22)
+  f.head:SetPoint("TOP", 0, -20)
   f.head:SetJustifyH("CENTER")
-  bigFont(f.head, 26)
-  local hl = line(f, 260)
+  bigFont(f.head, 22)
+  local hl = line(f, 240)
   hl:SetPoint("TOP", f.head, "BOTTOM", 0, -8)
 
-  -- слева: вид, название, строка «зачем»
-  -- значок профессии в кольце и её вид - одной строкой над названием
-  f.badge = W.RingIcon(f, 40)
-  f.badge:SetPoint("TOPLEFT", LEFT, -112)
-  f.kind = W.Text(f, "head", false)
-  f.kind:SetPoint("LEFT", f.badge, "RIGHT", 12, 0)
+  -- значок профессии и название - одной строкой; рядом с названием серым -
+  -- основная она или вторичная
+  f.badge = W.RingIcon(f, 48)
+  f.badge:SetPoint("TOPLEFT", LEFT + 2, -76)
   f.name = W.Text(f, "huge", false)
-  f.name:SetPoint("TOPLEFT", f.badge, "BOTTOMLEFT", -2, -10)
-  bigFont(f.name, 46)
-  f.lineTop = line(f, TEXT_W + 20)
-  f.lineTop:SetPoint("TOPLEFT", f.name, "BOTTOMLEFT", -8, -14)
+  f.name:SetPoint("LEFT", f.badge, "RIGHT", 14, 0)
+  bigFont(f.name, 34)
+  f.kind = W.Text(f, "body", false)
+  f.kind:SetTextColor(0.62, 0.62, 0.62)
+  f.kind:SetPoint("BOTTOMLEFT", f.name, "BOTTOMRIGHT", 12, 5)
+  f.lineTop = line(f, ROW_W)
+  f.lineTop:SetPoint("TOPLEFT", f.badge, "BOTTOMLEFT", -2, -14)
   f.why = W.Text(f, "title")
-  f.why:SetWidth(TEXT_W)
+  f.why:SetWidth(ROW_W - 20)
   f.why:SetTextColor(W.LIGHT[1], W.LIGHT[2], W.LIGHT[3])
   f.why:SetPoint("TOPLEFT", f.lineTop, "BOTTOMLEFT", 10, -10)
-  f.lineBot = line(f, TEXT_W + 20)
+  f.lineBot = line(f, ROW_W)
   f.lineBot:SetPoint("TOPLEFT", f.why, "BOTTOMLEFT", -10, -10)
-  -- тёмная полоса под строкой «зачем», между линиями
   f.whyBg = f:CreateTexture(nil, "BORDER", nil, 5)
   f.whyBg:SetPoint("TOPLEFT", f.lineTop, "BOTTOMLEFT", 0, 0)
   f.whyBg:SetPoint("BOTTOMRIGHT", f.lineBot, "TOPRIGHT", 0, 0)
-  f.whyBg:SetColorTexture(0, 0, 0, 0.45)
+  f.whyBg:SetColorTexture(0, 0, 0, 0.5)
 
-  -- листать профессии: колесо мыши и стрелки по краям окна
-  local function turn(delta)
-    local order = TJ.ProfOrder
-    for i, k in ipairs(order) do
-      if k == f.key then
-        local n = i + delta
-        if n < 1 then n = #order elseif n > #order then n = 1 end
-        W.Sound("IG_ABILITY_PAGE_TURN")
-        TJ:ShowChoose(order[n])
-        return
-      end
-    end
-  end
-  f:EnableMouseWheel(true)
-  f:SetScript("OnMouseWheel", function(_, delta) turn(-delta) end)
-  for _, d in ipairs({ { "Prev", "LEFT", 12, -1 }, { "Next", "RIGHT", -12, 1 } }) do
-    local b = CreateFrame("Button", nil, f)
-    b:SetSize(32, 32)
-    b:SetPoint(d[2], d[3], 10)
-    b:SetNormalTexture("Interface\\Buttons\\UI-SpellbookIcon-" .. d[1] .. "Page-Up")
-    b:SetPushedTexture("Interface\\Buttons\\UI-SpellbookIcon-" .. d[1] .. "Page-Down")
-    b:SetHighlightTexture("Interface\\Buttons\\UI-Common-MouseHilight", "ADD")
-    b:SetScript("OnClick", function() turn(d[4]) end)
-  end
-
-  -- три преимущества: значок, подпись серым, значение
+  -- три строки преимуществ, как характеристики в окне персонажа: тёмная
+  -- полоса, значок, подпись золотом слева, значение светлым справа
   f.chips = {}
   for i = 1, 3 do
-    -- строка, как характеристики в окне персонажа: тёмная полоса, значок,
-    -- подпись золотом слева, значение светлым справа
     local c = CreateFrame("Frame", nil, f)
-    c:SetSize(TEXT_W + 20, 36)
-    if i == 1 then c:SetPoint("TOPLEFT", f.lineBot, "BOTTOMLEFT", 0, -14)
+    c:SetSize(ROW_W, 38)
+    if i == 1 then c:SetPoint("TOPLEFT", f.lineBot, "BOTTOMLEFT", 0, -12)
     else c:SetPoint("TOPLEFT", f.chips[i - 1], "BOTTOMLEFT", 0, -4) end
     c.bg = c:CreateTexture(nil, "BACKGROUND")
     c.bg:SetAllPoints()
-    c.bg:SetColorTexture(0, 0, 0, 0.4)
+    c.bg:SetColorTexture(0, 0, 0, 0.5)
     c.icon = W.RingIcon(c, 24)
     c.icon:SetPoint("LEFT", 10, 0)
     c.label = W.Text(c, "head", false)
     c.label:SetPoint("LEFT", c.icon, "RIGHT", 12, 0)
     c.value = W.Text(c, "body")
-    c.value:SetWidth(230)
+    c.value:SetWidth(270)
     c.value:SetJustifyH("RIGHT")
     c.value:SetJustifyV("MIDDLE")
     c.value:SetPoint("RIGHT", -10, 0)
@@ -242,64 +260,63 @@ local function build()
     f.made[i] = b
   end
 
-  -- справа: изучена ли
+  -- под всем блоком: изучена ли, учитель и маршрут
+  f.stateLine = line(f, ROW_W)
+  f.stateLine:SetPoint("TOPLEFT", f.madeHead, "BOTTOMLEFT", 0, -12 - 48 - 14)
   f.state = W.Text(f, "title", false)
-  f.state:SetPoint("BOTTOMRIGHT", -40, 150)
-  f.state:SetJustifyH("RIGHT")
+  f.state:SetPoint("TOPLEFT", f.stateLine, "BOTTOMLEFT", 0, -14)
+  f.trainer = W.Button(f, "", 190, W.S.btnBig)
+  f.trainer:SetPoint("TOPRIGHT", f.stateLine, "BOTTOMRIGHT", 0, -8)
+  f.route = W.Button(f, "", 190, W.S.btnBig)
+  f.route:SetPoint("TOPRIGHT", f.trainer, "BOTTOMRIGHT", 0, -6)
+  tipButton(f.trainer)
+  tipButton(f.route)
 
-  -- кнопки: учитель и маршрут
-  f.trainer = W.Button(f, "", 200, 26)
-  f.trainer:SetPoint("BOTTOMRIGHT", -40, 112)
-  f.route = W.Button(f, "", 200, 26)
-  f.route:SetPoint("RIGHT", f.trainer, "LEFT", -8, 0)
-  for _, b in ipairs({ f.trainer, f.route }) do
-    b:SetScript("OnEnter", function(s)
-      if not s.tip then return end
-      GameTooltip:SetOwner(s, "ANCHOR_TOP")
-      GameTooltip:SetText(s.tip, 1, 1, 1, 1, true)
-      GameTooltip:Show()
-    end)
-    b:SetScript("OnLeave", function() GameTooltip:Hide() end)
+  -- внизу окна: листать профессии (и колесом мыши)
+  local function nav(text, point, x, delta, arrow)
+    local b = W.Button(f, text, 150, 30)
+    b:SetPoint(point, x, 18)
+    local a = b:CreateTexture(nil, "OVERLAY")
+    a:SetSize(26, 26)
+    a:SetTexture("Interface\\Buttons\\UI-SpellbookIcon-" .. arrow .. "Page-Up")
+    a:SetPoint(delta < 0 and "LEFT" or "RIGHT", delta < 0 and 4 or -4, 0)
+    b:SetScript("OnClick", function() turn(f, delta) end)
+    return b
   end
+  f.prev = nav(T("Назад"), "BOTTOMLEFT", LEFT, -1, "Prev")
+  f.next = nav(T("Дальше"), "BOTTOMRIGHT", -LEFT, 1, "Next")
+  f:EnableMouseWheel(true)
+  f:SetScript("OnMouseWheel", function(s, delta) turn(s, -delta) end)
 
-  -- внизу: все профессии в ряд
-  f.picks = {}
-  local n, size, step = #TJ.ProfOrder, 44, 60
-  local x0 = floor((WIDTH - (n - 1) * step - size) / 2)
+  -- вкладки профессий справа у окна: значок и название
+  f.tabs = {}
   for i, key in ipairs(TJ.ProfOrder) do
-    local b = CreateFrame("Button", nil, f)
-    b:SetSize(size, size)
-    b:SetPoint("BOTTOMLEFT", x0 + (i - 1) * step, 34)
-    b.glow = b:CreateTexture(nil, "BACKGROUND")
-    b.glow:SetPoint("CENTER")
-    b.glow:SetSize(size * 1.9, size * 1.9)
-    b.glow:SetTexture("Interface\\Buttons\\UI-ActionButton-Border")
-    b.glow:SetBlendMode("ADD")
-    b.glow:SetVertexColor(1, 0.82, 0.2, 0.9)
-    b.ring = W.RingIcon(b, size)
-    b.ring:SetPoint("CENTER")
-    b.ring:SetIcon(TJ.Icon(TJ.Profs[key].icon))
-    b.check = b:CreateTexture(nil, "OVERLAY", nil, 3)
-    b.check:SetSize(18, 18)
-    b.check:SetPoint("BOTTOMRIGHT", 5, -4)
+    local b = CreateFrame("Button", nil, f, BackdropTemplateMixin and "BackdropTemplate" or nil)
+    b:SetSize(TAB_W, TAB_H)
+    b:SetPoint("TOPLEFT", f, "TOPRIGHT", -3, -44 - (i - 1) * TAB_STEP)
+    W.Backdrop(b, "Interface\\Buttons\\WHITE8X8", nil, 12, 0.06, 0.05, 0.04, 0.95, 0.5, 0.4, 0.22, 1)
+    b.icon = b:CreateTexture(nil, "ARTWORK")
+    b.icon:SetSize(24, 24)
+    b.icon:SetPoint("LEFT", 8, 0)
+    b.icon:SetTexCoord(0.08, 0.92, 0.08, 0.92)
+    b.icon:SetTexture(TJ.Icon(TJ.Profs[key].icon))
+    b.text = W.Text(b, "body", false)
+    b.text:SetPoint("LEFT", b.icon, "RIGHT", 8, 0)
+    b.text:SetPoint("RIGHT", -24, 0)
+    b.check = b:CreateTexture(nil, "OVERLAY")
+    b.check:SetSize(16, 16)
+    b.check:SetPoint("RIGHT", -6, 0)
     W.SetTex(b.check, "Interface\\RaidFrame\\ReadyCheck-Ready", 0.2, 0.9, 0.2, 1)
     local hlt = b:CreateTexture(nil, "HIGHLIGHT")
-    hlt:SetAllPoints()
-    hlt:SetTexture("Interface\\Buttons\\ButtonHilight-Square")
-    hlt:SetBlendMode("ADD")
+    hlt:SetPoint("TOPLEFT", 3, -3)
+    hlt:SetPoint("BOTTOMRIGHT", -3, 3)
+    hlt:SetColorTexture(1, 0.82, 0, 0.12)
     b.key = key
     b:SetScript("OnClick", function()
       W.Sound("IG_ABILITY_PAGE_TURN")
       TJ:ShowChoose(key)
     end)
-    b:SetScript("OnEnter", function(s)
-      GameTooltip:SetOwner(s, "ANCHOR_TOP")
-      GameTooltip:SetText(TJ:N(TJ.Profs[key]), 1, 0.82, 0)
-      GameTooltip:AddLine(T(KIND[TJ.Profs[key].kind] or ""), 0.8, 0.8, 0.8)
-      GameTooltip:Show()
-    end)
-    b:SetScript("OnLeave", function() GameTooltip:Hide() end)
-    f.picks[i] = b
+    f.tabs[i] = b
   end
   f:Hide()
   return f
@@ -307,49 +324,37 @@ end
 
 local function fill(f, key)
   local p = TJ.Profs[key]
-  local info = INFO[key] or { "", "", "", { 0.3, 0.3, 0.3 } }
+  local info = INFO[key] or { "", "", ALL, { 0.3, 0.3, 0.3 } }
   local rank, maxRank, learned = TJ:GetSkill(key)
   f.key = key
 
-  -- фон
+  -- фон: рисунок целиком, с сохранением пропорций, в правом нижнем углу
   local col = info[4]
-  f.wash:SetColorTexture(col[1] * 0.5, col[2] * 0.5, col[3] * 0.5, 1)
+  f.wash:SetColorTexture(col[1] * 0.45, col[2] * 0.45, col[3] * 0.45, 1)
   local atlas = artAtlas(key)
+  local shown = false
   if atlas then
-    -- картинка покрывает окно целиком: лишнее по длинной стороне срезается
-    -- поровну с двух краёв, пропорции не меняются
-    f.art:SetAtlas(atlas)
-    local info = C_Texture.GetAtlasInfo(atlas)
-    local l, r, t, b = info.leftTexCoord, info.rightTexCoord, info.topTexCoord, info.bottomTexCoord
-    local aw, ah = info.width or 0, info.height or 0
-    if l and r and t and b and aw > 0 and ah > 0 then
-      local want, have = (WIDTH - 8) / (HEIGHT - 8), aw / ah
-      if have > want then
-        local cut = (r - l) * (1 - want / have) / 2
-        l, r = l + cut, r - cut
-      else
-        local cut = (b - t) * (1 - have / want) / 2
-        t, b = t + cut, b - cut
-      end
-      f.art:SetTexCoord(l, r, t, b)
+    local ai = C_Texture.GetAtlasInfo(atlas)
+    local aw, ah = ai and ai.width or 0, ai and ai.height or 0
+    if aw > 0 and ah > 0 then
+      local k = min((WIDTH - 8) / aw, (HEIGHT - 8) / ah)
+      f.art:SetAtlas(atlas)
+      f.art:SetSize(floor(aw * k), floor(ah * k))
+      f.artGlow:SetAtlas(atlas)
+      shown = true
     end
-    f.art:SetAlpha(1)
-    f.art:Show()
-    f.artGlow:SetAtlas(atlas)
-    if l and r and t and b then f.artGlow:SetTexCoord(l, r, t, b) end
-    f.artGlow:Show()
-    f.emblem:Hide()
-  else
-    f.art:Hide()
-    f.artGlow:Hide()
+  end
+  f.art:SetShown(shown)
+  f.artGlow:SetShown(shown)
+  f.emblem:SetShown(not shown)
+  if not shown then
     f.emblem:SetTexture(TJ.Icon(p.icon))
-    f.emblem:SetAlpha(0.5)
-    f.emblem:Show()
+    f.emblem:SetAlpha(0.45)
   end
 
   f.head:SetText(format(T("Профессий: %d"), #TJ.ProfOrder))
   f.badge:SetIcon(TJ.Icon(p.icon))
-  f.kind:SetText(T(KIND[p.kind] or "") .. "  |cff9d9d9d" .. T(SLOT[p.kind] or "") .. "|r")
+  f.kind:SetText(p.kind == "secondary" and T("Вторичная") or T("Основная"))
   f.name:SetText(TJ:N(p))
   f.why:SetText(T(info[1]))
 
@@ -357,7 +362,7 @@ local function fill(f, key)
   local chips = {
     { MAKE_ICON, gather and T("Добывает") or T("Создаёт"), T(info[2]) },
     { PAIR_ICON, p.kind == "craft" and T("Сбор к ней") or T("Кому пригодится"), pairText(key) },
-    { WHO_ICON, T("Кому брать"), T(info[3]) },
+    { WHO_ICON, T("Кому брать"), whoText(info[3]) },
   }
   for i, c in ipairs(f.chips) do
     local d = chips[i]
@@ -367,7 +372,7 @@ local function fill(f, key)
   end
 
   local items = products(key, #f.made)
-  f.madeHead:SetText(#items > 0 and T("Что получится (наведи на значок)") or "")
+  f.madeHead:SetText(T("Что получится (наведи на значок)"))
   for i, b in ipairs(f.made) do
     if items[i] then b:SetItem(items[i]); b:Show() else b:Hide() end
   end
@@ -386,10 +391,18 @@ local function fill(f, key)
   f.route.tip = T("Маршрут прокачки этой профессии в окне EasyCraft.")
   f.route:SetScript("OnClick", function() f:Hide(); TJ.UI:Open(key) end)
 
-  for _, b in ipairs(f.picks) do
+  for _, b in ipairs(f.tabs) do
     local sel = b.key == key
-    b.glow:SetShown(sel)
-    b:SetAlpha(sel and 1 or 0.8)
+    b.text:SetText(TJ:N(TJ.Profs[b.key]))
+    if sel then
+      b:SetBackdropColor(0.22, 0.16, 0.05, 1)
+      b:SetBackdropBorderColor(1, 0.82, 0, 1)
+      b.text:SetTextColor(1, 0.82, 0)
+    else
+      b:SetBackdropColor(0.06, 0.05, 0.04, 0.95)
+      b:SetBackdropBorderColor(0.5, 0.4, 0.22, 1)
+      b.text:SetTextColor(W.LIGHT[1], W.LIGHT[2], W.LIGHT[3])
+    end
     b.check:SetShown(TJ.char.profs[b.key] ~= nil)
   end
 end

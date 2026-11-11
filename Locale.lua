@@ -1549,3 +1549,6 @@ for k, v in pairs({
   ["что есть и что докупить"] = "what you have and what to buy",
   ["одной кнопкой"] = "with one button",
 }) do TJ.EN[k] = v end
+
+-- 1.2: окно выбора профессии - пометка у названия
+TJ.EN["Основная"] = "Primary"
