@@ -12,8 +12,9 @@ local S = W.S
 local WIDTH, HEIGHT = 760, 620
 local SIDE = 28 -- поля окна слева и справа
 local LEFT = 44 -- левый край содержимого
-local TOP = 96 -- где начинается содержимое под шапкой
+local TOP = 84 -- где начинается содержимое под шапкой
 local STRIP_W = 480 -- ширина полосы «зачем»
+local COST_H = 24 -- строка «Путь до 300» с кнопкой маршрута
 local MAX_ICONS = 4
 
 -- Строка «зачем», что создаёт (добывает), кому брать (текст или список
@@ -241,16 +242,9 @@ local function build()
   if file then f.title:SetFont(file, 24, flags) end
   f.title:SetShadowOffset(1, -1)
   f.title:SetShadowColor(0, 0, 0, 0.9)
-  f.rule = rule(f, 360)
-  f.rule:SetPoint("TOP", f.title, "BOTTOM", 0, -10)
 
-  -- основная она или вторичная - мелко над названием
-  f.kind = W.Text(f, "head", false)
-  f.kind:SetPoint("TOPLEFT", LEFT + 2, -TOP)
-  f.kind:SetShadowOffset(1, -1)
-  f.kind:SetShadowColor(0, 0, 0, 0.9)
   f.badge = W.RingIcon(f, 64)
-  f.badge:SetPoint("TOPLEFT", LEFT, -(TOP + 26))
+  f.badge:SetPoint("TOPLEFT", LEFT, -TOP)
   f.name = W.Text(f, "huge", false)
   f.name:SetPoint("LEFT", f.badge, "RIGHT", 18, 0)
   file, _, flags = f.name:GetFont()
@@ -262,9 +256,13 @@ local function build()
   f.state:SetPoint("TOPLEFT", f.badge, "BOTTOMLEFT", 2, -12)
   f.state:SetShadowOffset(1, -1)
   f.state:SetShadowColor(0, 0, 0, 0.9)
+  -- ниже - цена пути до 300 и рядом кнопка маршрута (строка высотой COST_H)
+  f.pathCost = W.Text(f, "body", false)
+  f.pathCost:SetShadowOffset(1, -1)
+  f.pathCost:SetShadowColor(0, 0, 0, 0.9)
   -- строка «зачем» на тёмной полосе между двумя линиями
   f.lineTop = rule(f, STRIP_W, 0.7)
-  f.lineTop:SetPoint("TOPLEFT", f.state, "BOTTOMLEFT", -6, -14)
+  f.lineTop:SetPoint("TOPLEFT", f.state, "BOTTOMLEFT", -6, -(8 + COST_H + 12))
   f.why = W.Text(f, "title")
   f.why:SetWidth(STRIP_W - 28)
   f.why:SetTextColor(0.95, 0.93, 0.88)
@@ -282,7 +280,7 @@ local function build()
   for i = 1, 3 do f.cards[i] = infoCard(f, colW) end
   f.colW = colW
 
-  -- низ: три кнопки в ряд по центру, стрелки по углам
+  -- низ: две кнопки по центру, стрелки по углам
   local function bigFont(b)
     local fs = b:GetFontString()
     if fs then
@@ -480,16 +478,17 @@ local function fill(f, key)
     f.emblem:SetAlpha(0.45)
   end
 
-  f.kind:SetText(p.kind == "secondary" and T("Вторичная") or T("Основная"))
   f.badge:SetIcon(ns.Icon(p.icon))
   f.name:SetText(ns:N(p))
   f.state:SetText(learned and ("|cff33dd33" .. format(T("Изучена: %d/%d"), rank, maxRank) .. "|r")
     or ("|cffb0aca0" .. T("Не изучена") .. "|r"))
   local cost = costLine(key)
-  if cost then f.state:SetText(f.state:GetText() .. "     " .. cost) end
+  f.pathCost:SetText(cost or "")
+  f.pathCost:ClearAllPoints()
+  f.pathCost:SetPoint("LEFT", f.state, "BOTTOMLEFT", 0, -(8 + COST_H / 2))
   f.why:SetText(T(info[1]))
   -- где кончается полоса «зачем» (от верха окна)
-  local stripEnd = TOP + 26 + 64 + 12 + f.state:GetStringHeight() + 14 + 1 + 12 + f.why:GetStringHeight() + 12 + 1
+  local stripEnd = TOP + 64 + 12 + f.state:GetStringHeight() + 8 + COST_H + 12 + 1 + 12 + f.why:GetStringHeight() + 12 + 1
 
   -- 1. что создаёт или добывает: предметы с подсказками
   local c1 = f.cards[1]
@@ -547,7 +546,7 @@ local function fill(f, key)
     c:SetPoint("TOPLEFT", LEFT + (i - 1) * f.colW, -(stripEnd + 22))
   end
 
-  -- низ: «учитель», «маршрут» (если изучена), «к аддону» - в ряд по центру
+  -- низ: «учитель» и «к аддону» - парой по центру
   local npc = ns:NearestTrainer(key)
   f.trainer:SetText(T("Учитель на карте"))
   f.trainer:SetEnabled(npc ~= nil)
@@ -562,18 +561,16 @@ local function fill(f, key)
   f.trainer:ClearAllPoints()
   f.go:ClearAllPoints()
   f.route:ClearAllPoints()
-  if true then
-    f.route:SetPoint("BOTTOM", 0, 29)
-    f.trainer:SetPoint("RIGHT", f.route, "LEFT", -10, 0)
-    f.go:SetPoint("LEFT", f.route, "RIGHT", 10, 0)
-    f.trainer:SetWidth(210)
-    f.go:SetWidth(210)
+  -- маршрут - рядом с ценой пути; нет цены - на её месте
+  if cost then
+    f.route:SetPoint("LEFT", f.pathCost, "RIGHT", 14, 0)
   else
-    f.trainer:SetPoint("BOTTOM", -131, 22)
-    f.go:SetPoint("BOTTOM", 131, 22)
-    f.trainer:SetWidth(250)
-    f.go:SetWidth(250)
+    f.route:SetPoint("LEFT", f.state, "BOTTOMLEFT", 0, -(8 + COST_H / 2))
   end
+  f.trainer:SetPoint("BOTTOM", -131, 22)
+  f.go:SetPoint("BOTTOM", 131, 22)
+  f.trainer:SetWidth(250)
+  f.go:SetWidth(250)
 
   for _, t in ipairs(f.tabs) do
     local q = ns.Profs[t.key]
