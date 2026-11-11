@@ -1512,7 +1512,7 @@ function ns:UpdateAuctionPanel()
     end
   end
   if shown == 0 then f:Hide(); return end -- покупать нечего
-  if hidden > 0 then y = f:Head("|cff9d9d9d" .. format(T("и ещё %d"), hidden) .. "|r", y) end
+  if hidden > 0 then y = f:Head(format(T("и ещё %d"), hidden), y) end
   y = f:EndList(y)
   -- 3. Итог и «Найти всё»
   local sum

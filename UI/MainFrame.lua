@@ -1956,8 +1956,11 @@ function Mini:ApplyStyle(f)
   f.stepBig:SetTextColor(head[1], head[2], head[3])
   f.stepOf:SetTextColor(body[1], body[2], body[3])
   for _, k in ipairs({ "secHead", "npcHead", "name" }) do if f[k] then f[k]:SetTextColor(head[1], head[2], head[3]) end end
-  for _, k in ipairs({ "note", "bestHead", "status" }) do if f[k] then f[k]:SetTextColor(body[1], body[2], body[3]) end end
+  for _, k in ipairs({ "note", "bestHead", "status", "secDesc" }) do if f[k] then f[k]:SetTextColor(body[1], body[2], body[3]) end end
   if f.find then f.find.text:SetTextColor(head[1], head[2], head[3]) end
+  -- заголовки, которые появляются позже (очередь крафта), красятся так же
+  f.inkHead = head
+  if f.queueHead then f.queueHead:SetTextColor(head[1], head[2], head[3]) end
   f.stepBig:ClearAllPoints()
   f.stepBig:SetPoint("LEFT", f, "TOPLEFT", MINI_PAD, -HEAD_MID)
   for _, set in pairs(f.headIcons) do set.open:Hide(); set.trainer:Hide() end
@@ -2489,6 +2492,8 @@ function Mini:Queue(f, key, y)
   end
   y = sep(f, 3, y - GAP_SECTION / 2)
   if not f.queueHead then f.queueHead = W.Text(f, "head") end
+  local qh = f.inkHead or W.INK_T
+  f.queueHead:SetTextColor(qh[1], qh[2], qh[3])
   f.queueHead:SetText(T("Очередь крафта"))
   y = place(f.queueHead, f, y) + 3
   if not f.queueBtn then f.queueBtn = W.Button(f, "", MINI_W - MINI_PAD * 2, 22) end
