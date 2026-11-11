@@ -1128,6 +1128,9 @@ function C:RankHead(UI, bk, done, total)
   UI:End(c, 4)
 end
 
+-- значки вкладок режима маршрута
+local MODE_ICON = { guide = "INV_Misc_Book_09", cheap = "INV_Misc_Coin_02", fast = "Ability_Rogue_Sprint" }
+
 function C:BuildRoute(UI, key)
   local p = ns.Profs[key]
   local rank, maxRank = ns:GetSkill(key)
@@ -1151,14 +1154,30 @@ function C:BuildRoute(UI, key)
   if ns.HasRouteModes and ns:HasRouteModes(key) then
     local mc = UI:Card("flat")
     local mode = ns:RouteMode()
-    local list = {}
+    -- вкладки, как вкладки разделов окна: значок и название, выбранная светлая
+    local x = UI.PAD
     for _, m in ipairs(ns.ROUTE_MODES) do
-      local on = m == mode
-      tinsert(list, { text = (on and "|cffffd100" or "") .. T(ns.ROUTE_MODE_NAME[m]) .. (on and "|r" or ""),
-        tip = T(ns.ROUTE_MODE_TIP[m]), enabled = not on,
-        onClick = function() ns:SetRouteMode(m); UI:Render(true) end })
+      local tab = mc:Take("modetab", function() return W.TopTab(mc) end)
+      tab.icon:SetTexture("Interface\\Icons\\" .. MODE_ICON[m])
+      tab.text:SetText(T(ns.ROUTE_MODE_NAME[m]))
+      tab:Fit()
+      tab:SetSelected(m == mode)
+      tab:SetPoint("TOPLEFT", mc, "TOPLEFT", x, -mc.y)
+      tab:SetScript("OnClick", function(t)
+        if t.selected then return end
+        W.Sound("IG_CHARACTER_INFO_TAB")
+        ns:SetRouteMode(m)
+        UI:Render(true)
+      end)
+      tab:SetScript("OnEnter", function(t)
+        GameTooltip:SetOwner(t, "ANCHOR_TOP")
+        GameTooltip:SetText(T(ns.ROUTE_MODE_NAME[m]), 1, 0.82, 0)
+        GameTooltip:AddLine(T(ns.ROUTE_MODE_TIP[m]), 1, 1, 1, true)
+        GameTooltip:Show()
+      end)
+      x = x + tab:GetWidth() + 2
     end
-    mc:Buttons(list)
+    mc.y = mc.y + W.TAB_H + 4
     if mode ~= "guide" and p.routeMode ~= mode then
       mc:Text("|cff9d9d9d" .. T("Для этого режима нужны цены: открой аукцион. Пока показан обычный маршрут.") .. "|r", "small")
     end
