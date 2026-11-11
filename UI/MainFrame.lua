@@ -14,8 +14,8 @@ local PAGE_W = WIDTH - 16
 local ATTIC = 64
 local CHILD_W = PAGE_W - 30
 local CARD_W = CHILD_W - 20
-local PAD = 18
-local GAP = 14 -- между карточками
+local PAD = W.S.pad
+local GAP = W.S.gap -- между карточками
 UI.CARD_W, UI.PAD = CARD_W, PAD
 -- Значок в начале блока (шаг, профессия, шапка карточки): одинаковые
 -- отступы во всех блоках. ICON_X, ICON_Y - от края блока до рамки значка
@@ -307,6 +307,22 @@ local function MakeCell(parent, size)
     self.tip = it.tip
     local fn = it.onClick
     self:SetScript("OnClick", function() W.Sound("IG_MAINMENU_OPTION_CHECKBOX_ON"); fn() end)
+    -- крестик у правого края (it.onDelete): убрать строку; текст справа - левее
+    if it.onDelete then
+      if not self.del then
+        self.del = CreateFrame("Button", nil, self, "UIPanelCloseButton")
+        self.del:SetSize(22, 22)
+        self.del:SetPoint("RIGHT", -1, 0)
+      end
+      self.del:SetScript("OnClick", it.onDelete)
+      self.del:Show()
+      if nI == 0 then
+        self.right:ClearAllPoints()
+        self.right:SetPoint("RIGHT", -24, -1)
+      end
+    elseif self.del then
+      self.del:Hide()
+    end
   end
   return b
 end
@@ -587,8 +603,11 @@ function Card:Button(d, x, y, right)
     btn:SetScript("OnLeave", function() GameTooltip:Hide() end)
     return btn
   end)
-  b:SetSize(d.w or 120, 24)
+  -- две высоты (обычная и главная - d.big); ширина по тексту, если не задана
   b:SetText(d.text)
+  local bfs = b.GetFontString and b:GetFontString()
+  local bw = d.w or max(W.S.btnMin, floor((bfs and bfs:GetStringWidth() or 90) + 30))
+  b:SetSize(bw, d.big and W.S.btnBig or W.S.btn)
   b:SetEnabled(d.enabled ~= false)
   -- подсказка и у выключенной кнопки: почему она выключена
   if b.SetMotionScriptsWhileDisabled then b:SetMotionScriptsWhileDisabled(true) end
@@ -609,12 +628,12 @@ function Card:Buttons(list, right, stay)
   if right then
     for i = #list, 1, -1 do
       out[i] = self:Button(list[i], x, self.y, true)
-      x = x + (list[i].w or 120) + 6
+      x = x + out[i]:GetWidth() + 6
     end
   else
     for i, d in ipairs(list) do
       out[i] = self:Button(d, x, self.y)
-      x = x + (d.w or 120) + 6
+      x = x + out[i]:GetWidth() + 6
     end
   end
   if not stay then self.y = self.y + 34 end
@@ -822,6 +841,20 @@ function Card:Row(r)
   b.itemID = r.hoverItem and r.id or nil
   b.tip = r.hoverItem and TJ.T("Shift+щелчок - ссылка в чат. На открытом аукционе щелчок ищет этот реагент.") or nil
   b:SetScript("OnClick", r.onClick)
+  -- крестик у правого края (r.onDelete): убрать строку; текст справа - левее
+  b.right:ClearAllPoints()
+  b.right:SetPoint("RIGHT", r.onDelete and -28 or -8, -1)
+  if r.onDelete then
+    if not b.del then
+      b.del = CreateFrame("Button", nil, b, "UIPanelCloseButton")
+      b.del:SetSize(22, 22)
+      b.del:SetPoint("RIGHT", -2, 0)
+    end
+    b.del:SetScript("OnClick", r.onDelete)
+    b.del:Show()
+  elseif b.del then
+    b.del:Hide()
+  end
   self.y = self.y + 33
   return b
 end
@@ -1299,11 +1332,11 @@ end
 -- MacroCoach: { { text =, onClick =, tip =, enabled = } }.
 function UI:PageHeader(title, text, buttons)
   local c = self:Card("flat")
-  c:Text(title, "huge", { x = 10, gap = 8 })
-  if text and text ~= "" then c:Text(text, "body", { x = 10, gap = 4, color = INK_HEAD_TEXT }) end
+  c:Text(title, "huge", { x = PAD, gap = 8 })
+  if text and text ~= "" then c:Text(text, "body", { x = PAD, gap = 4, color = INK_HEAD_TEXT }) end
   if buttons and #buttons > 0 then
     c:Space(6)
-    local x = 10
+    local x = PAD
     for _, d in ipairs(buttons) do
       local b = c:Button(d, x, c.y)
       local fs = b.GetFontString and b:GetFontString()
@@ -1590,9 +1623,15 @@ function TJ:ToggleFrame()
   UI:Create()
   if UI.frame:IsShown() then UI.frame:Hide(); return end
   -- Первый раз - на главную, к знакомству.
-  if not TJ.db.introDone then UI.tab.home = 1; UI:Open("home"); return end
-  local last = TJ.char.lastView
-  UI:Open((last and TJ.char.profs[last]) and last or "home")
+  if not TJ.db.introDone then
+    UI.tab.home = 1
+    UI:Open("home")
+  else
+    local last = TJ.char.lastView
+    UI:Open((last and TJ.char.profs[last]) and last or "home")
+  end
+  -- знакомство отдельным окном - один раз (UI/Intro.lua)
+  if TJ.IntroOnce then TJ:IntroOnce() end
 end
 
 TJ:RegisterRefresh(function() UI:Render(true) end)

@@ -193,7 +193,7 @@ end
 function TJ:ZoneColor(area)
   local z = self.Zones[area]
   local f = z and z.f or "C"
-  if f == "A" then return "|cff4f9cff" elseif f == "H" then return "|cffff4f4f" end
+  if f == "A" then return "|cff4f9cff" elseif f == "H" then return "|cffff5555" end
   return "|cffffd36b"
 end
 
@@ -374,19 +374,19 @@ function TJ:OnSkillChanged(key, oldRank, newRank, newMax, firstSeen)
   -- completed steps
   for _, s in ipairs(p.steps) do
     if s.t and oldRank < s.t and newRank >= s.t then
-      self:Print(format(TJ.T("%s: |cff20ff20шаг выполнен|r - %s"), TJ:N(p), self:StepTitle(s)))
+      self:Print(format(TJ.T("%s: |cff33dd33шаг выполнен|r - %s"), TJ:N(p), self:StepTitle(s)))
       local _, nextStep = self:CurrentStep(key, newRank, newMax)
       if nextStep then self:Print(TJ.T("Дальше: ") .. self:StepTitle(nextStep)) end
     end
   end
   for _, s in ipairs(p.steps) do
     if s.learn and s.max and (newMax or 0) < s.max and oldRank < s.learn and newRank >= s.learn and self:CanLearnRank(s, newRank) then
-      self:Print(format(TJ.T("%s: |cffffff00можно выучить «%s»|r - успей до %d навыка"), TJ:N(p), self:RankName(s.max), s.at))
+      self:Print(format(TJ.T("%s: |cffffd100можно выучить «%s»|r - успей до %d навыка"), TJ:N(p), self:RankName(s.max), s.at))
     end
   end
   if newMax and newMax < 300 and newRank >= newMax and oldRank < newMax then
     local msg = format(TJ.T("%s %d/%d - пора к учителю: %s"), TJ:N(p), newRank, newMax, self:RankName(newMax + 75))
-    self:Print("|cffffff00" .. msg .. "|r")
+    self:Print("|cffffd100" .. msg .. "|r")
     if UIErrorsFrame then UIErrorsFrame:AddMessage(msg, 1, 0.82, 0) end
   end
 end

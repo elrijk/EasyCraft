@@ -51,6 +51,7 @@ UI\Content.lua
 UI\Choose.lua
 UI\Share.lua
 UI\Book.lua
+UI\Intro.lua
 UI\MainFrame.lua
 UI\MapOverlay.lua
 UI\Minimap.lua

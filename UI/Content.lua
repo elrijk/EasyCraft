@@ -461,13 +461,7 @@ end
 
 -- Гайды вкладок снова (кнопка «?», настройки, /ec помощь): показать на
 -- главной и прокрутить к началу.
-function TJ:ShowIntro()
-  local UI = self.UI
-  TJ.db.guideHidden, TJ.db.whyHidden = nil, nil
-  UI.tab.home = UI.tab.home or 1
-  UI:Open("home")
-  if UI.frame and UI.frame.scroll then UI.frame.scroll:SetVerticalScroll(0) end
-end
+-- TJ:ShowIntro() - в UI/Intro.lua: знакомство отдельным окном.
 
 -- Свёрнутый блок-подсказка: строка с «+», щелчок раскрывает.
 local function foldHead(c, title, open, onToggle)
@@ -520,6 +514,9 @@ local GUIDE = {
     { "INV_Misc_Note_02", "Собери очередь", "Щелчок по рецепту добавит его в очередь: видно, чего докупить, и создаётся одной кнопкой." },
   },
 }
+
+-- Знакомство с аддоном (UI/Intro.lua) показывает эти тексты отдельным окном.
+C.HOW, C.GUIDE = HOW, GUIDE
 
 -- Кнопки шапки вкладки: куда идти дальше.
 local function headButtons(UI, tab, data)
@@ -613,7 +610,7 @@ function C:BuildHome(UI, tab)
   if tab == 1 then TJ.db.introDone = true end -- главную видели: дальше окно открывается там, где было
   local shop = tab == 4 and self:ShoppingData() or nil
   UI:PageHeader(T(how.title), T(how.text), headButtons(UI, tab, shop))
-  self:GuideCard(UI, tab)
+  -- «Как пользоваться» - не на каждой вкладке, а отдельным окном (UI/Intro.lua)
   if tab == 2 then
     self:MapCard(UI)
     self:MyPointsCard(UI)

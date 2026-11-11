@@ -121,14 +121,11 @@ function C:QueueCard(UI)
     rows[#rows + 1] = { id = e.out, tex = e.icon, text = format("%d × %s", e.n, nameText(e)),
       sub = TJ:N(p) .. ", " .. state, right = profitText(e.profit and e.profit * e.n),
       star = e == nextUp, hot = e == nextUp,
-      tip = { title = e.name or "?", lines = lines, hint = T("Щелчок - создать. Ctrl+щелчок - убрать из очереди.") },
-      onClick = function()
-        if IsControlKeyDown and IsControlKeyDown() then
-          TJ:QueueRemove(e.spell)
-          UI:Render(true)
-        else
-          TJ:QueueCraft(e)
-        end
+      tip = { title = e.name or "?", lines = lines, hint = T("Щелчок - создать. Крестик справа уберёт из очереди.") },
+      onClick = function() TJ:QueueCraft(e) end,
+      onDelete = function()
+        TJ:QueueRemove(e.spell)
+        UI:Render(true)
       end }
   end
   c:Items(rows, 1, 28)
@@ -163,17 +160,15 @@ function C:CooldownCard(UI)
   local c = UI:Card()
   c:Head({ ring = "Interface\\Icons\\INV_Misc_PocketWatch_01" }, T("Откаты по персонажам"),
     { { #list == 0 and T("Пока пусто. Создай предмет с откатом при открытом окне профессии - аддон запомнит его для этого персонажа.")
-      or T("Что уже можно создавать снова и сколько ждать остальное. Ctrl+щелчок убирает строку."), "small" } }, 32)
+      or T("Что уже можно создавать снова и сколько ждать остальное."), "small" } }, 32)
   for _, e in ipairs(list) do
     local who = e.who:match("^[^-]+") or e.who
     c:Row({ tex = e.icon, text = (e.name or "?") .. "  " .. GREY .. who .. "|r",
       right = e.left == 0 and (GREEN .. T("готово") .. "|r") or TJ:TimeLeft(e.left),
       state = e.mine and e.left == 0 and "current" or nil,
-      onClick = function()
-        if IsControlKeyDown and IsControlKeyDown() then
-          TJ:ForgetCooldown(e.who, e.spell)
-          UI:Render(true)
-        end
+      onDelete = function()
+        TJ:ForgetCooldown(e.who, e.spell)
+        UI:Render(true)
       end })
   end
   UI:End(c)
