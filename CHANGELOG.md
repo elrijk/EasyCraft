@@ -2,38 +2,40 @@
 
 ## 1.2.0
 
-**Works without other addons**
+**Works on its own**
 
-- Auction prices are read by EasyCraft itself when you open the auction house; Auctionator and TSM are no longer used. The addon reminds you to visit the auction house when it has no prices or they are older than 3 days. `/ec scan` reads prices on demand.
+- Auction prices are read by EasyCraft itself when you open the auction house. Auctionator and TSM are no longer used. The addon reminds you to visit the auction house when it has no prices or they are older than 3 days. `/ec scan` reads prices on demand.
 - Reagents on your other characters are counted by EasyCraft itself (bags, bank, mail). Syndicator and BagBrother are still used when installed. A setting turns alt counting off.
 
 **Recipes**
 
-- New "Recipes" tab: every learned recipe with its profit, the most profitable on top.
+- New "Recipes" tab: every recipe of your professions, learned or not, with cost, profit and where to get it. The most profitable on top.
 - Profit uses the best way to sell: auction house, vendor, or disenchanting (if the character is an enchanter).
-- Full recipe list of each profession, read from the game: recipes you have not learned yet show their cost, profit and where to get them.
 - Craft queue: click a recipe to queue it, see what to buy, craft with one button. A queue block also sits in the mini window.
 - Cooldowns of all your characters in one list.
 - "What to craft for yourself now": gear better than what you wear and consumables for your level.
-- "Dungeons", "Raids" and "PvP" filters: what is considered the best to craft and for which classes. Starter list, not yet checked against WoW Forever.
+- "Dungeons", "Raids" and "PvP" filter: what is considered the best to craft and for which classes. Starter list, not yet checked against WoW Forever.
 
-**Routes**
+**Leveling path**
 
-- Route modes with a switch above the route: Standard, Cheaper (least gold per skill point) and Faster (fewest crafts).
-- EasyCraft records the colours of your recipes at each skill and uses them in the route modes. `/ec colors` and a once-per-session hint give a code to send to the author, so thresholds improve for everyone.
+- A "Leveling path" switch on the home page: Standard, Cheaper (least gold per skill point) or Faster (fewest crafts). One choice for all professions.
+- EasyCraft records the colours of your recipes at each skill and uses them for the paths. `/ec colors` or a once-per-session hint gives a link to a pre-filled GitHub issue, so thresholds improve for everyone.
 
 **Choosing a profession**
 
 - A separate window: what each profession makes, what it pairs with, who should take it, where the trainer is.
-- The cost of the path to 300 and a preview of the whole route before you learn the profession.
+- The cost of the path to 300 and a preview of the whole route before you learn the profession. `/ec choose` opens it.
 
 **Camp**
 
 - "XP: the most per hour": the XP bonuses professions give - the Camp Tent (leatherworking) and cooked food. Numbers come from player guides; check the buff tooltip in game.
 
-**Other**
+**Interface**
 
 - One-screen introduction on first open; "?" in the window title shows it again.
+- Settings page regrouped into sections: General, Hints, Map and auction house.
+- Step card: one "Create all" button. Hint panels at the bank and auction house scroll when the list is long.
+- Removed: the "Map" tab and your own finds on the world map (gathering areas stay), Russian chat command aliases.
 - All new strings are translated into the 8 other languages (machine translation).
 - Code cleanup: fallbacks for clients other than WoW Forever are removed.
 
