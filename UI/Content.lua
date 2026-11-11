@@ -525,11 +525,23 @@ local GUIDE = {
 local function headButtons(UI, tab, data)
   local function goTab(n) return function() UI.tab.home = n; UI:Render() end end
   if tab == 1 then
-    return {
+    -- «Выбор профессии» есть всегда: профессии меняют. У персонажа без
+    -- профессий страница выбора открыта и так - кнопка не нужна.
+    local choose
+    if #TJ:LearnedList() > 0 then
+      choose = UI.chooseOpen
+        and { text = T("Мои профессии"), onClick = function() UI.chooseOpen = nil; UI:Render() end,
+          tip = T("Назад к маршрутам твоих профессий.") }
+        or { text = T("Выбор профессии"), onClick = function() UI.chooseOpen = true; UI:Render() end,
+          tip = T("Что делает каждая профессия и какой сбор к ней нужен. Пригодится, если решишь сменить профессию.") }
+    end
+    local list = {
       { text = T("Покупки до учителя"), onClick = goTab(4), tip = T("Что докупить до следующего учителя по всем профессиям.") },
       { text = T("Карта сбора"), onClick = goTab(2), tip = T("Руда и травы, которые сейчас дают навык.") },
       { text = T("Настройки"), onClick = function() TJ:OpenSettings() end },
     }
+    if choose then tinsert(list, 1, choose) end
+    return list
   elseif tab == 2 then
     return {
       { text = T("Открыть карту"), onClick = function() if TJ.MapOverlay then TJ.MapOverlay:OpenMap() end end,
@@ -721,7 +733,7 @@ end
 
 function C:BuildProfList(UI)
   local learned = TJ:LearnedList()
-  if #learned == 0 then
+  if #learned == 0 or UI.chooseOpen then
     self:BuildChoose(UI) -- UI/Choose.lua
     return
   end

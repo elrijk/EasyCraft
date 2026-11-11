@@ -1459,3 +1459,11 @@ for k, v in pairs({
   ["Все рецепты и очередь"] = "All recipes and the queue",
   ["Откроет вкладку «Рецепты»: там вся очередь, что докупить и новые рецепты в неё."] = "Opens the \"Recipes\" tab: the whole queue, what to buy, and more recipes to add.",
 }) do TJ.EN[k] = v end
+
+-- 1.2: выбор профессии открывается всегда
+for k, v in pairs({
+  ["Выбор профессии"] = "Choosing a profession",
+  ["Мои профессии"] = "My professions",
+  ["Назад к маршрутам твоих профессий."] = "Back to the routes of your professions.",
+  ["Что делает каждая профессия и какой сбор к ней нужен. Пригодится, если решишь сменить профессию."] = "What each profession does and which gathering goes with it. Handy if you decide to switch.",
+}) do TJ.EN[k] = v end
