@@ -1,5 +1,6 @@
 local _, ns = ...
-local C, T = ns.Content, ns.T
+local C, T, W = ns.Content, ns.T, ns.W
+local floor, max, min = math.floor, math.max, math.min
 
 -------------------------------------------------------------------------------
 --  «Опыт: максимум в час» во вкладке «Лагерь»: какие бонусы к опыту есть,
@@ -9,8 +10,9 @@ local C, T = ns.Content, ns.T
 --  бафа в игре.
 -------------------------------------------------------------------------------
 local ICON = "Interface\\Icons\\"
+local XP_COLS, XP_GAP, XP_RING = 2, 28, 26
 
--- { значок, название, справа, пояснение, подсказка }
+-- { значок, название, бонус, что сделать, подробности }
 local SOURCES = {
   { "Spell_Nature_Sleep", "Отдых (синяя полоса)", "x2 за убийства",
     "Выходи из игры в таверне или городе.",
@@ -48,15 +50,48 @@ local BAG = {
 }
 
 function C:XpCard(UI)
+  local PAD, CW = UI.PAD, UI.CARD_W
   local c = UI:Card()
   c:Head({ ring = ICON .. "Spell_Holy_BlessingOfStrength" }, T("Опыт: максимум в час"),
-    { { T("Бонусы складываются. Наведи на строку - подробности."), "small" } }, 32)
-  local rows = {}
-  for _, s in ipairs(SOURCES) do
-    rows[#rows + 1] = { tex = ICON .. s[1], text = T(s[2]), sub = T(s[4]), right = "|cff33dd33" .. T(s[3]) .. "|r",
-      tip = { title = T(s[2]), lines = { T(s[5]) } } }
+    { { T("Бонусы складываются."), "small" } }, 32)
+  -- источники блоками по два в ряд: значок, название и бонус зелёным,
+  -- ниже - что сделать и подробности
+  local rp = W.RingPad(XP_RING)
+  local outer = XP_RING + rp * 2
+  local colW = floor((CW - PAD * 2 - XP_GAP * (XP_COLS - 1)) / XP_COLS)
+  local rowTop = c.y + 10
+  for first = 1, #SOURCES, XP_COLS do
+    local xs, rowH = {}, 0
+    for i = first, min(first + XP_COLS - 1, #SOURCES) do
+      local s = SOURCES[i]
+      local x = PAD + (i - first) * (colW + XP_GAP)
+      local by = rowTop
+      c:Ring(XP_RING, x + rp, by + rp):SetIcon(ICON .. s[1])
+      c:TextBlock(x + outer + 6, by, outer, colW - outer - 6, {
+        { T(s[2]), "head", W.LIGHT, true },
+        { "|cff33dd33" .. T(s[3]) .. "|r", "small" },
+      })
+      by = by + outer + 6
+      local fs = c:Text(T(s[4]), "small", { x = x, y = by, w = colW, color = W.LIGHT })
+      by = by + (fs and fs:GetStringHeight() or 14) + 4
+      fs = c:Text(T(s[5]), "small", { x = x, y = by, w = colW })
+      by = by + (fs and fs:GetStringHeight() or 14)
+      rowH = max(rowH, by - rowTop)
+      xs[#xs + 1] = x
+    end
+    -- подложка у блоков ряда одной высоты
+    for _, x in ipairs(xs) do
+      local bg = c:Take("xpbg", function()
+        local t = c:CreateTexture(nil, "BORDER")
+        t:SetColorTexture(0, 0, 0, 0.3)
+        return t
+      end)
+      bg:SetPoint("TOPLEFT", c, "TOPLEFT", x - 8, -(rowTop - 8))
+      bg:SetSize(colW + 16, rowH + 16)
+    end
+    rowTop = rowTop + rowH + XP_GAP
   end
-  c:Items(rows, 1, 28)
+  c.y = rowTop - XP_GAP + 14
   c:Text(T(ORDER), "small", { gap = 6 })
   local open = UI.xpBag
   c:Buttons({ { text = open and T("Скрыть путь к спальнику") or T("Как добыть спальник"), w = 220,

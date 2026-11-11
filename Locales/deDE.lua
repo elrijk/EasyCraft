@@ -1492,4 +1492,5 @@ ns.LOCALES.deDE = function() return {
   ["disenchant, roughly"] = "entzaubern, ungefähr",
   ["read prices at the open auction house"] = "Preise im offenen Auktionshaus lesen",
   ["a code with recipe colours for the author"] = "ein Code mit Rezeptfarben für den Autor",
+  ["The bonuses stack."] = "Die Boni addieren sich.",
 } end

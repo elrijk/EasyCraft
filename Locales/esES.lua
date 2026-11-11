@@ -1500,4 +1500,5 @@ ns.LOCALES.esES = function() return {
   ["disenchant, roughly"] = "desencantar, aproximado",
   ["read prices at the open auction house"] = "leer los precios en la casa de subastas abierta",
   ["a code with recipe colours for the author"] = "un código con los colores de las recetas para el autor",
+  ["The bonuses stack."] = "Las bonificaciones se acumulan.",
 } end

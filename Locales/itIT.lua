@@ -1500,4 +1500,5 @@ ns.LOCALES.itIT = function() return {
   ["disenchant, roughly"] = "disincantare, circa",
   ["read prices at the open auction house"] = "leggi i prezzi alla casa d'aste aperta",
   ["a code with recipe colours for the author"] = "un codice con i colori delle ricette per l'autore",
+  ["The bonuses stack."] = "I bonus si sommano.",
 } end

@@ -1507,4 +1507,5 @@ ns.LOCALES.zhCN = function() return {
   ["disenchant, roughly"] = "分解，约数",
   ["read prices at the open auction house"] = "在打开的拍卖行读取价格",
   ["a code with recipe colours for the author"] = "给作者的配方颜色代码",
+  ["The bonuses stack."] = "这些加成可以叠加。",
 } end

@@ -1707,3 +1707,8 @@ for k, v in pairs({
   ["прочитать цены на открытом аукционе"] = "read prices at the open auction house",
   ["код с цветами рецептов для автора"] = "a code with recipe colours for the author",
 }) do if ns.EN[k] == nil then ns.EN[k] = v end end
+
+-- 1.2: карточка опыта блоками
+for k, v in pairs({
+  ["Бонусы складываются."] = "The bonuses stack.",
+}) do if ns.EN[k] == nil then ns.EN[k] = v end end

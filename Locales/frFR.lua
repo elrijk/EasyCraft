@@ -1491,4 +1491,5 @@ ns.LOCALES.frFR = function() return {
   ["disenchant, roughly"] = "désenchanter, approximatif",
   ["read prices at the open auction house"] = "lire les prix à l'hôtel des ventes ouvert",
   ["a code with recipe colours for the author"] = "un code avec les couleurs des recettes pour l'auteur",
+  ["The bonuses stack."] = "Les bonus se cumulent.",
 } end

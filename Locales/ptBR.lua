@@ -1494,4 +1494,5 @@ ns.LOCALES.ptBR = function() return {
   ["disenchant, roughly"] = "desencantar, aproximado",
   ["read prices at the open auction house"] = "ler os preços na casa de leilões aberta",
   ["a code with recipe colours for the author"] = "um código com as cores das receitas para o autor",
+  ["The bonuses stack."] = "Os bônus se acumulam.",
 } end
