@@ -1501,4 +1501,9 @@ ns.LOCALES.esES = function() return {
   ["read prices at the open auction house"] = "leer los precios en la casa de subastas abierta",
   ["a code with recipe colours for the author"] = "un código con los colores de las recetas para el autor",
   ["The bonuses stack."] = "Las bonificaciones se acumulan.",
+  ["Recipe colours: %d"] = "Colores de recetas: %d",
+  ["Copy the link (Ctrl+C), paste it into your browser's address bar and press Submit on the page."] = "Copia el enlace (Ctrl+C), pégalo en la barra de direcciones del navegador y pulsa Submit en la página.",
+  ["1. Copy the link (Ctrl+C) and open it in your browser."] = "1. Copia el enlace (Ctrl+C) y ábrelo en el navegador.",
+  ["2. Copy the code, paste it into the issue text and press Submit."] = "2. Copia el código, pégalo en el texto de la incidencia y pulsa Submit.",
+  ["The game cannot open a browser, so the link has to be copied. A GitHub account is needed; the page is public. The code holds recipes and skill values only."] = "El juego no puede abrir el navegador, por eso hay que copiar el enlace. Hace falta una cuenta de GitHub; la página es pública. El código solo contiene recetas y habilidad.",
 } end

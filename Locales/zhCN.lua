@@ -1508,4 +1508,9 @@ ns.LOCALES.zhCN = function() return {
   ["read prices at the open auction house"] = "在打开的拍卖行读取价格",
   ["a code with recipe colours for the author"] = "给作者的配方颜色代码",
   ["The bonuses stack."] = "这些加成可以叠加。",
+  ["Recipe colours: %d"] = "配方颜色：%d 条",
+  ["Copy the link (Ctrl+C), paste it into your browser's address bar and press Submit on the page."] = "复制链接（Ctrl+C），粘贴到浏览器地址栏，然后在页面上点击 Submit。",
+  ["1. Copy the link (Ctrl+C) and open it in your browser."] = "1. 复制链接（Ctrl+C）并在浏览器中打开。",
+  ["2. Copy the code, paste it into the issue text and press Submit."] = "2. 复制代码，粘贴到问题正文里，然后点击 Submit。",
+  ["The game cannot open a browser, so the link has to be copied. A GitHub account is needed; the page is public. The code holds recipes and skill values only."] = "游戏无法打开浏览器，所以需要手动复制链接。需要 GitHub 账号；页面是公开的。代码里只有配方和技能值。",
 } end

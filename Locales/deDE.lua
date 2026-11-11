@@ -1493,4 +1493,9 @@ ns.LOCALES.deDE = function() return {
   ["read prices at the open auction house"] = "Preise im offenen Auktionshaus lesen",
   ["a code with recipe colours for the author"] = "ein Code mit Rezeptfarben für den Autor",
   ["The bonuses stack."] = "Die Boni addieren sich.",
+  ["Recipe colours: %d"] = "Rezeptfarben: %d",
+  ["Copy the link (Ctrl+C), paste it into your browser's address bar and press Submit on the page."] = "Kopiere den Link (Strg+C), füge ihn in die Adresszeile des Browsers ein und klicke auf der Seite auf Submit.",
+  ["1. Copy the link (Ctrl+C) and open it in your browser."] = "1. Kopiere den Link (Strg+C) und öffne ihn im Browser.",
+  ["2. Copy the code, paste it into the issue text and press Submit."] = "2. Kopiere den Code, füge ihn in den Text der Meldung ein und klicke auf Submit.",
+  ["The game cannot open a browser, so the link has to be copied. A GitHub account is needed; the page is public. The code holds recipes and skill values only."] = "Das Spiel kann keinen Browser öffnen, daher muss der Link kopiert werden. Ein GitHub-Konto ist nötig; die Seite ist öffentlich. Der Code enthält nur Rezepte und Fertigkeit.",
 } end

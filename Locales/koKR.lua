@@ -1507,4 +1507,9 @@ ns.LOCALES.koKR = function() return {
   ["read prices at the open auction house"] = "열려 있는 경매장에서 가격 읽기",
   ["a code with recipe colours for the author"] = "제작자에게 보낼 제조법 색상 코드",
   ["The bonuses stack."] = "보너스는 중첩됩니다.",
+  ["Recipe colours: %d"] = "제조법 색상: %d개",
+  ["Copy the link (Ctrl+C), paste it into your browser's address bar and press Submit on the page."] = "링크를 복사(Ctrl+C)해 브라우저 주소창에 붙여 넣고 페이지에서 Submit을 누르세요.",
+  ["1. Copy the link (Ctrl+C) and open it in your browser."] = "1. 링크를 복사(Ctrl+C)해 브라우저에서 여세요.",
+  ["2. Copy the code, paste it into the issue text and press Submit."] = "2. 코드를 복사해 이슈 내용에 붙여 넣고 Submit을 누르세요.",
+  ["The game cannot open a browser, so the link has to be copied. A GitHub account is needed; the page is public. The code holds recipes and skill values only."] = "게임은 브라우저를 열 수 없어서 링크를 직접 복사해야 합니다. GitHub 계정이 필요하며 페이지는 공개됩니다. 코드에는 제조법과 숙련도만 들어 있습니다.",
 } end

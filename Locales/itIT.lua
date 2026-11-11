@@ -1501,4 +1501,9 @@ ns.LOCALES.itIT = function() return {
   ["read prices at the open auction house"] = "leggi i prezzi alla casa d'aste aperta",
   ["a code with recipe colours for the author"] = "un codice con i colori delle ricette per l'autore",
   ["The bonuses stack."] = "I bonus si sommano.",
+  ["Recipe colours: %d"] = "Colori delle ricette: %d",
+  ["Copy the link (Ctrl+C), paste it into your browser's address bar and press Submit on the page."] = "Copia il link (Ctrl+C), incollalo nella barra degli indirizzi del browser e premi Submit sulla pagina.",
+  ["1. Copy the link (Ctrl+C) and open it in your browser."] = "1. Copia il link (Ctrl+C) e aprilo nel browser.",
+  ["2. Copy the code, paste it into the issue text and press Submit."] = "2. Copia il codice, incollalo nel testo della segnalazione e premi Submit.",
+  ["The game cannot open a browser, so the link has to be copied. A GitHub account is needed; the page is public. The code holds recipes and skill values only."] = "Il gioco non può aprire il browser, quindi il link va copiato. Serve un account GitHub; la pagina è pubblica. Il codice contiene solo ricette e abilità.",
 } end

@@ -1712,3 +1712,12 @@ for k, v in pairs({
 for k, v in pairs({
   ["Бонусы складываются."] = "The bonuses stack.",
 }) do if ns.EN[k] == nil then ns.EN[k] = v end end
+
+-- 1.2: окно отправки цветов рецептов
+for k, v in pairs({
+  ["Цвета рецептов: %d"] = "Recipe colours: %d",
+  ["Скопируй ссылку (Ctrl+C), вставь в адресную строку браузера и нажми Submit на странице."] = "Copy the link (Ctrl+C), paste it into your browser's address bar and press Submit on the page.",
+  ["1. Скопируй ссылку (Ctrl+C) и открой её в браузере."] = "1. Copy the link (Ctrl+C) and open it in your browser.",
+  ["2. Скопируй код, вставь его в текст обращения и нажми Submit."] = "2. Copy the code, paste it into the issue text and press Submit.",
+  ["Игра не умеет открывать браузер, поэтому ссылку нужно скопировать. Нужна учётная запись GitHub; страница видна всем. В коде только рецепты и навык."] = "The game cannot open a browser, so the link has to be copied. A GitHub account is needed; the page is public. The code holds recipes and skill values only.",
+}) do if ns.EN[k] == nil then ns.EN[k] = v end end

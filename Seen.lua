@@ -104,10 +104,117 @@ function ns:ShareColors()
     self:Print(ns.T("наблюдений пока нет: открой окно профессии."))
     return
   end
-  if StaticPopupDialogs and StaticPopupDialogs.EASYCRAFT_SHARE then
-    StaticPopup_Show("EASYCRAFT_SHARE", format(ns.T("Цвета рецептов (%d). Скопируй код (Ctrl+C) и отправь автору аддона:"), n)
-      .. "\ngithub.com/elrijk/EasyCraft/issues", nil, code)
+  self:ShowShareWindow(code, n)
+end
+
+-------------------------------------------------------------------------------
+--  Окно отправки. Игра не открывает браузер и не выходит в интернет, поэтому
+--  аддон готовит ссылку на новое обращение в GitHub с уже вставленным кодом:
+--  игрок копирует её, открывает в браузере и нажимает Submit. Если код в
+--  ссылку не помещается (у адреса есть предел длины), даём ссылку и код
+--  отдельно, двумя шагами.
+-------------------------------------------------------------------------------
+local SHARE_URL = "https://github.com/elrijk/EasyCraft/issues/new"
+local SHARE_MAX = 7000 -- длиннее адрес браузеры и GitHub могут не принять
+local shareWin
+
+local function urlEncode(text)
+  return (text:gsub("[^%w%-_%.~]", function(c) return format("%%%02X", c:byte()) end))
+end
+
+-- поле с текстом только для копирования: набранное возвращается обратно
+local function copyBox(parent, width)
+  local e = CreateFrame("EditBox", nil, parent, "InputBoxTemplate")
+  e:SetSize(width, 22)
+  e:SetAutoFocus(false)
+  e:SetMaxLetters(0)
+  e:SetScript("OnTextChanged", function(box, user)
+    if user and box:GetText() ~= box.value then
+      box:SetText(box.value or "")
+      box:HighlightText()
+    end
+  end)
+  e:SetScript("OnEditFocusGained", function(box) box:HighlightText() end)
+  e:SetScript("OnEscapePressed", function(box) box:ClearFocus() end)
+  function e:Put(text)
+    self.value = text
+    self:SetText(text)
+    self:SetCursorPosition(0)
   end
+  return e
+end
+
+function ns:ShowShareWindow(code, n)
+  local W, T = self.W, self.T
+  local f = shareWin
+  local WIDTH, PAD = 460, 20
+  local inner = WIDTH - PAD * 2
+  if not f then
+    f = CreateFrame("Frame", "EasyCraftShareFrame", UIParent, BackdropTemplateMixin and "BackdropTemplate" or nil)
+    shareWin = f
+    f:SetWidth(WIDTH)
+    f:SetPoint("CENTER", 0, 60)
+    f:SetFrameStrata("DIALOG")
+    f:SetToplevel(true)
+    f:SetClampedToScreen(true)
+    f:EnableMouse(true)
+    f:SetMovable(true)
+    f:RegisterForDrag("LeftButton")
+    f:SetScript("OnDragStart", f.StartMoving)
+    f:SetScript("OnDragStop", f.StopMovingOrSizing)
+    W.Backdrop(f, "Interface\\Buttons\\WHITE8X8", nil, 16, 0.06, 0.045, 0.03, 1, 0.75, 0.6, 0.3, 1)
+    tinsert(UISpecialFrames, "EasyCraftShareFrame")
+    local x = CreateFrame("Button", nil, f, "UIPanelCloseButton")
+    x:SetPoint("TOPRIGHT", 0, 0)
+    f.title = W.Text(f, "title", false)
+    f.title:SetPoint("TOPLEFT", PAD, -16)
+    f.step1 = W.Text(f, "body")
+    f.step1:SetWidth(inner)
+    f.link = copyBox(f, inner - 6)
+    f.step2 = W.Text(f, "body")
+    f.step2:SetWidth(inner)
+    f.code = copyBox(f, inner - 6)
+    f.note = W.Text(f, "small")
+    f.note:SetWidth(inner)
+    f.close = W.Button(f, CLOSE or "Close", 160, 26)
+    f.close:SetScript("OnClick", function() f:Hide() end)
+  end
+  local full = SHARE_URL .. "?title=" .. urlEncode("Recipe colours (" .. n .. ")") .. "&body=" .. urlEncode(code)
+  local fits = #full <= SHARE_MAX
+  f.title:SetText(format(T("Цвета рецептов: %d"), n))
+  local y = 16 + f.title:GetStringHeight() + 12
+  f.step1:SetText(fits and T("Скопируй ссылку (Ctrl+C), вставь в адресную строку браузера и нажми Submit на странице.")
+    or T("1. Скопируй ссылку (Ctrl+C) и открой её в браузере."))
+  f.step1:ClearAllPoints()
+  f.step1:SetPoint("TOPLEFT", PAD, -y)
+  y = y + f.step1:GetStringHeight() + 6
+  f.link:Put(fits and full or (SHARE_URL .. "?title=" .. urlEncode("Recipe colours (" .. n .. ")")))
+  f.link:ClearAllPoints()
+  f.link:SetPoint("TOPLEFT", PAD + 6, -y)
+  y = y + 22 + 12
+  f.step2:SetShown(not fits)
+  f.code:SetShown(not fits)
+  if not fits then
+    f.step2:SetText(T("2. Скопируй код, вставь его в текст обращения и нажми Submit."))
+    f.step2:ClearAllPoints()
+    f.step2:SetPoint("TOPLEFT", PAD, -y)
+    y = y + f.step2:GetStringHeight() + 6
+    f.code:Put(code)
+    f.code:ClearAllPoints()
+    f.code:SetPoint("TOPLEFT", PAD + 6, -y)
+    y = y + 22 + 12
+  end
+  f.note:SetText(T("Игра не умеет открывать браузер, поэтому ссылку нужно скопировать. Нужна учётная запись GitHub; страница видна всем. В коде только рецепты и навык."))
+  f.note:ClearAllPoints()
+  f.note:SetPoint("TOPLEFT", PAD, -y)
+  y = y + f.note:GetStringHeight() + 14
+  f.close:ClearAllPoints()
+  f.close:SetPoint("TOP", f, "TOP", 0, -y)
+  f:SetHeight(y + 26 + 16)
+  f:Show()
+  f:Raise()
+  f.link:SetFocus()
+  f.link:HighlightText()
 end
 
 -------------------------------------------------------------------------------
