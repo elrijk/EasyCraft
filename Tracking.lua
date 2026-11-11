@@ -7,7 +7,7 @@ local handlers = {}
 
 local function on(event, fn)
   handlers[event] = fn
-  pcall(ev.RegisterEvent, ev, event) -- unknown events must not break loading
+  ev:RegisterEvent(event)
 end
 ev:SetScript("OnEvent", function(_, event, ...)
   local fn = handlers[event]
@@ -76,7 +76,6 @@ on("PLAYER_ENTERING_WORLD", function()
 end)
 on("SKILL_LINES_CHANGED", function() throttle("skills", 0.5, function() TJ:ScanSkills() end) end)
 on("CHAT_MSG_SKILL", function() throttle("skills", 0.5, function() TJ:ScanSkills() end) end)
-on("LEARNED_SPELL_IN_TAB", function() throttle("skills", 1, function() TJ:ScanSkills() end) end)
 
 -- Выучил рецепт (у учителя или из предмета-рецепта): отметить его в скане
 -- окна профессии, чтобы карточка сразу перестала звать к учителю.
@@ -123,21 +122,10 @@ end
 
 -- Чужая профессия: ссылка из чата, список гильдии, ремесленник-NPC.
 -- Её навык и рецепты не наши, записывать их нельзя.
-function TJ:IsForeignTradeSkill(isCraft)
+function TJ:IsForeignTradeSkill()
   local api = C_TradeSkillUI
-  if api then
-    for _, fn in ipairs({ "IsTradeSkillLinked", "IsTradeSkillGuild", "IsTradeSkillGuildMember", "IsNPCCrafting" }) do
-      if api[fn] then
-        local ok, v = pcall(api[fn])
-        if ok and v then return true end
-      end
-    end
-  end
-  if not isCraft and IsTradeSkillLinked then
-    local ok, v = pcall(IsTradeSkillLinked)
-    if ok and v then return true end
-  end
-  return false
+  return api.IsTradeSkillLinked() or api.IsTradeSkillGuild() or api.IsTradeSkillGuildMember() or api.IsNPCCrafting()
+    or false
 end
 
 -- Одинаковы ли «сколько можно сделать» двух сканов.
@@ -150,8 +138,8 @@ local function sameCounts(a, b)
 end
 local routeSig = {} -- профессия -> «навык:рецептов» последней сверки маршрута
 
-function TJ:ScanTradeSkill(isCraft)
-  if self:IsForeignTradeSkill(isCraft) then
+function TJ:ScanTradeSkill()
+  if self:IsForeignTradeSkill() then
     self.openKey = nil
     if self.Tracker and self.Tracker.Detach then self.Tracker:Detach() end
     self:RefreshAll()
@@ -169,43 +157,14 @@ function TJ:ScanTradeSkill(isCraft)
     if name and d and d <= 2 then tinsert(list, { n = name, d = d, a = num or 0, i = icon, id = id }) end
   end
 
-  if isCraft and GetCraftDisplaySkillLine and GetNumCrafts then
-    profName, rank, maxRank = GetCraftDisplaySkillLine()
-    for i = 1, GetNumCrafts() or 0 do
-      local name, _, kind, num = GetCraftInfo(i)
-      if kind ~= "header" then add(name, kind, num, GetCraftIcon and GetCraftIcon(i)) end
-    end
+  local info = C_TradeSkillUI.GetBaseProfessionInfo()
+  if info and info.professionName then
+    profName, rank, maxRank = info.professionName, info.skillLevel, info.maxSkillLevel
   end
-
-  if not profName and C_TradeSkillUI and C_TradeSkillUI.GetAllRecipeIDs then
-    local info = C_TradeSkillUI.GetBaseProfessionInfo and C_TradeSkillUI.GetBaseProfessionInfo()
-    if info and info.professionName then
-      profName, rank, maxRank = info.professionName, info.skillLevel, info.maxSkillLevel
-    end
-    if not profName and C_TradeSkillUI.GetTradeSkillLine then
-      local _, n, r, m = C_TradeSkillUI.GetTradeSkillLine()
-      profName, rank, maxRank = n, r, m
-    end
-    local ids = C_TradeSkillUI.GetAllRecipeIDs() or {}
-    for _, id in ipairs(ids) do
-      local r = C_TradeSkillUI.GetRecipeInfo(id)
-      if r and r.learned ~= false and r.type ~= "header" and r.type ~= "subheader" then
-        add(r.name, r.relativeDifficulty or r.difficulty, r.numAvailable, r.icon, id)
-      end
-    end
-  end
-
-  if (not profName or #list == 0) and GetTradeSkillLine and GetNumTradeSkills then
-    local n, r, m = GetTradeSkillLine()
-    if n and n ~= "UNKNOWN" then
-      profName, rank, maxRank = n, r, m
-      wipe(list)
-      for i = 1, GetNumTradeSkills() or 0 do
-        local name, kind, num = GetTradeSkillInfo(i)
-        if kind and kind ~= "header" and kind ~= "subheader" then
-          add(name, kind, num, GetTradeSkillIcon and GetTradeSkillIcon(i))
-        end
-      end
+  for _, id in ipairs(C_TradeSkillUI.GetAllRecipeIDs() or {}) do
+    local r = C_TradeSkillUI.GetRecipeInfo(id)
+    if r and r.learned ~= false and r.type ~= "header" and r.type ~= "subheader" then
+      add(r.name, r.relativeDifficulty or r.difficulty, r.numAvailable, r.icon, id)
     end
   end
 
@@ -243,7 +202,7 @@ end
 
 -- Окно профессии открыто? Скан, назначенный до закрытия, после закрытия не
 -- делаем: иначе «Создать» решит, что окно открыто, а скан затрётся пустым.
-local tradeOpen, craftOpen = false, false
+local tradeOpen = false
 local function windowShown(names)
   for _, n in ipairs(names) do
     local f = _G[n]
@@ -251,43 +210,33 @@ local function windowShown(names)
   end
   return false
 end
-local TRADE_FRAMES, CRAFT_FRAMES = { "ProfessionsFrame", "TradeSkillFrame" }, { "CraftFrame" }
-for _, e in ipairs({ "TRADE_SKILL_SHOW", "TRADE_SKILL_UPDATE", "TRADE_SKILL_LIST_UPDATE", "TRADE_SKILL_DATA_SOURCE_CHANGED" }) do
+-- окно профессии игра подгружает при первом открытии, под одним из этих имён
+local TRADE_FRAMES = { "ProfessionsFrame", "TradeSkillFrame" }
+for _, e in ipairs({ "TRADE_SKILL_SHOW", "TRADE_SKILL_LIST_UPDATE", "TRADE_SKILL_DATA_SOURCE_CHANGED" }) do
   on(e, function()
     if e == "TRADE_SKILL_SHOW" then tradeOpen = true end
     throttle("trade", 0.4, function()
-      if tradeOpen or windowShown(TRADE_FRAMES) then TJ:ScanTradeSkill(false) end
+      if tradeOpen or windowShown(TRADE_FRAMES) then TJ:ScanTradeSkill() end
     end)
   end)
 end
-for _, e in ipairs({ "TRADE_SKILL_CLOSE", "CRAFT_CLOSE" }) do
-  on(e, function()
-    if e == "CRAFT_CLOSE" then craftOpen = false else tradeOpen = false end
-    TJ.openKey = nil
-    -- окно закрыли раньше, чем начали создавать: само потом не начнём
-    if TJ.pendingCraft and GetTime() - TJ.pendingCraft.t > 2 then TJ.pendingCraft = nil end
-    if TJ.Tracker and TJ.Tracker.Detach then TJ.Tracker:Detach() end
-    TJ:RefreshAll()
-  end)
-end
-for _, e in ipairs({ "CRAFT_SHOW", "CRAFT_UPDATE" }) do
-  on(e, function()
-    if e == "CRAFT_SHOW" then craftOpen = true end
-    throttle("craft", 0.4, function()
-      if craftOpen or windowShown(CRAFT_FRAMES) then TJ:ScanTradeSkill(true) end
-    end)
-  end)
-end
+on("TRADE_SKILL_CLOSE", function()
+  tradeOpen = false
+  TJ.openKey = nil
+  -- окно закрыли раньше, чем начали создавать: само потом не начнём
+  if TJ.pendingCraft and GetTime() - TJ.pendingCraft.t > 2 then TJ.pendingCraft = nil end
+  if TJ.Tracker and TJ.Tracker.Detach then TJ.Tracker:Detach() end
+  TJ:RefreshAll()
+end)
 
 ---------------------------------------------------------------------------
 -- Gathering journal (idea from Gather Together): what you loot from nodes,
 -- skinning and fishing, per zone, plus node positions for the world map.
 ---------------------------------------------------------------------------
 function TJ:PlayerPosition()
-  if not (C_Map and C_Map.GetBestMapForUnit) then return end
   local mapID = C_Map.GetBestMapForUnit("player")
   if not mapID then return end
-  local pos = C_Map.GetPlayerMapPosition and C_Map.GetPlayerMapPosition(mapID, "player")
+  local pos = C_Map.GetPlayerMapPosition(mapID, "player")
   if not pos then return mapID end
   local x, y = pos:GetXY()
   return mapID, x, y

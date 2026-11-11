@@ -991,18 +991,21 @@ function W.Parchment(tex)
   end
 end
 
+-- Сумма не рвётся переносом строки: между золотом, серебром и медью
+-- неразрывные пробелы.
+local NBSP = "\194\160"
 function W.Money(copper)
   copper = math.floor((copper or 0) + 0.5)
   if GetMoneyString then
     local ok, s = pcall(GetMoneyString, copper, true)
-    if ok and s then return s end
+    if ok and s then return (s:gsub(" ", NBSP)) end
   end
   local g, s, c = math.floor(copper / 10000), math.floor(copper / 100) % 100, copper % 100
   local out = {}
   if g > 0 then out[#out + 1] = "|cffffd700" .. g .. TJ.T("з") .. "|r" end
   if s > 0 or g > 0 then out[#out + 1] = "|cffc7c7cf" .. s .. TJ.T("с") .. "|r" end
   out[#out + 1] = "|cffeda55f" .. c .. TJ.T("м") .. "|r"
-  return table.concat(out, " ")
+  return table.concat(out, NBSP)
 end
 
 -------------------------------------------------------------------------------

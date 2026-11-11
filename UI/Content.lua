@@ -575,9 +575,11 @@ function C:GuideCard(UI, tab)
       local r = rows[i]
       local x = PAD + (i - first) * (colW + GX)
       c:IconAt(x, rowTop, size, TJ.Icon(r[1]))
-      c:TextBlock(x + size + 8, rowTop, size, colW - size - 8, { { T(r[2]), "head", W.GOLD, true } })
-      local fs = c:Text(T(r[3]), "small", { x = x, y = rowTop + size + 6, w = colW, color = W.LIGHT })
-      h = max(h, size + 6 + (fs and fs:GetStringHeight() or 14))
+      -- длинный заголовок занимает больше строк, чем высота значка: пояснение ниже него
+      local th = c:TextBlock(x + size + 8, rowTop, size, colW - size - 8, { { T(r[2]), "head", W.GOLD, true } })
+      local top = max(size, th or 0)
+      local fs = c:Text(T(r[3]), "small", { x = x, y = rowTop + top + 6, w = colW, color = W.LIGHT })
+      h = max(h, top + 6 + (fs and fs:GetStringHeight() or 14))
       xs[#xs + 1] = x
     end
     -- подложка у всех блоков ряда одной высоты

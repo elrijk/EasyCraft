@@ -127,7 +127,7 @@ function TJ:BuildSettings()
 
   -- подсказки, которые перетаскивали, - на прежние места
   local reset = TJ.W.Button(body, TJ.T("Вернуть подсказки на место"), 240, 22)
-  reset:SetPoint("TOPLEFT", prev, "BOTTOMLEFT", 2, -6)
+  reset:SetPoint("TOPLEFT", prev, "BOTTOMLEFT", 2, -14)
   reset:SetScript("OnClick", function()
     TJ.db.hintPos = nil
     TJ:RefreshAll()
