@@ -246,19 +246,8 @@ function ns:PlayerPosition()
   return mapID, x, y
 end
 
-function ns:AddNode(mapID, x, y, key)
-  if not (mapID and x and y and x > 0 and y > 0) then return end
-  self.nodeGen = (self.nodeGen or 0) + 1 -- карта: свои находки изменились
-  local list = self.db.nodes[mapID] or {}
-  self.db.nodes[mapID] = list
-  for _, n in ipairs(list) do
-    if n[3] == key and (n[1] - x) ^ 2 + (n[2] - y) ^ 2 < 0.00004 then
-      n[4] = (n[4] or 1) + 1
-      n[5] = time()
-      return
-    end
-  end
-  tinsert(list, { x, y, key, 1, time() })
+-- Свои находки на карте убраны (1.2): места сбора больше не записываются.
+function ns:AddNode()
 end
 
 local function bump(t, k, n) t[k] = (t[k] or 0) + n end

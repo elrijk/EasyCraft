@@ -337,7 +337,7 @@ function M:Refresh()
   -- ничего не поменялось, области заново не строим.
   local tg = ns.mapTarget
   local sig = table.concat({ tostring(overlay), mapID or 0, floor(w), floor(h), table.concat(keys, ","),
-    tostring(ns.mapFocus), tostring(ns.settings.mapMine), tostring(ns.settings.mapAreaAlpha),
+    tostring(ns.mapFocus), tostring(ns.settings.mapAreaAlpha),
     tg and (tostring(tg.ui) .. ":" .. tostring(tg.x) .. ":" .. tostring(tg.y)) or "-", ns.nodeGen or 0, ns.itemGen or 0 }, "|")
   if sig == self.sig then return end
   self:Clear()
@@ -381,31 +381,6 @@ function M:Refresh()
     b:SetPoint("CENTER", overlay, "TOPLEFT", tg.x * w, -tg.y * h)
   end
 
-  if ns.settings.mapMine then
-    local list = ns.db.nodes[mapID]
-    for _, n in ipairs(list or {}) do
-      local key = n[3]
-      local node = ns.Nodes[key]
-      local icon, title
-      if key == "fish" then
-        icon, title = ns.Icon("Trade_Fishing"), ns.T("Место рыбалки")
-      elseif node then
-        icon, title = ns:ItemIcon(node.item), ns:N(node)
-      else
-        local id = tonumber(tostring(key):match("item:(%d+)"))
-        icon, title = id and ns:ItemIcon(id) or ns.Icon(nil), id and ns:ItemName(id) or "?"
-      end
-      local b = self:MinePin(overlay)
-      b.icon:SetTexture(icon)
-      b.title, b.count, b.when = title, n[4], n[5]
-      b.base = MINE_SIZE
-      local s = MINE_SIZE / scale
-      b:SetSize(s, s)
-      b.ring:SetSize(s * 2.65, s * 2.65)
-      b.ring:SetPoint("CENTER", b, "CENTER", s * 0.55, -s * 0.55)
-      b:SetPoint("CENTER", overlay, "TOPLEFT", n[1] * w, -n[2] * h)
-    end
-  end
 end
 
 function M:Rescale()

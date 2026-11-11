@@ -12,7 +12,6 @@ local OPTIONS = {
   { "minimap", "Показывать кнопку у миникарты", function(v) ns:SetMinimapHidden(not v) end },
   { "miniGuide", "Мини-окно рядом с окном профессии", function(v) ns.settings.miniGuide = v; if ns.Tracker then ns.Tracker.hidden = nil end end },
   { "hideDone", "Скрывать выполненные шаги в маршруте" },
-  { "mapMine", "Карта мира: мои находки" },
   { "itemTips", "Подсказки: сколько предмета нужно до учителя, цвет жилы и травы" },
   { "trainerStars", "Окно учителя: звезда у рецептов, нужных маршруту" },
   { "ahScan", "Аукцион: читать цены самому при открытии" },
@@ -238,45 +237,7 @@ function ns:BuildSettings()
 
   ------------------------------------------------------ Карта и аукцион
   Header(ns.T("Карта и аукцион"))
-  Check("mapMine")
   Check("ahScan")
-  -- свои точки сбора на карте мира: сколько их и очистка в два щелчка
-  local clear = ns.W.Button(list, "", 260, 26)
-  local function points()
-    local total = 0
-    for _, nodes in pairs(ns.db.nodes) do
-      if type(nodes) == "table" then total = total + #nodes end
-    end
-    return total
-  end
-  local function label()
-    local n = points()
-    clear:SetText(clear.armed and ns.T("Точно очистить?") or (ns.T("Очистить точки") .. " (" .. n .. ")"))
-    clear:SetEnabled(n > 0)
-  end
-  clear:SetScript("OnShow", function(s) s.armed = nil; label() end)
-  clear:SetScript("OnClick", function(s)
-    if not s.armed then
-      s.armed = true
-      label()
-      C_Timer.After(3, function() s.armed = nil; label() end)
-      return
-    end
-    s.armed = nil
-    wipe(ns.db.nodes)
-    ns.nodeGen = (ns.nodeGen or 0) + 1 -- карта: свои точки убрать
-    ns:RefreshAll()
-    label()
-  end)
-  clear:SetScript("OnEnter", function(s)
-    GameTooltip:SetOwner(s, "ANCHOR_TOP")
-    GameTooltip:SetText(ns.T("Мои точки на карте"), 1, 0.82, 0)
-    GameTooltip:AddLine(ns.T("Когда ты собираешь руду или траву или ловишь рыбу, место запоминается и появляется на карте мира. Точки общие для всех твоих персонажей."), 1, 1, 1, true)
-    GameTooltip:Show()
-  end)
-  clear:SetScript("OnLeave", function() GameTooltip:Hide() end)
-  label()
-  Row(clear)
   -- непрозрачность областей сбора на карте (щелчок по зоне в подсказке)
   do
     local al, alLabel, low, high = Slider("EasyCraftAreaAlphaSlider", 0.1, 1, 0.05)
