@@ -201,14 +201,23 @@ end
 -- Первое открытие аддона: сначала знакомство; когда его закроют - выбор
 -- профессии (если профессий ещё нет), и только потом само окно EasyCraft.
 -- Возвращает true, если знакомство показано и окно открывать пока не надо.
+-- ВРЕМЕННО, ДЛЯ ПРОВЕРКИ: знакомство и выбор профессии показываются при
+-- каждом открытии аддона. Перед релизом поставить false.
+local TEST_ALWAYS = true
+
 function TJ:IntroFirst()
-  if not self.db or self.db.onboarded then return false end
+  if not self.db then return false end
+  if self.skipIntro then self.skipIntro = nil; return false end -- открываем окно после знакомства
+  if self.db.onboarded and not TEST_ALWAYS then return false end
   local function openMain()
     local UI = TJ.UI
-    if not (UI.frame and UI.frame:IsShown()) then TJ:ToggleFrame() end
+    if not (UI.frame and UI.frame:IsShown()) then
+      TJ.skipIntro = true
+      TJ:ToggleFrame()
+    end
   end
   self:ShowIntro(function()
-    if #TJ:LearnedList() == 0 and TJ.ShowChoose then
+    if (TEST_ALWAYS or #TJ:LearnedList() == 0) and TJ.ShowChoose then
       TJ:ShowChoose(nil, openMain)
     else
       openMain()
