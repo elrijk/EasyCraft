@@ -126,8 +126,12 @@ end
 -- аукциона); сколько можно создать из сумок.
 function ns:PriceEntry(e)
   e.cost = self:RecipeCost(e.rc)
-  local p = e.out and self:AuctionPrice(e.out)
-  e.sale = p and p * (e.q or 1) or nil
+  -- продажа - самым выгодным способом: аукцион, распыление или торговец (Sale.lua)
+  e.sale, e.saleHow, e.sales = nil, nil, nil
+  if e.out then
+    local ok, sale, how, all = pcall(self.SaleValue, self, e.out, e.q or 1)
+    if ok then e.sale, e.saleHow, e.sales = sale, how, all end
+  end
   e.profit = (e.cost and e.sale) and (e.sale - e.cost) or nil
   e.can = e.rc and (self:CanMake({ rc = e.rc }) or 0) or 0
   local b = e.out and self.Best and self.Best[e.out]

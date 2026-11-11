@@ -1695,3 +1695,10 @@ if ns.EN["Больше не напоминать"] == nil then ns.EN["Больш
 if ns.EN["Что уже можно создавать снова и сколько ждать остальное."] == nil then
   ns.EN["Что уже можно создавать снова и сколько ждать остальное."] = "What you can craft again and how long to wait for the rest."
 end
+
+-- 1.2: продажа торговцу и распыление в выгоде
+for k, v in pairs({
+  ["на аукционе"] = "at the auction house",
+  ["торговцу"] = "to a vendor",
+  ["распылить, примерно"] = "disenchant, roughly",
+}) do if ns.EN[k] == nil then ns.EN[k] = v end end

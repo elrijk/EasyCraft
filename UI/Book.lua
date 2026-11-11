@@ -51,10 +51,18 @@ end
 local function priceLines(e)
   local lines = {}
   if e.cost then lines[#lines + 1] = { T("Реагенты"), W.Money(e.cost) } end
-  if e.sale then lines[#lines + 1] = { T("Продажа") .. ((e.q or 1) > 1 and format(" (%d)", e.q) or ""), W.Money(e.sale) } end
+  local HOW = { ah = "на аукционе", vendor = "торговцу", de = "распылить, примерно" }
+  if e.sale then
+    lines[#lines + 1] = { T("Продажа") .. ((e.q or 1) > 1 and format(" (%d)", e.q) or "") .. ": " .. T(HOW[e.saleHow] or "на аукционе"), W.Money(e.sale) }
+    -- остальные способы - серым, чтобы было видно, с чем сравнивали
+    for _, k in ipairs({ "ah", "de", "vendor" }) do
+      local v = e.sales and e.sales[k]
+      if v and k ~= e.saleHow then lines[#lines + 1] = { "|cff9d9d9d" .. T(HOW[k]) .. "|r", "|cff9d9d9d" .. W.Money(v) .. "|r" } end
+    end
+  end
   if e.profit then
     lines[#lines + 1] = { T("Выгода за создание"), profitText(e.profit) }
-    lines[#lines + 1] = T("Без комиссии аукциона.")
+    if e.saleHow == "ah" then lines[#lines + 1] = T("Без комиссии аукциона.") end
   else
     lines[#lines + 1] = ns:PriceSource() and T("Цены на аукционе пока нет") or T("Цен нет: открой аукцион - EasyCraft прочитает их сам")
   end
