@@ -116,20 +116,22 @@ local function build()
   f.wash = f:CreateTexture(nil, "BORDER")
   f.wash:SetPoint("TOPLEFT", 4, -4)
   f.wash:SetPoint("BOTTOMRIGHT", -4, 4)
+  -- картинка - на всё окно, без искажения (обрезка по центру считается в fill)
   f.art = f:CreateTexture(nil, "BORDER", nil, 1)
-  f.art:SetPoint("TOPRIGHT", -4, -4)
+  f.art:SetPoint("TOPLEFT", 4, -4)
   f.art:SetPoint("BOTTOMRIGHT", -4, 4)
-  f.art:SetWidth(floor(WIDTH * 0.68))
   f.emblem = f:CreateTexture(nil, "BORDER", nil, 2)
   f.emblem:SetSize(360, 360)
   f.emblem:SetPoint("RIGHT", -70, 10)
   f.emblem:SetTexCoord(0.08, 0.92, 0.08, 0.92)
+  -- затемнение только под текстом слева: правая часть картинки открыта
   f.shade = f:CreateTexture(nil, "BORDER", nil, 3)
   f.shade:SetPoint("TOPLEFT", 4, -4)
-  f.shade:SetPoint("BOTTOMRIGHT", -4, 4)
+  f.shade:SetPoint("BOTTOMLEFT", 4, 4)
+  f.shade:SetWidth(floor(WIDTH * 0.62))
   f.shade:SetColorTexture(1, 1, 1, 1)
-  local ok = CreateColor and pcall(f.shade.SetGradient, f.shade, "HORIZONTAL", CreateColor(0, 0, 0, 0.94), CreateColor(0, 0, 0, 0.1))
-  if not ok then f.shade:SetColorTexture(0, 0, 0, 0.55) end
+  local ok = CreateColor and pcall(f.shade.SetGradient, f.shade, "HORIZONTAL", CreateColor(0, 0, 0, 0.88), CreateColor(0, 0, 0, 0))
+  if not ok then f.shade:SetColorTexture(0, 0, 0, 0.5) end
   f.floor = f:CreateTexture(nil, "BORDER", nil, 4) -- затемнение снизу под ряд профессий
   f.floor:SetPoint("BOTTOMLEFT", 4, 4)
   f.floor:SetPoint("BOTTOMRIGHT", -4, 4)
@@ -150,10 +152,13 @@ local function build()
   hl:SetPoint("TOP", f.head, "BOTTOM", 0, -8)
 
   -- слева: вид, название, строка «зачем»
+  -- значок профессии в кольце и её вид - одной строкой над названием
+  f.badge = W.RingIcon(f, 40)
+  f.badge:SetPoint("TOPLEFT", LEFT, -112)
   f.kind = W.Text(f, "head", false)
-  f.kind:SetPoint("TOPLEFT", LEFT, -130)
+  f.kind:SetPoint("LEFT", f.badge, "RIGHT", 12, 0)
   f.name = W.Text(f, "huge", false)
-  f.name:SetPoint("TOPLEFT", f.kind, "BOTTOMLEFT", -2, -6)
+  f.name:SetPoint("TOPLEFT", f.badge, "BOTTOMLEFT", -2, -10)
   bigFont(f.name, 46)
   f.lineTop = line(f, TEXT_W + 20)
   f.lineTop:SetPoint("TOPLEFT", f.name, "BOTTOMLEFT", -8, -14)
@@ -163,6 +168,25 @@ local function build()
   f.why:SetPoint("TOPLEFT", f.lineTop, "BOTTOMLEFT", 10, -10)
   f.lineBot = line(f, TEXT_W + 20)
   f.lineBot:SetPoint("TOPLEFT", f.why, "BOTTOMLEFT", -10, -10)
+  -- тёмная полоса под строкой «зачем», между линиями
+  f.whyBg = f:CreateTexture(nil, "BORDER", nil, 5)
+  f.whyBg:SetPoint("TOPLEFT", f.lineTop, "BOTTOMLEFT", 0, 0)
+  f.whyBg:SetPoint("BOTTOMRIGHT", f.lineBot, "TOPRIGHT", 0, 0)
+  f.whyBg:SetColorTexture(0, 0, 0, 0.45)
+
+  -- колесо мыши листает профессии
+  f:EnableMouseWheel(true)
+  f:SetScript("OnMouseWheel", function(s, delta)
+    local order = TJ.ProfOrder
+    for i, k in ipairs(order) do
+      if k == s.key then
+        local n = i - delta
+        if n < 1 then n = #order elseif n > #order then n = 1 end
+        TJ:ShowChoose(order[n])
+        return
+      end
+    end
+  end)
 
   -- три преимущества: значок, подпись серым, значение
   f.chips = {}
@@ -264,8 +288,24 @@ local function fill(f, key)
   f.wash:SetColorTexture(col[1] * 0.5, col[2] * 0.5, col[3] * 0.5, 1)
   local atlas = artAtlas(key)
   if atlas then
+    -- картинка покрывает окно целиком: лишнее по длинной стороне срезается
+    -- поровну с двух краёв, пропорции не меняются
     f.art:SetAtlas(atlas)
-    f.art:SetAlpha(0.9)
+    local info = C_Texture.GetAtlasInfo(atlas)
+    local l, r, t, b = info.leftTexCoord, info.rightTexCoord, info.topTexCoord, info.bottomTexCoord
+    local aw, ah = info.width or 0, info.height or 0
+    if l and r and t and b and aw > 0 and ah > 0 then
+      local want, have = (WIDTH - 8) / (HEIGHT - 8), aw / ah
+      if have > want then
+        local cut = (r - l) * (1 - want / have) / 2
+        l, r = l + cut, r - cut
+      else
+        local cut = (b - t) * (1 - have / want) / 2
+        t, b = t + cut, b - cut
+      end
+      f.art:SetTexCoord(l, r, t, b)
+    end
+    f.art:SetAlpha(1)
     f.art:Show()
     f.emblem:Hide()
   else
@@ -276,6 +316,7 @@ local function fill(f, key)
   end
 
   f.head:SetText(format(T("Профессий: %d"), #TJ.ProfOrder))
+  f.badge:SetIcon(TJ.Icon(p.icon))
   f.kind:SetText(T(KIND[p.kind] or "") .. "  |cff9d9d9d" .. T(SLOT[p.kind] or "") .. "|r")
   f.name:SetText(TJ:N(p))
   f.why:SetText(T(info[1]))
