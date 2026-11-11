@@ -5,7 +5,7 @@ TJ.UI = UI
 local format, floor, max, min = string.format, math.floor, math.max, math.min
 
 -------------------------------------------------------------------------------
---  Окно EasyCraft в стиле EasyMacros: рамка окна игры, пергамент,
+--  Окно EasyCraft в стиле MacroCoach: рамка окна игры, пергамент,
 --  справа вкладки (главная и изученные профессии), сверху вкладки разделов,
 --  на пергаменте - тёмные карточки.
 -------------------------------------------------------------------------------
@@ -49,12 +49,12 @@ local STYLE = {
 UI.STYLE = STYLE
 -- Тёмные чернила для текста на пергаменте (как в книге заклинаний).
 local INK = {
-  huge = { 0.16, 0.08, 0 }, -- шапка страницы - те же чернила, что в EasyMacros
+  huge = { 0.16, 0.08, 0 }, -- шапка страницы - те же чернила, что в MacroCoach
   title = { 0.22, 0.12, 0.02 }, head = { 0.22, 0.12, 0.02 },
   body = { 0.2, 0.13, 0.05 }, small = { 0.36, 0.27, 0.16 },
 }
 local INK_HEAD_TEXT = { 0.24, 0.14, 0.04 }
--- Тот же цвет чернил, что у заголовков на пергаменте в EasyMacros.
+-- Тот же цвет чернил, что у заголовков на пергаменте в MacroCoach.
 if type(SPELLBOOK_FONT_COLOR) == "table" and SPELLBOOK_FONT_COLOR.GetRGB then
   local r, g, b = SPELLBOOK_FONT_COLOR:GetRGB()
   INK.title, INK.head = { r, g, b }, { r, g, b }
@@ -390,7 +390,7 @@ function Card:TextBlock(x, y, h, w, lines)
   return total
 end
 
--- Картинка «было -> стало», как в «Зачем макросы» EasyMacros: значки
+-- Картинка «было -> стало», как в «Зачем макросы» MacroCoach: значки
 -- «было» серые (последний с крестиком), стрелка, значок «стало» с
 -- галочкой; под ними подписи. В точке x, y; раскладку не двигает.
 -- Возвращает ширину и высоту.
@@ -710,7 +710,7 @@ end
 
 -- Картинка «реагенты -> результат» (W.Flow) с края текста. lines -
 -- короткие строки справа от картинки, по центру значков (как текст справа
--- от картинки на карточке EasyMacros).
+-- от картинки на карточке MacroCoach).
 function Card:Flow(inputs, output, size, x, lines)
   size = size or 36
   local f = self:Take("flow" .. size, function() return W.Flow(self, size) end)
@@ -870,7 +870,7 @@ end
 -- Шаги плитками, как награды в «Старинных испытаниях», в виде карточек
 -- аддона и подсказки у окна профессии: тёмная плитка в бурой рамке
 -- (текущая - в золотой, пройденная - в зелёной), сверху табличка с
--- навыком, квадратная ячейка значка, как в EasyMacros (внизу - сколько
+-- навыком, квадратная ячейка значка, как в MacroCoach (внизу - сколько
 -- ещё создать, вверху справа у пройденной - галочка, у текущей - стрелка
 -- в золотой рамке, как табличка «Текущий шаг»), под ней название и
 -- строка «что нужно»: хватает ли реагентов, сколько докупить, с какого
@@ -1293,10 +1293,10 @@ function UI:NewCard()
   return f
 end
 
--- Шапка страницы прямо на пергаменте, как во всех страницах EasyMacros:
+-- Шапка страницы прямо на пергаменте, как во всех страницах MacroCoach:
 -- крупный заголовок тёмными чернилами и одна-две строки под ним.
 -- buttons - кнопки в ряд под текстом (куда идти дальше), как у страниц
--- EasyMacros: { { text =, onClick =, tip =, enabled = } }.
+-- MacroCoach: { { text =, onClick =, tip =, enabled = } }.
 function UI:PageHeader(title, text, buttons)
   local c = self:Card("flat")
   c:Text(title, "huge", { x = 10, gap = 8 })
@@ -1393,7 +1393,7 @@ function UI:Create()
   help:SetScript("OnLeave", function() GameTooltip:Hide() end)
   f.helpButton = help
 
-  -- Пергамент на месте внутренней панели, как в EasyMacros.
+  -- Пергамент на месте внутренней панели, как в MacroCoach.
   local page = CreateFrame("Frame", nil, f)
   if type(f.Inset) == "table" then
     f.Inset:ClearAllPoints()
@@ -1832,7 +1832,7 @@ function Mini:ApplyStyle(f)
   f.stepBig:SetFontObject(_G[spec[1]] or _G[spec[2]] or GameFontNormal)
   local ofs = W.FONTS[st.ofFont or "small"] or W.FONTS.small
   f.stepOf:SetFontObject(_G[ofs[1]] or _G[ofs[2]] or GameFontHighlightSmall)
-  -- на светлом пергаменте - тёмные чернила, как заголовки EasyMacros;
+  -- на светлом пергаменте - тёмные чернила, как заголовки MacroCoach;
   -- в виде «как окна игры» (тёмный фон) - золото и светлый текст
   local head = classic and { 1, 0.82, 0 } or INK_T
   local body = classic and { 0.75, 0.75, 0.75 } or INK_B

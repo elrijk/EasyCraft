@@ -1247,4 +1247,5 @@ TJ.LOCALES.deDE = function() return {
   ["|cffffff00You can: |r"] = "|cffffff00Du kannst: |r",
   ["~%s each"] = "~%s pro Stück",
   ["~%s per craft"] = "~%s pro Herstellung",
+  ["this erases this character's data: step marks, gathering journal, skill history. To confirm: /ec reset confirm"] = "dies löscht die Daten dieses Charakters: Schrittmarkierungen, Sammeljournal, Fertigkeitsverlauf. Bestätigen: /ec reset confirm",
 } end

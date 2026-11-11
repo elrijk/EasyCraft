@@ -1262,4 +1262,5 @@ TJ.LOCALES.zhCN = function() return {
   ["|cffffff00You can: |r"] = "|cffffff00可以：|r",
   ["~%s each"] = "每个约 %s",
   ["~%s per craft"] = "每次制作约 %s",
+  ["this erases this character's data: step marks, gathering journal, skill history. To confirm: /ec reset confirm"] = "这会清除该角色的数据：步骤标记、采集日志和技能记录。确认请输入：/ec reset confirm",
 } end

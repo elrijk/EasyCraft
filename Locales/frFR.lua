@@ -1246,4 +1246,5 @@ TJ.LOCALES.frFR = function() return {
   ["|cffffff00You can: |r"] = "|cffffff00Tu peux : |r",
   ["~%s each"] = "~%s chacun",
   ["~%s per craft"] = "~%s par fabrication",
+  ["this erases this character's data: step marks, gathering journal, skill history. To confirm: /ec reset confirm"] = "cela efface les données de ce personnage : étapes cochées, journal de récolte, historique de compétence. Pour confirmer : /ec reset confirm",
 } end

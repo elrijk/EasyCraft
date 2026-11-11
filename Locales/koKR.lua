@@ -1261,4 +1261,5 @@ TJ.LOCALES.koKR = function() return {
   ["|cffffff00You can: |r"] = "|cffffff00가능: |r",
   ["~%s each"] = "개당 ~%s",
   ["~%s per craft"] = "제작당 ~%s",
+  ["this erases this character's data: step marks, gathering journal, skill history. To confirm: /ec reset confirm"] = "이 캐릭터의 데이터(단계 표시, 채집 일지, 숙련 기록)가 지워집니다. 확인: /ec reset confirm",
 } end

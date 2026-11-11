@@ -1249,4 +1249,5 @@ TJ.LOCALES.ptBR = function() return {
   ["|cffffff00You can: |r"] = "|cffffff00Você pode: |r",
   ["~%s each"] = "~%s cada",
   ["~%s per craft"] = "~%s por criação",
+  ["this erases this character's data: step marks, gathering journal, skill history. To confirm: /ec reset confirm"] = "isto apaga os dados deste personagem: passos marcados, diário de coleta e histórico de perícia. Para confirmar: /ec reset confirm",
 } end

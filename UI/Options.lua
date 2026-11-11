@@ -11,10 +11,6 @@ local settingsCategory, panel
 local OPTIONS = {
   { "minimap", "Показывать кнопку у миникарты", function(v) TJ:SetMinimapHidden(not v) end },
   { "miniGuide", "Мини-окно рядом с окном профессии", function(v) TJ.settings.miniGuide = v; if TJ.Tracker then TJ.Tracker.hidden = nil end end },
-  { "miniClassic", "Мини-окно в стиле окон игры (сними - вернётся прежний вид)", function(v)
-    TJ.settings.miniClassic = v
-    if TJ.Tracker and TJ.Tracker.f then TJ.Tracker:Update() end
-  end },
   { "hideDone", "Скрывать выполненные шаги в маршруте" },
   { "mapKnown", "Карта мира: известные места жил и трав (Forever)" },
   { "mapMine", "Карта мира: мои находки" },
@@ -75,7 +71,7 @@ function TJ:BuildSettings()
   if panel then return end
   panel = CreateFrame("Frame")
   panel.name = "EasyCraft"
-  -- Одинаково у EasyCraft и EasyMacros: название, язык, описание, кнопки
+  -- Одинаково у EasyCraft и MacroCoach: название, язык, описание, кнопки
   -- «Открыть окно» и «Как пользоваться», настройки, команды.
   local body = ScrollBody(panel)
 

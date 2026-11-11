@@ -60,7 +60,7 @@ local function create()
     end)
   end)
   b:SetScript("OnDragStop", function(self) self:SetScript("OnUpdate", nil) end)
-  -- подсказка в одном виде с EasyMacros: название, что это, свои строки,
+  -- подсказка в одном виде с MacroCoach: название, что это, свои строки,
   -- потом кнопки мыши (ЛКМ, ПКМ, перетащить)
   b:SetScript("OnEnter", function(self)
     local T = TJ.T
@@ -90,9 +90,8 @@ function TJ:UpdateMinimapButton()
     if button then button:Hide() end
     return
   end
-  -- Ставим у миникарты только при создании. Раньше кнопку двигали на место
-  -- при каждом обновлении аддона - и она «улетала» к миникарте из сборщика
-  -- кнопок (MinimapButtonButton и др.), куда её убрали.
+  -- Ставим у миникарты только при создании: если кнопку забрал сборщик
+  -- кнопок (MinimapButtonButton и др.), обратно её не уводим.
   if not button then
     button = create()
     place()
@@ -107,7 +106,11 @@ function TJ:SetMinimapHidden(hide)
   if self.RefreshOptions then self:RefreshOptions() end
 end
 
--- kept for the login code in Tracking.lua
+-- Меню аддонов у миникарты: ЛКМ - окно, ПКМ - настройки.
+function EasyCraft_OnAddonCompartmentClick(_, mouseButton)
+  if mouseButton == "RightButton" then TJ:OpenSettings() else TJ:ToggleFrame() end
+end
+
 function TJ:CreateMinimapButton()
   self:UpdateMinimapButton()
   self:RegisterRefresh(function() TJ:UpdateMinimapButton() end)

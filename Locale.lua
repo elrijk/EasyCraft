@@ -116,6 +116,7 @@ TJ.EN = {
   ["серый с "] = "gray from ",
   [", метка поставлена"] = ", waypoint set",
   ["данные персонажа сброшены."] = "character data reset.",
+  ["это сотрёт данные этого персонажа: отметки шагов, журнал сбора, историю навыка. Подтвердить: /ec reset confirm"] = "this erases this character's data: step marks, gathering journal, skill history. To confirm: /ec reset confirm",
   ["известные точки на карте: "] = "known spots on the map: ",
   ["вкл"] = "on",
   ["выкл"] = "off",

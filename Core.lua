@@ -1,6 +1,6 @@
 local ADDON, TJ = ...
 _G.EasyCraft = TJ
-TJ.version = "0.15.0"
+TJ.version = "1.0.0"
 -- значок аддона: список модификаций, портрет окна, кнопка у миникарты
 TJ.ICON = "Interface\\AddOns\\" .. ADDON .. "\\Media\\Icon"
 
@@ -224,30 +224,18 @@ end
 -- Saved variables
 ---------------------------------------------------------------------------
 local DEFAULTS = {
-  hideDone = false, mapKnown = true, mapMine = true, mapShow = true, miniClassic = false, mapAreaAlpha = 0.5, minimap = true, miniGuide = true, itemTips = true, trainerStars = true,
+  hideDone = false, mapKnown = true, mapMine = true, mapShow = true, mapAreaAlpha = 0.5, minimap = true, miniGuide = true, itemTips = true, trainerStars = true,
   minimapAngle = 205, scale = 1,
 }
 
 function TJ:InitDB()
-  -- переезд с GodCrafter: в старой папке остался только файл описания с
-  -- его сохранениями - настройки и данные персонажа забираем один раз
-  if EasyCraftDB == nil and type(GodCrafterDB) == "table" then EasyCraftDB = GodCrafterDB end
-  if EasyCraftCharDB == nil and type(GodCrafterCharDB) == "table" then EasyCraftCharDB = GodCrafterCharDB end
   EasyCraftDB = EasyCraftDB or {}
   local db = EasyCraftDB
   db.settings = db.settings or {}
-  -- вид подсказки «как окна игры» откатили: у тех, у кого он включился
-  -- сам (по умолчанию), возвращаем прежний один раз
-  if db.settings.miniStyleV == nil then
-    db.settings.miniClassic = nil
-    db.settings.miniStyleV = 1
-  end
   for k, v in pairs(DEFAULTS) do if db.settings[k] == nil then db.settings[k] = v end end
   db.nodes = db.nodes or {}
   db.vprice = db.vprice or {} -- цена у торговца за штуку (id -> медь), запоминаем у торговцев
   self.db, self.settings = db, db.settings
-  -- язык: свой выбор EasyCraft; раньше он был общим в GodCore
-  if db.lang == nil and type(GodCoreDB) == "table" and GodCoreDB.lang then db.lang = GodCoreDB.lang end
   self:SetLang(db.lang)
 
   EasyCraftCharDB = EasyCraftCharDB or {}

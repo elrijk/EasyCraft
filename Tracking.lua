@@ -401,8 +401,9 @@ SLASH_EASYCRAFT3 = "/ремесла"
 SlashCmdList.EASYCRAFT = function(msg)
   msg = TJ.Lower(strtrim and strtrim(msg or "") or (msg or ""))
   if msg == "reset" then
+    TJ:Print(TJ.T("это сотрёт данные этого персонажа: отметки шагов, журнал сбора, историю навыка. Подтвердить: /ec reset confirm"))
+  elseif msg == "reset confirm" then
     EasyCraftCharDB = nil
-    GodCrafterCharDB = nil -- и старые данные GodCrafter, чтобы не вернулись при переезде
     TJ:InitDB()
     TJ:ScanSkills()
     TJ:Print(TJ.T("данные персонажа сброшены."))

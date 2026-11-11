@@ -1255,4 +1255,5 @@ TJ.LOCALES.itIT = function() return {
   ["|cffffff00You can: |r"] = "|cffffff00Puoi: |r",
   ["~%s each"] = "~%s l'uno",
   ["~%s per craft"] = "~%s per creazione",
+  ["this erases this character's data: step marks, gathering journal, skill history. To confirm: /ec reset confirm"] = "questo cancella i dati di questo personaggio: passi segnati, diario di raccolta, storico dell'abilità. Per confermare: /ec reset confirm",
 } end
