@@ -445,13 +445,15 @@ end
 -------------------------------------------------------------------------------
 --  Вкладки
 -------------------------------------------------------------------------------
+-- { название, значок, подсказка, режим, номер страницы }. Номера страниц
+-- постоянные (по ним HOW, BuildHome и переходы): 2 была «Карта», её
+-- настройки теперь в настройках аддона.
 function C:HomeTabs()
   return {
-    { T("Профессии"), "Interface\\Icons\\INV_Misc_Book_11" },
-    { T("Карта"), "Interface\\Icons\\INV_Misc_Map_01" },
-    { T("Лагерь"), "Interface\\Icons\\Spell_Fire_Fire" },
-    { T("Покупки"), "Interface\\Icons\\INV_Misc_Coin_02" },
-    { T("Рецепты"), "Interface\\Icons\\INV_Scroll_03" },
+    { T("Профессии"), "Interface\\Icons\\INV_Misc_Book_11", nil, nil, 1 },
+    { T("Лагерь"), "Interface\\Icons\\Spell_Fire_Fire", nil, nil, 3 },
+    { T("Покупки"), "Interface\\Icons\\INV_Misc_Coin_02", nil, nil, 4 },
+    { T("Рецепты"), "Interface\\Icons\\INV_Scroll_03", nil, nil, 5 },
   }
 end
 
@@ -535,11 +537,6 @@ local function headButtons(UI, tab, data)
       { text = T("Выбор профессии"), icon = "INV_Misc_Book_09", onClick = function() ns:ShowChoose() end,
         tip = T("Что делает каждая профессия и какой сбор к ней нужен. Пригодится, если решишь сменить профессию.") },
     }
-  elseif tab == 2 then
-    return {
-      { text = T("Открыть карту"), icon = "INV_Misc_Map_01", onClick = function() if ns.MapOverlay then ns.MapOverlay:OpenMap() end end,
-        tip = T("Карта мира с местами сбора.") },
-    }
   elseif tab == 4 then
     local list = data and data.toAuction or {}
     local open = ns:IsAuctionOpen()
@@ -610,10 +607,7 @@ function C:BuildHome(UI, tab)
   local shop = tab == 4 and self:ShoppingData() or nil
   UI:PageHeader(T(how.title), T(how.text), headButtons(UI, tab, shop))
   -- «Как пользоваться» - не на каждой вкладке, а отдельным окном (UI/Intro.lua)
-  if tab == 2 then
-    self:MapCard(UI)
-    self:MyPointsCard(UI)
-  elseif tab == 3 then
+  if tab == 3 then
     self:BuildCamp(UI)
   elseif tab == 4 then
     self:BuildShopping(UI, shop)
@@ -732,44 +726,6 @@ function C:BuildProfList(UI)
   end
   local pool = {} -- общий запас реагентов на все профессии
   for _, key in ipairs(learned) do ns:Safe(self.ProfCard, self, UI, key, pool) end
-end
-
--------------------------------------------------------------------------------
---  Главная: карта
--------------------------------------------------------------------------------
-function C:MapCard(UI)
-  local c = UI:Card()
-  c:Head({ ring = "Interface\\Icons\\INV_Misc_Map_01" }, T("Карта мира"), nil, 32)
-  c:Check(T("Показывать мои находки"), ns.settings.mapMine, function(v) ns.settings.mapMine = v; ns:RefreshAll() end,
-    T("Где ты уже собирал или ловил рыбу, яркими значками."))
-  c:Space(2)
-  c:Text(T("На карте видны руда и травы, которые сейчас дают навык твоим профессиям сбора."), "small")
-  UI:End(c)
-end
-
-function C:MyPointsCard(UI)
-  local total = 0
-  for _, list in pairs(ns.db.nodes) do
-    if type(list) == "table" then total = total + #list end
-  end
-  local c = UI:Card()
-  c:Head({ ring = "Interface\\Icons\\INV_Misc_Spyglass_02" }, T("Мои точки на карте"), { { format(T("Отмечено мест: %d"), total), "body" } }, 32)
-  c:Text(T("Когда ты собираешь руду или траву или ловишь рыбу, место запоминается и появляется на карте мира. Точки общие для всех твоих персонажей."), "small")
-  c:Space(2)
-  local armed = UI.armClear
-  c:Buttons({ { text = armed and T("Точно очистить?") or T("Очистить точки"), w = 170, enabled = total > 0, onClick = function()
-    if not UI.armClear then
-      UI.armClear = true
-      UI:Render(true)
-      C_Timer.After(3, function() UI.armClear = nil; UI:Render(true) end)
-      return
-    end
-    UI.armClear = nil
-    wipe(ns.db.nodes)
-    ns.nodeGen = (ns.nodeGen or 0) + 1 -- карта: свои точки убрать
-    ns:RefreshAll()
-  end } })
-  UI:End(c)
 end
 
 -------------------------------------------------------------------------------

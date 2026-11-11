@@ -1539,7 +1539,7 @@ function UI:Create()
       if b.selected then return end
       W.Sound("IG_CHARACTER_INFO_TAB")
       -- у профессии вкладки - режимы маршрута, на главной - разделы
-      if b.mode then ns:SetRouteMode(b.mode) else UI.tab[UI.view] = i end
+      if b.mode then ns:SetRouteMode(b.mode) else UI.tab[UI.view] = b.page or i end
       UI:Render()
     end)
     b:Hide()
@@ -1614,7 +1614,7 @@ function UI:SetTopTabs(list, sel)
     if t then
       b.icon:SetTexture(t[2])
       b.text:SetText(t[1])
-      b.tip, b.mode = t[3], t[4]
+      b.tip, b.mode, b.page = t[3], t[4], t[5]
       b:Fit()
       b:SetSelected(i == sel)
       b:Show()
@@ -1639,10 +1639,13 @@ function UI:Render(keepScroll)
     SetTitle(f, ns.T("EasyCraft: прокачка профессий"))
     self.profHead:Hide()
     SetPortrait(f, ns.ICON)
+    -- self.tab.home - номер страницы, а не место вкладки в ряду
     local tabs = C:HomeTabs()
-    local sel = min(self.tab.home or 1, #tabs)
+    local sel = 1
+    for i, t in ipairs(tabs) do if t[5] == self.tab.home then sel = i end end
+    self.tab.home = tabs[sel][5]
     self:SetTopTabs(tabs, sel)
-    ns:Safe(C.BuildHome, C, self, sel)
+    ns:Safe(C.BuildHome, C, self, self.tab.home)
   else
     local key = self.view
     local p = ns.Profs[key]
