@@ -527,24 +527,9 @@ C.HOW, C.GUIDE = HOW, GUIDE
 
 -- Кнопки шапки вкладки: куда идти дальше.
 local function headButtons(UI, tab, data)
-  local function goTab(n) return function() UI.tab.home = n; UI:Render() end end
-  if tab == 1 then
-    -- «Выбор профессии» есть всегда: профессии меняют. У персонажа без
-    -- профессий страница выбора открыта и так - кнопка не нужна.
-    local choose
-    if #ns:LearnedList() > 0 then
-      choose = { text = T("Выбор профессии"), icon = "INV_Misc_Book_09", onClick = function() ns:ShowChoose() end,
-        tip = T("Что делает каждая профессия и какой сбор к ней нужен. Пригодится, если решишь сменить профессию.") }
-    end
-    local list = {
-      { text = T("Покупки"), icon = "INV_Misc_Coin_02", onClick = goTab(4), tip = T("Что докупить до следующего учителя по всем профессиям.") },
-      { text = T("Карта сбора"), icon = "INV_Misc_Map_01", onClick = goTab(2), tip = T("Руда и травы, которые сейчас дают навык.") },
-      { text = T("Лагерь"), icon = "Spell_Fire_Fire", onClick = goTab(3), tip = T("Бонусы у костра и где падают чертежи.") },
-      { text = T("Рецепты"), icon = "INV_Scroll_03", onClick = goTab(5), tip = T("Что выгодно создавать, очередь и откаты.") },
-    }
-    if choose then tinsert(list, 1, choose) end
-    return list
-  elseif tab == 2 then
+  -- на главной плиток нет: разделы - во вкладках окна, выбор профессии -
+  -- по команде /ec choose и из знакомства
+  if tab == 2 then
     return {
       { text = T("Открыть карту"), icon = "INV_Misc_Map_01", onClick = function() if ns.MapOverlay then ns.MapOverlay:OpenMap() end end,
         tip = T("Карта мира с местами сбора.") },

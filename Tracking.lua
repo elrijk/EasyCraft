@@ -359,6 +359,8 @@ SlashCmdList.EASYCRAFT = function(msg)
   elseif msg == "minimap" or msg == "миникарта" then
     ns:SetMinimapHidden(ns.settings.minimap)
     ns:Print(ns.settings.minimap and ns.T("кнопка у миникарты показана.") or ns.T("кнопка у миникарты скрыта (вернуть: /ec minimap)."))
+  elseif msg == "choose" or msg == "выбор" then
+    ns:ShowChoose()
   elseif msg == "colors" or msg == "цвета" then
     ns:ShareColors()
   elseif msg == "scan" or msg == "цены" then
