@@ -645,7 +645,7 @@ function C:ProfCard(UI, key, pool)
   local rp = W.RingPad(HOME_RING)
   local top = UI.ICON_Y
   local headH = HOME_RING + rp * 2
-  c:Zone(6, 6, CW - 12, headH + 10, open, function()
+  c:Zone(6, top - 5, CW - 12, headH + 10, open, function()
     local lines = { { T("Навык"), format("%d / %d", rank, cap) } }
     local nr = ns:NextRank(key)
     if nr then tinsert(lines, { format(T("Ранг «%s»"), ns:RankName(nr.max)), rankShort(nr.s, rank) }) end
@@ -660,7 +660,11 @@ function C:ProfCard(UI, key, pool)
   local y1 = top + floor((headH - (nameH + gap + lineH)) / 2)
   local y2 = y1 + nameH + gap
   c:Text(ns:N(p), "title", { x = tx, y = y1, w = barX - tx - 10, nowrap = true })
-  local bar = c:BarAt(barX, y1 - 3, HOME_BAR_W, rank, cap, ns:RankName(maxRank), format("%d/%d", rank, cap))
+  -- справа полоса навыка (22 с рамкой) и строка ранга под ней - блоком по
+  -- центру шапки, как название и шаг слева
+  local BAR_H, BAR_GAP = 22, 2
+  local ry = top + floor((headH - (BAR_H + BAR_GAP + lineH)) / 2)
+  local bar = c:BarAt(barX, ry, HOME_BAR_W, rank, cap, ns:RankName(maxRank), format("%d/%d", rank, cap))
   ns:MarkNextRank(bar)
   local nx = tx
   local pos, total = C:StepPos(p, cur or 0)
@@ -679,7 +683,7 @@ function C:ProfCard(UI, key, pool)
     local text = can and (YELLOW .. format(T("Можно учить «%s»"), ns:RankName(nr.max)) .. "|r")
       or (format(T("«%s»: "), ns:RankName(nr.max)) .. rankShort(rs, rank))
     -- под полосой - с просветом, чтобы не слипалось с её рамкой
-    c:Note(PAD, y2 + 3, text, { title = format(T("Ранг «%s» (до %d)"), ns:RankName(nr.max), nr.max),
+    c:Note(PAD, ry + BAR_H + BAR_GAP, text, { title = format(T("Ранг «%s» (до %d)"), ns:RankName(nr.max), nr.max),
       lines = { rankStatus(rs, rank), npc and { ns:NpcName(npc), ns:NpcZone(npc) } or nil },
       hint = npc and T("Щелчок поставит метку на ближайшего.") or nil },
       npc and function() ns:Waypoint(npc, true) end or open, true)
