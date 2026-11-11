@@ -22,9 +22,11 @@ The "XP: the most per hour" card and the Cozy Sleeping Bag quest chain
 - wowforeverleveling.com, WoW Forever XP Buffs
 - wow-professions.com, Camping Guide
 - mmoexp.com, Cozy Sleeping Bag Guide
+- warcrafttavern.com, Cozy Sleeping Bag Guide (WoW Forever)
 
 The disenchanting table in `Sale.lua` is the well-known classic one (item level
-to dust, essence and shard); it has not been checked against WoW Forever.
+to dust, essence and shard). It matches the WoW Forever disenchanting guide on
+wow-professions.com (November 2026); it has not been measured in the game.
 
 No code or data was taken from other profession addons. Recipe lists, reagents
 and recipe colours come from the game client at run time.

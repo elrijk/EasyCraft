@@ -1647,7 +1647,7 @@ for k, v in pairs({
   ["Шесть заданий с 14 уровня на двух материках."] = "Six quests from level 14 across both continents.",
   ["«...и та записка, что ты нашёл»"] = "...and that note you found.",
   ["Альянс: Западный край, ферма Алекстонов (37, 51). Орда: Степи, к югу от Лагеря Таураджо (46, 74)."] = "Alliance: Westfall, Alexston Farmstead (37, 51). Horde: The Barrens, south of Camp Taurajo (46, 74).",
-  ["Осмотри сгоревшие остатки, потом иди к такому же месту другой фракции и возьми там задание с прибитой доски."] = "Inspect the Burned-Out Remains, then go to the other faction's spot and take the quest from the Nailed Plank there.",
+  ["Альянс: прибитая доска на ферме. Орда: сгоревшие остатки в Степях. Потом иди к месту другой фракции и осмотри предмет там."] = "Alliance: the Nailed Plank at the farm. Horde: the Burned-Out Remains in the Barrens. Then go to the other faction's spot and inspect the object there.",
   ["«Ступеньки»"] = "Stepping Stones",
   ["Когтистые горы (41, 53)"] = "Stonetalon Mountains (41, 53)",
   ["Заброшенный лагерь над Приютом у Солнечного Камня: бумажки на ящике. В награду - две сумки на 12 ячеек."] = "The abandoned camp above Sun Rock Retreat: Pocket Litter on a box. Rewards two 12-slot bags.",
