@@ -418,48 +418,13 @@ function ns:FlushPendingLink()
 end
 
 -------------------------------------------------------------------------------
---  Цены аукциона: из Auctionator (если его нет - из TSM).
+--  Цены аукциона - в Prices.lua: EasyCraft читает их сам, когда игрок
+--  открывает аукцион. Чужие аддоны для цен не используются.
 -------------------------------------------------------------------------------
-local CALLER = "EasyCraft"
 local GetItemInfoFn = C_Item.GetItemInfo
-
-local function AuctionatorAPI()
-  if type(Auctionator) == "table" and type(Auctionator.API) == "table" then return Auctionator.API.v1 end
-end
-
--- Откуда цены: "Auctionator", "TSM" или nil (цен нет).
-function ns:PriceSource()
-  local A = AuctionatorAPI()
-  if A and A.GetAuctionPriceByItemID then return "Auctionator" end
-  if type(TSM_API) == "table" and TSM_API.GetCustomPriceValue then return "TSM" end
-end
 
 -- Цена старше стольких дней помечается как устаревшая.
 ns.PRICE_OLD_DAYS = 3
-
--- Цена одной штуки на аукционе в меди или nil; вторым - сколько дней
--- назад Auctionator видел предмет (nil - неизвестно или TSM).
-function ns:AuctionPrice(id)
-  if type(id) ~= "number" then return nil end
-  local A = AuctionatorAPI()
-  if A and A.GetAuctionPriceByItemID then
-    local ok, v = pcall(A.GetAuctionPriceByItemID, CALLER, id)
-    if ok and type(v) == "number" and v > 0 then
-      local age
-      if A.GetAuctionAgeByItemID then
-        local ok2, d = pcall(A.GetAuctionAgeByItemID, CALLER, id)
-        -- цена есть, а возраста нет: Auctionator не видел предмет больше 21 дня
-        if ok2 then age = type(d) == "number" and d or 22 end
-      end
-      return v, age
-    end
-    return nil
-  end
-  if type(TSM_API) == "table" and TSM_API.GetCustomPriceValue then
-    local ok, v = pcall(TSM_API.GetCustomPriceValue, "dbminbuyout", "i:" .. id)
-    if ok and type(v) == "number" and v > 0 then return v end
-  end
-end
 
 -- Продаётся у торговцев (колбы, нитки, соль): на аукционе не ищем.
 function ns:IsVendorItem(id)
@@ -487,65 +452,6 @@ function ns:ClientItemName(id)
     if C_Item and C_Item.RequestLoadItemDataByID then pcall(C_Item.RequestLoadItemDataByID, id) end
   end
   return name
-end
-
-function ns:HasAuctionator()
-  local A = AuctionatorAPI()
-  return A and A.ConvertToSearchString and A.CreateShoppingList and true or false
-end
-
--- Покупки в Auctionator: на открытом аукционе сразу поиск (вкладка «Покупки»
--- Auctionator), иначе - список «EasyCraft» в Auctionator на потом.
--- list = { { id = , buy = }, ... }
-function ns:SendToAuction(list)
-  local A = AuctionatorAPI()
-  if not self:HasAuctionator() then
-    self:Print(ns.T("нужен аддон Auctionator: через него EasyCraft ищет реагенты на аукционе."))
-    return
-  end
-  local strings, terms, skipped = {}, {}, 0
-  for _, e in ipairs(list) do
-    if e.buy and e.buy > 0 and not self:IsVendorItem(e.id) then
-      local name = self:ClientItemName(e.id)
-      if name then
-        local term = { searchString = name, isExact = true, quantity = e.buy }
-        local ok, str = pcall(A.ConvertToSearchString, CALLER, term)
-        if ok and type(str) == "string" then
-          strings[#strings + 1] = str
-          terms[#terms + 1] = term
-        end
-      else
-        skipped = skipped + 1
-      end
-    end
-  end
-  if #strings == 0 then
-    self:Print(skipped > 0 and ns.T("названия предметов ещё загружаются: нажми ещё раз через секунду.")
-      or ns.T("на аукционе покупать нечего."))
-    return
-  end
-  local ok, err
-  if self:IsAuctionOpen() and A.MultiSearchAdvanced then
-    ok, err = pcall(A.MultiSearchAdvanced, CALLER, terms)
-    if ok then self:Print(format(ns.T("ищу на аукционе, позиций: %d (вкладка «Покупки» Auctionator)."), #terms)) end
-  else
-    ok, err = pcall(A.CreateShoppingList, CALLER, "EasyCraft", strings)
-    if ok then self:Print(format(ns.T("список «EasyCraft» в Auctionator готов (%d): открой аукцион, вкладка «Покупки»."), #strings)) end
-  end
-  if not ok then
-    self:Print(ns.T("Auctionator не принял список: ") .. tostring(err))
-    return
-  end
-  if skipped > 0 then
-    self:Print(format(ns.T("не загрузились названия, позиций: %d. Нажми ещё раз через секунду."), skipped))
-  end
-end
-
--- Цены обновились в Auctionator (скан аукциона) - перерисовать окно.
-function ns:HookPriceUpdates()
-  local A = AuctionatorAPI()
-  if self.priceHooked or not (A and A.RegisterForDBUpdate) then return end
-  self.priceHooked = pcall(A.RegisterForDBUpdate, CALLER, function() ns:RefreshAll() end)
 end
 
 -------------------------------------------------------------------------------
@@ -649,7 +555,7 @@ end
 --   buy (докупить), cost/age (аукцион), vendor }.
 -- Итог: total (медь на аукционе), noPrice, vendor (имена), vendorCost
 -- (медь у торговцев), vendorApprox (цена примерная), auction
--- ({id, buy} для Auctionator), bank/mail (часть лежит там), allHave.
+-- ({id, buy} - что докупить на аукционе), bank/mail (часть лежит там), allHave.
 -- Банк, почта и альты не докупаются - их надо забрать.
 function ns:StepBuy(s, left, pool)
   local out = { items = {}, total = 0, noPrice = 0, vendor = {}, vendorCost = 0, auction = {}, allHave = true }
@@ -1405,16 +1311,15 @@ end)
 --  Подсказка у аукциона - в том же виде, что подсказка у окна профессии:
 --  светлый пергамент, заголовки чернилами, строки - тёмные блоки. Что
 --  купить для текущих шагов (по профессиям), каждый предмет - отдельной
---  строкой со своей кнопкой поиска; внизу итог и «Найти всё» (Auctionator).
+--  строкой со своей кнопкой поиска; внизу итог.
 --  Для текущих шагов всё есть - что купить дальше, до учителя.
 -------------------------------------------------------------------------------
 local AH_W, AH_PAD, AH_ROW, AH_MAX = 340, 12, 34, 60 -- список прокручивается
 local SEARCH_ICON = "Interface\\Common\\UI-Searchbox-Icon"
 local ahPanel
 
--- Найти один предмет на аукционе: Auctionator, иначе поиск самой игры.
+-- Найти один предмет на аукционе поиском самой игры.
 function ns:SearchAuction(id, buy)
-  if self:HasAuctionator() then return self:SendToAuction({ { id = id, buy = buy or 1 } }) end
   local name = self:ClientItemName(id)
   if not name then self:Print(ns.T("названия предметов ещё загружаются: нажми ещё раз через секунду.")) return end
   local ok = false
@@ -1521,11 +1426,9 @@ function ns:UpdateAuctionPanel()
     sum = T("Всего: ") .. W.Money(total) .. (noPrice > 0 and ("  " .. format(T("(и ещё %d без цены)"), noPrice)) or "")
   end
   if sum then y = f:Head(sum, y + 3) + 2 end
-  local has = self:HasAuctionator()
-  local h = f:Button(format(T("Найти всё (%d)"), #all), has, function() ns:SendToAuction(all) end,
-    has and T("Найдёт всё сразу во вкладке «Покупки» Auctionator.")
-      or T("Нужен аддон Auctionator. Без него ищи по одному - лупа у каждого предмета."), y)
-  f:SetHeight(h)
+  -- кнопки «найти всё» нет: у игры поиск по одному предмету - лупа в строке
+  f.btn:Hide()
+  f:SetHeight(y + 10)
   if not W.PlaceSaved(f, "ah") then
     f:ClearAllPoints()
     f:SetPoint("TOPLEFT", win, "TOPRIGHT", 4, 0)

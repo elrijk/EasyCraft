@@ -4,7 +4,7 @@
 
 **Works without other addons**
 
-- Auction prices are read by EasyCraft itself when you open the auction house. Auctionator and TSM are still used when installed; the fresher price wins. `/ec scan` reads prices on demand.
+- Auction prices are read by EasyCraft itself when you open the auction house; Auctionator and TSM are no longer used. The addon reminds you to visit the auction house when it has no prices or they are older than 3 days. `/ec scan` reads prices on demand.
 - Reagents on your other characters are counted by EasyCraft itself (bags, bank, mail). Syndicator and BagBrother are still used when installed. A setting turns alt counting off.
 
 **Recipes**

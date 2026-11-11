@@ -1506,4 +1506,8 @@ ns.LOCALES.deDE = function() return {
   ["Map and auction house"] = "Karte und Auktionshaus",
   ["Leveling path"] = "Levelweg",
   ["How to get to 300. Pick once - it applies to all professions."] = "Wie du auf 300 kommst. Einmal wählen - gilt für alle Berufe.",
+  ["Prices are older than %d days: open the auction house - EasyCraft will update them itself"] = "Die Preise sind älter als %d Tage: Öffne das Auktionshaus - EasyCraft aktualisiert sie selbst",
+  ["no auction prices yet: visit the auction house - EasyCraft will read them itself, and shopping and profit will show prices."] = "noch keine Auktionspreise: Besuche das Auktionshaus - EasyCraft liest sie selbst, dann zeigen Einkauf und Gewinn Preise.",
+  ["auction prices are older than %d days: visit the auction house - EasyCraft will update them itself."] = "die Auktionspreise sind älter als %d Tage: Besuche das Auktionshaus - EasyCraft aktualisiert sie selbst.",
+  ["A hint with the list appears beside the auction window: the magnifier on an item searches for it."] = "Neben dem Auktionsfenster erscheint ein Hinweis mit der Liste: Die Lupe an einem Gegenstand sucht ihn.",
 } end

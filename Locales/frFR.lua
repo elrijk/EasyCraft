@@ -1505,4 +1505,8 @@ ns.LOCALES.frFR = function() return {
   ["Map and auction house"] = "Carte et hôtel des ventes",
   ["Leveling path"] = "Parcours de progression",
   ["How to get to 300. Pick once - it applies to all professions."] = "Comment atteindre 300. Choisissez une fois : cela vaut pour tous les métiers.",
+  ["Prices are older than %d days: open the auction house - EasyCraft will update them itself"] = "Les prix ont plus de %d jours : ouvrez l'hôtel des ventes, EasyCraft les mettra à jour lui-même",
+  ["no auction prices yet: visit the auction house - EasyCraft will read them itself, and shopping and profit will show prices."] = "pas encore de prix de l'hôtel des ventes : passez-y, EasyCraft les lira lui-même et les achats comme le profit afficheront des prix.",
+  ["auction prices are older than %d days: visit the auction house - EasyCraft will update them itself."] = "les prix de l'hôtel des ventes ont plus de %d jours : passez-y, EasyCraft les mettra à jour lui-même.",
+  ["A hint with the list appears beside the auction window: the magnifier on an item searches for it."] = "Une aide avec la liste apparaît à côté de la fenêtre de l'hôtel des ventes : la loupe d'un objet le recherche.",
 } end

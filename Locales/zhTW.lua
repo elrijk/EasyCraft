@@ -1521,4 +1521,8 @@ ns.LOCALES.zhTW = function() return {
   ["Map and auction house"] = "地圖和拍賣場",
   ["Leveling path"] = "升級路線",
   ["How to get to 300. Pick once - it applies to all professions."] = "怎樣升到 300。選一次即可，對所有專業生效。",
+  ["Prices are older than %d days: open the auction house - EasyCraft will update them itself"] = "價格已超過 %d 天：打開拍賣場，EasyCraft 會自行更新",
+  ["no auction prices yet: visit the auction house - EasyCraft will read them itself, and shopping and profit will show prices."] = "還沒有拍賣場價格：去一趟拍賣場，EasyCraft 會自行讀取，購物清單和利潤才會有價格。",
+  ["auction prices are older than %d days: visit the auction house - EasyCraft will update them itself."] = "拍賣場價格已超過 %d 天：去一趟拍賣場，EasyCraft 會自行更新。",
+  ["A hint with the list appears beside the auction window: the magnifier on an item searches for it."] = "拍賣場視窗旁會出現帶清單的提示：點物品旁的放大鏡即可搜尋。",
 } end

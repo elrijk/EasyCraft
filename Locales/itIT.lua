@@ -1514,4 +1514,8 @@ ns.LOCALES.itIT = function() return {
   ["Map and auction house"] = "Mappa e asta",
   ["Leveling path"] = "Percorso di crescita",
   ["How to get to 300. Pick once - it applies to all professions."] = "Come arrivare a 300. Scegli una volta: vale per tutte le professioni.",
+  ["Prices are older than %d days: open the auction house - EasyCraft will update them itself"] = "I prezzi hanno più di %d giorni: apri l'asta e EasyCraft li aggiornerà da solo",
+  ["no auction prices yet: visit the auction house - EasyCraft will read them itself, and shopping and profit will show prices."] = "ancora nessun prezzo d'asta: passa dalla casa d'aste e EasyCraft li leggerà da solo; così acquisti e profitto avranno i prezzi.",
+  ["auction prices are older than %d days: visit the auction house - EasyCraft will update them itself."] = "i prezzi d'asta hanno più di %d giorni: passa dalla casa d'aste e EasyCraft li aggiornerà da solo.",
+  ["A hint with the list appears beside the auction window: the magnifier on an item searches for it."] = "Accanto alla finestra dell'asta compare un suggerimento con l'elenco: la lente su un oggetto lo cerca.",
 } end

@@ -44,7 +44,6 @@ on("PLAYER_LOGIN", function()
   if ns.CreateMinimapButton then ns:Safe(ns.CreateMinimapButton, ns) end
   if ns.MapOverlay then ns:Safe(ns.MapOverlay.Init, ns.MapOverlay) end
   if ns.Tracker then ns:Safe(ns.Tracker.Init, ns.Tracker) end
-  if ns.HookPriceUpdates then ns:Safe(ns.HookPriceUpdates, ns) end
   if ns.HookItemTooltips then ns:Safe(ns.HookItemTooltips, ns) end
   if ns.HookNodeTooltips then ns:Safe(ns.HookNodeTooltips, ns) end
   ns:RegisterRefresh(function() if ns.UpdateMerchantButton then ns:UpdateMerchantButton() end end)

@@ -6,9 +6,9 @@ local _, ns = ...
 --  заодно запоминает цены из любых поисков игрока.
 --  Хранится в EasyCraftDB.ah[сервер] = { p = { id -> медь за штуку },
 --  d = { id -> день, когда видели }, t = время последнего полного обхода }.
---  Auctionator и TSM остаются запасным источником: берётся более свежая цена.
---  Если Auctionator стоит, свой обход не запускается (два обхода мешали бы
---  друг другу) - цены подбираются из его обхода, события у них общие.
+--  Других источников цен нет: ни Auctionator, ни TSM аддон не читает. Пока
+--  игрок не был на аукционе, цен нет - об этом аддон напоминает (в чате при
+--  входе и в окне).
 -------------------------------------------------------------------------------
 local AH = C_AuctionHouse
 local floor, min, time = math.floor, math.min, time
@@ -104,7 +104,7 @@ local function step()
   if not pcall(AH.RequestMoreBrowseResults) then finish(true) end
 end
 
--- Начать обход. force - по команде игрока, не глядя на паузу и Auctionator.
+-- Начать обход. force - по команде игрока, не глядя на паузу.
 function ns:ScanAuction(force)
   if not self:CanScanAuction() then
     if force then self:Print(ns.T("этот клиент не даёт читать аукцион.")) end
@@ -117,7 +117,6 @@ function ns:ScanAuction(force)
   if scan.active then return true end
   if not force then
     if self.settings and self.settings.ahScan == false then return false end
-    if type(Auctionator) == "table" then return false end
     local s = store()
     if s and s.t and time() - s.t < RESCAN then return false end
   end
@@ -181,25 +180,51 @@ ev:SetScript("OnEvent", function(_, e, a) if type(AH) == "table" then ns:Safe(on
 -------------------------------------------------------------------------------
 --  Источник цен для остального аддона.
 -------------------------------------------------------------------------------
-local baseSource, basePrice = ns.PriceSource, ns.AuctionPrice
-
--- Откуда цены: "EasyCraft" (свои), "Auctionator", "TSM" или nil.
+-- Есть ли цены: "EasyCraft" или nil (на аукционе ещё не были).
 function ns:PriceSource()
-  if self:HasOwnPrices() or self:CanScanAuction() then return "EasyCraft" end
-  return baseSource(self)
+  return self:HasOwnPrices() and "EasyCraft" or nil
 end
 
--- Цена одной штуки в меди и сколько дней назад её видели. Из своей цены и
--- цены Auctionator берётся более свежая.
+-- Цена одной штуки в меди и сколько дней назад её видели.
 function ns:AuctionPrice(id)
   if type(id) ~= "number" then return nil end
-  local otherPrice, otherAge = basePrice(self, id)
   local s = store()
   local own = s and s.p[id]
-  if own then
-    local age = today() - (s.d[id] or 0)
-    if age < 0 then age = 0 end
-    if not otherPrice or not otherAge or age <= otherAge then return own, age end
-  end
-  return otherPrice, otherAge
+  if not own then return nil end
+  local age = today() - (s.d[id] or 0)
+  return own, age < 0 and 0 or age
 end
+
+-- Пора ли на аукцион: "none" - цен нет вовсе, "old" - последний обход
+-- старше PRICE_OLD_DAYS дней, nil - цены свежие (или клиент не даёт читать).
+function ns:PricesStale()
+  if not self:CanScanAuction() then return nil end
+  local s = store()
+  if not (s and s.t) then return "none" end
+  if time() - s.t > (self.PRICE_OLD_DAYS or 3) * 86400 then return "old" end
+end
+
+-- Строка-напоминание для окна (или nil).
+function ns:PricesNote()
+  local st = self:PricesStale()
+  if st == "none" then return ns.T("Цен нет: открой аукцион - EasyCraft прочитает их сам") end
+  if st == "old" then return format(ns.T("Цены старше %d дней: открой аукцион - EasyCraft обновит их сам"), self.PRICE_OLD_DAYS or 3) end
+end
+
+-- При входе, один раз: напомнить в чате сходить на аукцион (только тем, у
+-- кого есть профессии, где что-то покупают).
+local remind = CreateFrame("Frame")
+remind:RegisterEvent("PLAYER_ENTERING_WORLD")
+remind:SetScript("OnEvent", function(self)
+  self:UnregisterAllEvents()
+  C_Timer.After(12, function()
+    if not (ns.db and ns.char and ns.LearnedList) then return end
+    if #ns:LearnedList() == 0 then return end
+    local st = ns:PricesStale()
+    if st == "none" then
+      ns:Print(ns.T("цен аукциона пока нет: загляни на аукцион - EasyCraft прочитает их сам, и покупки с выгодой будут с ценами."))
+    elseif st == "old" then
+      ns:Print(format(ns.T("цены аукциона старше %d дней: загляни на аукцион - EasyCraft обновит их сам."), ns.PRICE_OLD_DAYS or 3))
+    end
+  end)
+end)

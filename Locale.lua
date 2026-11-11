@@ -1741,3 +1741,11 @@ for k, v in pairs({
   ["Путь прокачки"] = "Leveling path",
   ["Как идти до 300. Выбери один раз - действует на все профессии."] = "How to get to 300. Pick once - it applies to all professions.",
 }) do if ns.EN[k] == nil then ns.EN[k] = v end end
+
+-- 1.2: цены только свои, напоминание сходить на аукцион
+for k, v in pairs({
+  ["Цены старше %d дней: открой аукцион - EasyCraft обновит их сам"] = "Prices are older than %d days: open the auction house - EasyCraft will update them itself",
+  ["цен аукциона пока нет: загляни на аукцион - EasyCraft прочитает их сам, и покупки с выгодой будут с ценами."] = "no auction prices yet: visit the auction house - EasyCraft will read them itself, and shopping and profit will show prices.",
+  ["цены аукциона старше %d дней: загляни на аукцион - EasyCraft обновит их сам."] = "auction prices are older than %d days: visit the auction house - EasyCraft will update them itself.",
+  ["У окна аукциона появится подсказка со списком: лупа у предмета найдёт его."] = "A hint with the list appears beside the auction window: the magnifier on an item searches for it.",
+}) do if ns.EN[k] == nil then ns.EN[k] = v end end

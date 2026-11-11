@@ -57,7 +57,7 @@ end
 
 
 -- Сколько стоит докупить buy штук на аукционе (медь) или nil; вторым -
--- возраст цены в днях (Auctionator), если она старая.
+-- возраст цены в днях, если она старая.
 local function buyCost(id, buy)
   if ns:IsVendorItem(id) then return nil end
   local p, age = ns:AuctionPrice(id)
@@ -549,7 +549,7 @@ local GUIDE = {
   { -- Покупки
     { "INV_Misc_Bag_08", "Что есть - уже посчитано", "Сумки, банк, почта и альты учтены: в списке только то, чего не хватает до учителя." },
     { "INV_Misc_Coin_02", "Цена и где купить", "У каждого реагента: у торговца или на аукционе и почём." },
-    { "INV_Misc_Note_02", "Остальное - на аукционе", "Кнопка вверху отправит список в Auctionator, у аукциона - найдёт всё сразу." },
+    { "INV_Misc_Note_02", "Остальное - на аукционе", "У окна аукциона появится подсказка со списком: лупа у предмета найдёт его." },
   },
   { -- Рецепты
     { "Trade_BlackSmithing", "Открой окно профессии", "Аддон прочитает все выученные рецепты, что из них выходит и какие на откате." },
@@ -580,16 +580,6 @@ local function headButtons(UI, tab, data)
           ns.settings.campAll = not ns.settings.campAll
           UI:Render(true)
         end },
-    }
-  elseif tab == 4 then
-    local list = data and data.toAuction or {}
-    local open = ns:IsAuctionOpen()
-    local has = ns:HasAuctionator()
-    return {
-      { text = open and T("Найти на аукционе") or T("В список Auctionator"), icon = "INV_Misc_Coin_01", enabled = #list > 0 and has,
-        tip = has and (open and T("Найдёт всё нужное на аукционе.") or T("Добавит всё нужное в список «EasyCraft» в Auctionator."))
-          or T("Нужен аддон Auctionator: через него EasyCraft ищет сразу весь список."),
-        onClick = function() ns:SendToAuction(list) end },
     }
   end
 end
@@ -650,6 +640,14 @@ function C:BuildHome(UI, tab)
   if tab == 1 then ns.db.introDone = true end -- главную видели: дальше окно открывается там, где было
   local shop = tab == 4 and self:ShoppingData() or nil
   UI:PageHeader(T(how.title), T(how.text), headButtons(UI, tab, shop))
+  -- покупки и рецепты считаются по ценам аукциона: нет цен или они старые -
+  -- сказать об этом сразу под шапкой
+  local priceNote = (tab == 4 or tab == 5) and ns.PricesNote and ns:PricesNote()
+  if priceNote then
+    local pc = UI:Card("flat")
+    pc:Text("|cffa03000" .. priceNote .. ".|r", "body", { x = UI.PAD })
+    UI:End(pc, 6)
+  end
   -- «Как пользоваться» - не на каждой вкладке, а отдельным окном (UI/Intro.lua)
   if tab == 3 then
     self:BuildCamp(UI)
@@ -1054,7 +1052,7 @@ function C:BuildShopping(UI, d)
               local _, link = C_Item.GetItemInfo(id)
               W.InsertLink(link)
             elseif ns:IsAuctionOpen() and not ns:IsVendorItem(id) then
-              ns:SendToAuction({ { id = id, buy = buy } })
+              ns:SearchAuction(id, buy)
             end
           end,
         })
@@ -1451,7 +1449,7 @@ function C:CurrentActions(UI, c, key, i, s, st, train, rank, maxRank, left)
       end }, c.indent or UI.PAD, y)
   end
   if craft then
-    if self:CraftButtons(UI, c, key, s, left, y) or self:AuctionButton(UI, c, y) then placed = true end
+    if self:CraftButtons(UI, c, key, s, left, y) then placed = true end
   end
   -- строку под кнопки - только если они есть: иначе пустое место снизу
   if placed then c.y = y + 32 end
@@ -1526,21 +1524,6 @@ function C:BestBlock(UI, c, key, offers)
       tip = format(T("Создаст «%s»: %d шт. (не больше, чем осталось до конца шага)."), best.name or "?", best.n),
       onClick = function() ns:CraftOrOpen(key, best.id, best.n) end } })
   end
-end
-
--- Нечего создавать, а реагенты есть на аукционе: «Найти на аукционе»
--- (открыт) или «В список Auctionator»; без Auctionator - поставить его.
-function C:AuctionButton(UI, c, y)
-  local b = UI.stepBuy
-  if not (b and #b.auction > 0) then return end
-  local has = ns:HasAuctionator()
-  local open = ns:IsAuctionOpen()
-  c:Button({ text = open and T("Найти на аукционе") or T("В список Auctionator"), w = 190, enabled = has,
-    tip = has and (open and T("Найдёт недостающие реагенты на аукционе.")
-      or T("Добавит недостающие реагенты в список «EasyCraft» в Auctionator: на аукционе останется нажать «Искать»."))
-      or T("Нужен аддон Auctionator: через него EasyCraft ищет сразу весь список."),
-    onClick = function() ns:SendToAuction(b.auction) end }, UI.PAD, y, true)
-  return true
 end
 
 -- Кнопка создания справа в нижней строке: одна, «Создать все (N)» - сколько

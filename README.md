@@ -26,7 +26,6 @@ goes up. No guide in a second window, no counting materials by hand.
 
 EasyCraft works on its own. These add convenience:
 
-- **Auctionator**: search the whole shopping list at once. Its prices and TradeSkillMaster's are used too.
 - **Syndicator (Baganator)** or **BagBrother (Bagnon)**: reagents on characters you have not logged into since installing EasyCraft.
 - **TomTom**: arrow to trainers and vendors.
 

@@ -146,17 +146,11 @@ function C:QueueCard(UI)
   else
     c:Text(GREEN .. T("Реагентов хватает на всю очередь.") .. "|r", "body")
   end
-  local has, open = ns:HasAuctionator(), ns:IsAuctionOpen()
   c:Buttons({
     { text = T("Создать следующий"), w = 170, enabled = nextUp ~= nil,
       tip = nextUp and format(T("Создаст «%s»: %d шт."), nextUp.name or "?", min(nextUp.n, nextUp.can))
         or T("Ни на один рецепт очереди нет реагентов."),
       onClick = function() if nextUp then ns:QueueCraft(nextUp) end end },
-    { text = open and T("Найти на аукционе") or T("В список Auctionator"), w = 190, enabled = has and #needs.auction > 0,
-      tip = has and (open and T("Найдёт недостающие реагенты на аукционе.")
-        or T("Добавит недостающие реагенты в список «EasyCraft» в Auctionator: на аукционе останется нажать «Искать»."))
-        or T("Нужен аддон Auctionator: через него EasyCraft ищет сразу весь список."),
-      onClick = function() ns:SendToAuction(needs.auction) end },
     { text = T("Очистить"), w = 110, onClick = function() ns:QueueClear(); UI:Render(true) end,
       tip = T("Уберёт из очереди всё.") },
   })
