@@ -4,12 +4,11 @@ local M = {}
 TJ.MapOverlay = M
 local format, max = string.format, math.max
 
-local KNOWN_SIZE, MINE_SIZE, MAX_KNOWN = 11, 15, 900
--- Области, где растёт нужное (как в GatherTogether): карта делится на
--- мелкие клетки, клетки, где мест сбора рядом много, сливаются в единые
--- области - ровная полупрозрачная заливка и одна обводка по краю области.
--- Точки по отдельности не рисуем - иначе каша из значков. Непрозрачность -
--- в настройках (mapAreaAlpha).
+local MINE_SIZE = 15
+-- Области, где растёт нужное: карта делится на мелкие клетки, клетки, где
+-- мест сбора рядом много, сливаются в единые области - ровная
+-- полупрозрачная заливка и одна обводка по краю. Отдельных точек на карте
+-- нет, только свои находки. Непрозрачность - в настройках (mapAreaAlpha).
 local AREA_GRID = 44
 local WHITE = "Interface\\Buttons\\WHITE8X8"
 local floor = math.floor
@@ -20,7 +19,6 @@ function M:Init()
   local map = mapFrame()
   if self.inited or not map or not map.GetCanvas then return end
   self.inited = true
-  self.known, self.nknown = {}, 0
   self.mine, self.nmine = {}, 0
 
   if map.AddDataProvider and MapCanvasDataProviderMixin and CreateFromMixins then
@@ -58,8 +56,8 @@ function M:Init()
   banner:Hide()
   self.banner = banner
 
-  -- справа внизу карты: вкл/выкл всё от EasyCraft на карте (места сбора,
-  -- свои находки, области)
+  -- слева внизу карты: вкл/выкл всё от EasyCraft на карте (области сбора
+  -- и свои находки)
   local tog = CreateFrame("Button", nil, parent)
   tog:SetSize(30, 30)
   tog:SetPoint("BOTTOMLEFT", parent, "BOTTOMLEFT", 10, 10)
@@ -128,10 +126,9 @@ end
 
 function M:Clear()
   self.sig = nil -- нарисованного больше нет: следующий Refresh рисует заново
-  for i = 1, self.nknown or 0 do self.known[i]:Hide() end
   for i = 1, self.nmine or 0 do self.mine[i]:Hide() end
   for i = 1, self.narea or 0 do self.area[i]:Hide() end
-  self.nknown, self.nmine, self.narea = 0, 0, 0
+  self.nmine, self.narea = 0, 0
 end
 
 function M:AreaTex(parent, layer)
@@ -263,18 +260,6 @@ function M:DrawAreas(overlay, keys, mapID, w, h, scale)
   end
 end
 
-function M:KnownTex(parent)
-  self.nknown = self.nknown + 1
-  local t = self.known[self.nknown]
-  if not t then
-    t = parent:CreateTexture(nil, "OVERLAY")
-    self.known[self.nknown] = t
-  end
-  t:ClearAllPoints()
-  t:Show()
-  return t
-end
-
 function M:MinePin(parent)
   self.nmine = self.nmine + 1
   local b = self.mine[self.nmine]
@@ -349,16 +334,15 @@ function M:Refresh()
 
   local keys = self:VisibleNodeKeys()
   -- Перерисовка аддона (сумки, добыча) при открытой карте: если на карте
-  -- ничего не поменялось, сотни точек заново не ставим.
+  -- ничего не поменялось, области заново не строим.
   local tg = TJ.mapTarget
   local sig = table.concat({ tostring(overlay), mapID or 0, floor(w), floor(h), table.concat(keys, ","),
-    tostring(TJ.mapFocus), tostring(TJ.settings.mapKnown), tostring(TJ.settings.mapMine), tostring(TJ.settings.mapAreaAlpha),
+    tostring(TJ.mapFocus), tostring(TJ.settings.mapMine), tostring(TJ.settings.mapAreaAlpha),
     tg and (tostring(tg.ui) .. ":" .. tostring(tg.x) .. ":" .. tostring(tg.y)) or "-", TJ.nodeGen or 0, TJ.itemGen or 0 }, "|")
   if sig == self.sig then return end
   self:Clear()
   self.sig = sig
-  -- плашку сверху больше не показываем (налезала на значки других аддонов):
-  -- что показано - круглым значком слева внизу, щелчок убирает
+  -- что показано из шага - круглым значком слева внизу, щелчок убирает
   self.banner:Hide()
   local cur = self.current
   if cur then
@@ -380,30 +364,9 @@ function M:Refresh()
     end
   end
 
-  -- показать на карте из шага: области, где растёт нужное, и сами места ярче
-  if TJ.mapFocus then self:DrawAreas(overlay, keys, mapID, w, h, scale) end
-  if TJ.settings.mapKnown and not TJ.mapFocus then
-    do
-      for _, key in ipairs(keys) do
-        local packed = TJ.Spawns[key] and TJ.Spawns[key][mapID]
-        if packed then
-          local icon = TJ:ItemIcon(TJ.Nodes[key].item)
-          for i = 1, #packed, 6 do
-            if self.nknown >= MAX_KNOWN then break end
-            local x = tonumber(packed:sub(i, i + 2)) / 1000
-            local y = tonumber(packed:sub(i + 3, i + 5)) / 1000
-            local t = self:KnownTex(overlay)
-            t:SetTexture(icon)
-            t:SetTexCoord(0.08, 0.92, 0.08, 0.92)
-            t:SetAlpha(TJ.mapFocus and 0.95 or 0.6)
-            local ks = TJ.mapFocus and KNOWN_SIZE + 3 or KNOWN_SIZE
-            t:SetSize(ks / scale, ks / scale)
-            t:SetPoint("CENTER", overlay, "TOPLEFT", x * w, -y * h)
-          end
-        end
-      end
-    end
-  end
+  -- Области, где растёт нужное: из шага (mapFocus), иначе - всё, что сейчас
+  -- даёт навык изученным профессиям сбора.
+  self:DrawAreas(overlay, keys, mapID, w, h, scale)
 
   local tg = TJ.mapTarget
   if tg and tg.ui == mapID then
@@ -459,8 +422,6 @@ function M:Rescale()
     return
   end
   local scale = canvasScale(map)
-  local ks = TJ.mapFocus and KNOWN_SIZE + 3 or KNOWN_SIZE
-  for i = 1, self.nknown or 0 do self.known[i]:SetSize(ks / scale, ks / scale) end
   for i = 1, self.nmine or 0 do
     local b = self.mine[i]
     local s = (b.base or MINE_SIZE) / scale

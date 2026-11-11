@@ -727,8 +727,6 @@ end
 function C:MapCard(UI)
   local c = UI:Card()
   c:Head({ ring = "Interface\\Icons\\INV_Misc_Map_01" }, T("Карта мира"), nil, 32)
-  c:Check(T("Показывать места жил и трав"), TJ.settings.mapKnown, function(v) TJ.settings.mapKnown = v; TJ:RefreshAll() end,
-    T("Известные места из базы игры, полупрозрачными значками."))
   c:Check(T("Показывать мои находки"), TJ.settings.mapMine, function(v) TJ.settings.mapMine = v; TJ:RefreshAll() end,
     T("Где ты уже собирал или ловил рыбу, яркими значками."))
   c:Space(2)

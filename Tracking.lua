@@ -408,10 +408,6 @@ SlashCmdList.EASYCRAFT = function(msg)
     TJ:ScanSkills()
     TJ:Print(TJ.T("данные персонажа сброшены."))
     TJ:RefreshAll()
-  elseif msg == "map" then
-    TJ.settings.mapKnown = not TJ.settings.mapKnown
-    TJ:Print(TJ.T("известные точки на карте: ") .. (TJ.settings.mapKnown and TJ.T("вкл") or TJ.T("выкл")))
-    TJ:RefreshAll()
   elseif msg == "minimap" or msg == "миникарта" then
     TJ:SetMinimapHidden(TJ.settings.minimap)
     TJ:Print(TJ.settings.minimap and TJ.T("кнопка у миникарты показана.") or TJ.T("кнопка у миникарты скрыта (вернуть: /ec minimap)."))

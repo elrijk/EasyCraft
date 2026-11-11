@@ -11,7 +11,7 @@ goes up. No guide in a second window, no counting materials by hand.
 - **Shopping to the next trainer**: counts your bags, bank, mail and alts, so you never buy twice. Prices come from Auctionator or TSM.
 - **One-click helpers**: buy missing reagents at a vendor, take the right stacks from the bank, search everything at the auction house.
 - **Trainers and recipes**: the nearest trainer or recipe vendor with a map pin; stars in the trainer window on recipes your route needs.
-- **Gathering on the map**: zones for your faction and level, known node spots and your own finds, node colour in the tooltip.
+- **Gathering on the map**: zones for your faction and level, highlighted areas where herbs and ore are dense, your own finds, node colour in the tooltip.
 - **Camp**: the campfire items of your professions and where their blueprints drop.
 - **Self-check**: if a recipe in the game differs from the route, the addon uses the game's data.
 
@@ -48,7 +48,7 @@ Map and name data: pfQuest by Shagu (MIT). Node positions: GatherLite by Wuild
 - **Покупки до учителя**: сумки, банк, почта и альты уже посчитаны. Цены из Auctionator или TSM.
 - **Кнопки-помощники**: докупить у торговца, забрать из банка, найти всё на аукционе.
 - **Учителя и рецепты**: ближайший учитель или торговец с меткой на карте.
-- **Сбор на карте**: зоны для твоей фракции и уровня, известные места жил и трав, твои находки.
+- **Сбор на карте**: зоны для твоей фракции и уровня, области, где жил и трав больше всего, твои находки.
 - **Лагерь**: предметы твоих профессий для костра и где падают чертежи.
 
 Команда: `/ec` или `/ремесла`.
