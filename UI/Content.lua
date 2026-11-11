@@ -527,9 +527,15 @@ C.HOW, C.GUIDE = HOW, GUIDE
 
 -- Кнопки шапки вкладки: куда идти дальше.
 local function headButtons(UI, tab, data)
-  -- на главной плиток нет: разделы - во вкладках окна, выбор профессии -
-  -- по команде /ec choose и из знакомства
-  if tab == 2 then
+  if tab == 1 then
+    -- на главной одна плитка - «Выбор профессии» (остальные разделы - во
+    -- вкладках окна). У персонажа без профессий выбор открыт и так.
+    if #ns:LearnedList() == 0 then return nil end
+    return {
+      { text = T("Выбор профессии"), icon = "INV_Misc_Book_09", onClick = function() ns:ShowChoose() end,
+        tip = T("Что делает каждая профессия и какой сбор к ней нужен. Пригодится, если решишь сменить профессию.") },
+    }
+  elseif tab == 2 then
     return {
       { text = T("Открыть карту"), icon = "INV_Misc_Map_01", onClick = function() if ns.MapOverlay then ns.MapOverlay:OpenMap() end end,
         tip = T("Карта мира с местами сбора.") },

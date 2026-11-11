@@ -119,8 +119,20 @@ function ns:BuildSettings()
   share:SetPoint("LEFT", intro, "RIGHT", 10, 0)
   share:SetScript("OnClick", function() if ns.ShareColors then ns:ShareColors() end end)
 
+  -- выбор профессии: окно поверх настроек игры
+  local choose = ns.W.Button(body, ns.T("Выбор профессии"), 200, 26)
+  choose:SetPoint("TOPLEFT", open, "BOTTOMLEFT", 0, -8)
+  choose:SetScript("OnClick", function()
+    ns:ShowChoose()
+    local win = EasyCraftChooseFrame
+    if win then
+      win:SetFrameStrata("DIALOG")
+      win:Raise()
+    end
+  end)
+
   panel.checks = {}
-  local prev = open
+  local prev = choose
   for i, o in ipairs(OPTIONS) do
     local c = ns.W.Check(body, ns.T(o[2]))
     c:SetSize(26, 26)
