@@ -1702,3 +1702,8 @@ for k, v in pairs({
   ["торговцу"] = "to a vendor",
   ["распылить, примерно"] = "disenchant, roughly",
 }) do if ns.EN[k] == nil then ns.EN[k] = v end end
+
+for k, v in pairs({
+  ["прочитать цены на открытом аукционе"] = "read prices at the open auction house",
+  ["код с цветами рецептов для автора"] = "a code with recipe colours for the author",
+}) do if ns.EN[k] == nil then ns.EN[k] = v end end
