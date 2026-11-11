@@ -18,13 +18,11 @@ local format, floor, min, max = string.format, math.floor, math.min, math.max
 --  первом открытии аддона.
 -------------------------------------------------------------------------------
 local S = W.S
-local WIDTH = 760
+local WIDTH, HEIGHT = 760, 620
 local SIDE = 28 -- поля окна слева и справа
-local GAP = 12 -- между блоками
-local INNER = WIDTH - SIDE * 2
-local HERO_H = 330 -- примерная высота панели профессии (точная - по содержимому)
-local STRIP_W = 470 -- ширина полосы «зачем»
-local TAB_W, TAB_H, TAB_STEP = 178, 34, 37
+local LEFT = 44 -- левый край содержимого
+local TOP = 96 -- где начинается содержимое под шапкой
+local STRIP_W = 480 -- ширина полосы «зачем»
 local MAX_ICONS = 4
 
 -- Строка «зачем», что создаёт (добывает), кому брать (текст или список
@@ -191,8 +189,8 @@ end
 
 local function build()
   local f = CreateFrame("Frame", "EasyCraftChooseFrame", UIParent, BackdropTemplateMixin and "BackdropTemplate" or nil)
-  f:SetSize(WIDTH, 560)
-  f:SetPoint("CENTER", -TAB_W / 2, 20)
+  f:SetSize(WIDTH, HEIGHT)
+  f:SetPoint("CENTER", -20, 20)
   f:SetFrameStrata("HIGH")
   f:SetToplevel(true)
   f:SetClampedToScreen(true)
@@ -202,15 +200,45 @@ local function build()
   f:SetScript("OnDragStart", f.StartMoving)
   f:SetScript("OnDragStop", f.StopMovingOrSizing)
   f:SetScale(TJ.settings.scale or 1)
-  -- рамка и фон - как у окна знакомства
+  -- рамка - как у окна знакомства; фон - рисунок профессии на всё окно
   W.Backdrop(f, "Interface\\Buttons\\WHITE8X8", nil, 16, 0.04, 0.03, 0.02, 1, 0.75, 0.6, 0.3, 1)
   tinsert(UISpecialFrames, "EasyCraftChooseFrame")
-  local bg = f:CreateTexture(nil, "BORDER")
-  bg:SetPoint("TOPLEFT", 4, -4)
-  bg:SetPoint("BOTTOMRIGHT", -4, 4)
-  bg:SetColorTexture(1, 1, 1, 1)
-  local ok = CreateColor and pcall(bg.SetGradient, bg, "VERTICAL", CreateColor(0.03, 0.025, 0.02, 1), CreateColor(0.2, 0.14, 0.08, 1))
-  if not ok then bg:SetColorTexture(0.1, 0.075, 0.05, 1) end
+  f.wash = f:CreateTexture(nil, "BORDER")
+  f.wash:SetPoint("TOPLEFT", 4, -4)
+  f.wash:SetPoint("BOTTOMRIGHT", -4, 4)
+  f.wash:SetColorTexture(1, 1, 1, 1)
+  f.art = f:CreateTexture(nil, "BORDER", nil, 1)
+  f.art:SetPoint("TOPLEFT", 4, -4)
+  f.art:SetPoint("BOTTOMRIGHT", -4, 4)
+  f.glow = f:CreateTexture(nil, "BORDER", nil, 2) -- второй слой сложением: бледный рисунок заметнее
+  f.glow:SetAllPoints(f.art)
+  f.glow:SetBlendMode("ADD")
+  f.glow:SetAlpha(0.7)
+  f.emblem = f:CreateTexture(nil, "BORDER", nil, 2)
+  f.emblem:SetSize(340, 340)
+  f.emblem:SetPoint("RIGHT", -40, 10)
+  f.emblem:SetTexCoord(0.08, 0.92, 0.08, 0.92)
+  -- затемнения: слева под текст, сверху под заголовок, снизу под кнопки
+  local function shade(orient, a1, a2)
+    local t = f:CreateTexture(nil, "BORDER", nil, 3)
+    t:SetColorTexture(1, 1, 1, 1)
+    local ok = CreateColor and pcall(t.SetGradient, t, orient, CreateColor(0, 0, 0, a1), CreateColor(0, 0, 0, a2))
+    if not ok then t:SetColorTexture(0, 0, 0, (a1 + a2) / 2) end
+    return t
+  end
+  local left = shade("HORIZONTAL", 0.85, 0)
+  left:SetPoint("TOPLEFT", 4, -4)
+  left:SetPoint("BOTTOMLEFT", 4, 4)
+  left:SetWidth(floor(WIDTH * 0.75))
+  local top = shade("VERTICAL", 0, 0.75)
+  top:SetPoint("TOPLEFT", 4, -4)
+  top:SetPoint("TOPRIGHT", -4, -4)
+  top:SetHeight(110)
+  local bottom = shade("VERTICAL", 0.9, 0)
+  bottom:SetPoint("BOTTOMLEFT", 4, 4)
+  bottom:SetPoint("BOTTOMRIGHT", -4, 4)
+  bottom:SetHeight(170)
+
   local close = CreateFrame("Button", nil, f, "UIPanelCloseButton")
   close:SetPoint("TOPRIGHT", 0, 0)
 
@@ -220,78 +248,50 @@ local function build()
   f.title:SetPoint("TOP", 0, -26)
   local file, _, flags = f.title:GetFont()
   if file then f.title:SetFont(file, 24, flags) end
+  f.title:SetShadowOffset(1, -1)
+  f.title:SetShadowColor(0, 0, 0, 0.9)
   f.rule = rule(f, 360)
   f.rule:SetPoint("TOP", f.title, "BOTTOM", 0, -10)
 
-  -- панель профессии: рисунок на всю панель, слева текст
-  local hero = CreateFrame("Frame", nil, f, BackdropTemplateMixin and "BackdropTemplate" or nil)
-  W.Backdrop(hero, "Interface\\Buttons\\WHITE8X8", nil, 14, 0.03, 0.025, 0.02, 1, 0.75, 0.6, 0.3, 1)
-  hero:SetSize(INNER, HERO_H)
-  f.hero = hero
-  hero.wash = hero:CreateTexture(nil, "BORDER")
-  hero.wash:SetPoint("TOPLEFT", 4, -4)
-  hero.wash:SetPoint("BOTTOMRIGHT", -4, 4)
-  hero.art = hero:CreateTexture(nil, "BORDER", nil, 1)
-  hero.art:SetPoint("TOPLEFT", 4, -4)
-  hero.art:SetPoint("BOTTOMRIGHT", -4, 4)
-  hero.glow = hero:CreateTexture(nil, "BORDER", nil, 2) -- второй слой сложением: бледный рисунок заметнее
-  hero.glow:SetAllPoints(hero.art)
-  hero.glow:SetBlendMode("ADD")
-  hero.glow:SetAlpha(0.7)
-  hero.emblem = hero:CreateTexture(nil, "BORDER", nil, 2)
-  hero.emblem:SetSize(HERO_H - 30, HERO_H - 30)
-  hero.emblem:SetPoint("RIGHT", -30, 0)
-  hero.emblem:SetTexCoord(0.08, 0.92, 0.08, 0.92)
-  hero.shade = hero:CreateTexture(nil, "BORDER", nil, 3) -- слева темнее: там текст
-  hero.shade:SetPoint("TOPLEFT", 4, -4)
-  hero.shade:SetPoint("BOTTOMRIGHT", -4, 4)
-  hero.shade:SetColorTexture(1, 1, 1, 1)
-  ok = CreateColor and pcall(hero.shade.SetGradient, hero.shade, "HORIZONTAL", CreateColor(0, 0, 0, 0.85), CreateColor(0, 0, 0, 0.1))
-  if not ok then hero.shade:SetColorTexture(0, 0, 0, 0.45) end
   -- основная она или вторичная - мелко над названием
-  hero.kind = W.Text(hero, "head", false)
-  hero.kind:SetPoint("TOPLEFT", 26, -20)
-  hero.kind:SetShadowOffset(1, -1)
-  hero.kind:SetShadowColor(0, 0, 0, 0.9)
-  hero.badge = W.RingIcon(hero, 56)
-  hero.badge:SetPoint("TOPLEFT", 24, -44)
-  hero.name = W.Text(hero, "huge", false)
-  hero.name:SetPoint("LEFT", hero.badge, "RIGHT", 16, 0)
-  file, _, flags = hero.name:GetFont()
-  if file then hero.name:SetFont(file, 44, flags) end
-  hero.name:SetShadowOffset(2, -2)
-  hero.name:SetShadowColor(0, 0, 0, 0.9)
+  f.kind = W.Text(f, "head", false)
+  f.kind:SetPoint("TOPLEFT", LEFT + 2, -TOP)
+  f.kind:SetShadowOffset(1, -1)
+  f.kind:SetShadowColor(0, 0, 0, 0.9)
+  f.badge = W.RingIcon(f, 64)
+  f.badge:SetPoint("TOPLEFT", LEFT, -(TOP + 26))
+  f.name = W.Text(f, "huge", false)
+  f.name:SetPoint("LEFT", f.badge, "RIGHT", 18, 0)
+  file, _, flags = f.name:GetFont()
+  if file then f.name:SetFont(file, 52, flags) end
+  f.name:SetShadowOffset(2, -2)
+  f.name:SetShadowColor(0, 0, 0, 0.9)
+  -- изучена ли - сразу под названием
+  f.state = W.Text(f, "body", false)
+  f.state:SetPoint("TOPLEFT", f.badge, "BOTTOMLEFT", 2, -12)
+  f.state:SetShadowOffset(1, -1)
+  f.state:SetShadowColor(0, 0, 0, 0.9)
   -- строка «зачем» на тёмной полосе между двумя линиями
-  hero.lineTop = rule(hero, STRIP_W, 0.7)
-  hero.lineTop:SetPoint("TOPLEFT", hero.badge, "BOTTOMLEFT", -4, -16)
-  hero.why = W.Text(hero, "title")
-  hero.why:SetWidth(STRIP_W - 28)
-  hero.why:SetTextColor(0.95, 0.93, 0.88)
-  hero.why:SetPoint("TOPLEFT", hero.lineTop, "BOTTOMLEFT", 14, -12)
-  hero.lineBot = rule(hero, STRIP_W, 0.7)
-  hero.lineBot:SetPoint("TOPLEFT", hero.why, "BOTTOMLEFT", -14, -12)
-  hero.whyBg = hero:CreateTexture(nil, "BORDER", nil, 5)
-  hero.whyBg:SetPoint("TOPLEFT", hero.lineTop, "BOTTOMLEFT", 0, 0)
-  hero.whyBg:SetPoint("BOTTOMRIGHT", hero.lineBot, "TOPRIGHT", 0, 0)
-  hero.whyBg:SetColorTexture(0, 0, 0, 0.55)
-  hero.route = W.Button(hero, "", 180, S.btn)
-  hero.route:SetPoint("TOPRIGHT", -14, -14)
-  tipButton(hero.route)
+  f.lineTop = rule(f, STRIP_W, 0.7)
+  f.lineTop:SetPoint("TOPLEFT", f.state, "BOTTOMLEFT", -6, -14)
+  f.why = W.Text(f, "title")
+  f.why:SetWidth(STRIP_W - 28)
+  f.why:SetTextColor(0.95, 0.93, 0.88)
+  f.why:SetPoint("TOPLEFT", f.lineTop, "BOTTOMLEFT", 14, -12)
+  f.lineBot = rule(f, STRIP_W, 0.7)
+  f.lineBot:SetPoint("TOPLEFT", f.why, "BOTTOMLEFT", -14, -12)
+  f.whyBg = f:CreateTexture(nil, "BORDER", nil, 5)
+  f.whyBg:SetPoint("TOPLEFT", f.lineTop, "BOTTOMLEFT", 0, 0)
+  f.whyBg:SetPoint("BOTTOMRIGHT", f.lineBot, "TOPRIGHT", 0, 0)
+  f.whyBg:SetColorTexture(0, 0, 0, 0.55)
 
-  -- три блока-инфографики
-  -- лежат на панели профессии, под полосой «зачем»
-  local colW = floor((INNER - 40) / 3)
+  -- три группы значков под полосой, прямо на рисунке
+  local colW = floor((WIDTH - LEFT * 2) / 3)
   f.cards = {}
-  for i = 1, 3 do
-    f.cards[i] = infoCard(f, colW)
-    f.cards[i]:SetFrameLevel(hero:GetFrameLevel() + 3)
-  end
+  for i = 1, 3 do f.cards[i] = infoCard(f, colW) end
   f.colW = colW
 
-  -- низ: изучена ли, крупная кнопка учителя, листание
-  f.state = W.Text(f, "title", false)
-  f.state:SetJustifyH("CENTER")
-  -- две крупные кнопки рядом: учитель на карте и переход к окну аддона
+  -- низ: три кнопки в ряд по центру, стрелки по углам
   local function bigFont(b)
     local fs = b:GetFontString()
     if fs then
@@ -299,11 +299,15 @@ local function build()
       if tf then fs:SetFont(tf, 16, tfl) end
     end
   end
-  f.trainer = W.Button(f, "", 270, 40)
-  f.trainer:SetPoint("BOTTOM", -141, 22)
+  f.trainer = W.Button(f, "", 250, 40)
   bigFont(f.trainer)
-  f.go = W.Button(f, "", 270, 40)
-  f.go:SetPoint("BOTTOM", 141, 22)
+  f.trainer.pin = f.trainer:CreateTexture(nil, "OVERLAY")
+  f.trainer.pin:SetSize(24, 24)
+  f.trainer.pin:SetPoint("LEFT", 14, 0)
+  f.trainer.pin:SetTexture("Interface\\Icons\\INV_Misc_Map_01")
+  f.trainer.pin:SetTexCoord(0.08, 0.92, 0.08, 0.92)
+  tipButton(f.trainer)
+  f.go = W.Button(f, "", 250, 40)
   bigFont(f.go)
   f.go:SetScript("OnClick", function()
     W.Sound("IG_MAINMENU_OPTION_CHECKBOX_ON")
@@ -316,14 +320,8 @@ local function build()
       TJ:ToggleFrame()
     end
   end)
-  f.trainer.pin = f.trainer:CreateTexture(nil, "OVERLAY")
-  f.trainer.pin:SetSize(24, 24)
-  f.trainer.pin:SetPoint("LEFT", 14, 0)
-  f.trainer.pin:SetTexture("Interface\\Icons\\INV_Misc_Map_01")
-  f.trainer.pin:SetTexCoord(0.08, 0.92, 0.08, 0.92)
-  tipButton(f.trainer)
-  f.state:SetPoint("BOTTOM", f, "BOTTOM", 0, 22 + 40 + 10)
-  -- листать профессии - просто стрелки по углам (и колесо мыши)
+  f.route = W.Button(f, "", 160, S.btnBig)
+  tipButton(f.route)
   local function nav(point, x, delta, arrow)
     local b = CreateFrame("Button", nil, f)
     b:SetSize(36, 36)
@@ -339,50 +337,38 @@ local function build()
   f:EnableMouseWheel(true)
   f:SetScript("OnMouseWheel", function(s, delta) turn(s, -delta) end)
 
-  -- вкладки профессий справа у окна: значок и название
+  -- вкладки профессий справа - те же, что у окна аддона (W.SideTab):
+  -- значок на ярлыке, название и навык - в подсказке
   f.tabs = {}
   for i, key in ipairs(TJ.ProfOrder) do
-    local b = CreateFrame("Button", nil, f, BackdropTemplateMixin and "BackdropTemplate" or nil)
-    b:SetSize(TAB_W, TAB_H)
-    b:SetPoint("TOPLEFT", f, "TOPRIGHT", -3, -44 - (i - 1) * TAB_STEP)
-    W.Backdrop(b, "Interface\\Buttons\\WHITE8X8", nil, 12, 0.06, 0.05, 0.04, 0.95, 0.5, 0.4, 0.22, 1)
-    b.icon = b:CreateTexture(nil, "ARTWORK")
-    b.icon:SetSize(24, 24)
-    b.icon:SetPoint("LEFT", 8, 0)
-    b.icon:SetTexCoord(0.08, 0.92, 0.08, 0.92)
-    b.icon:SetTexture(TJ.Icon(TJ.Profs[key].icon))
-    b.text = W.Text(b, "body", false)
-    b.text:SetPoint("LEFT", b.icon, "RIGHT", 8, 0)
-    b.text:SetPoint("RIGHT", -24, 0)
-    b.check = b:CreateTexture(nil, "OVERLAY")
-    b.check:SetSize(16, 16)
-    b.check:SetPoint("RIGHT", -6, 0)
-    W.SetTex(b.check, "Interface\\RaidFrame\\ReadyCheck-Ready", 0.2, 0.9, 0.2, 1)
-    local hlt = b:CreateTexture(nil, "HIGHLIGHT")
-    hlt:SetPoint("TOPLEFT", 3, -3)
-    hlt:SetPoint("BOTTOMRIGHT", -3, 3)
-    hlt:SetColorTexture(1, 0.82, 0, 0.12)
-    b.key = key
-    b:SetScript("OnClick", function()
+    local t = W.SideTab(f)
+    t:SetPoint("TOPLEFT", f, "TOPRIGHT", 0, -40 - (i - 1) * 46)
+    t.icon:SetTexture(TJ.Icon(TJ.Profs[key].icon))
+    t.check = t:CreateTexture(nil, "OVERLAY", nil, 3)
+    t.check:SetSize(16, 16)
+    t.check:SetPoint("BOTTOMRIGHT", 5, -4)
+    W.SetTex(t.check, "Interface\\RaidFrame\\ReadyCheck-Ready", 0.2, 0.9, 0.2, 1)
+    t.key = key
+    t:SetScript("OnClick", function()
       W.Sound("IG_ABILITY_PAGE_TURN")
       TJ:ShowChoose(key)
     end)
-    f.tabs[i] = b
+    f.tabs[i] = t
   end
   f:Hide()
   return f
 end
 
--- Рисунок на всю панель без искажения: лишнее по длинной стороне срезается.
-local function coverArt(hero, atlas, height)
+-- Рисунок на всё окно без искажения: лишнее по длинной стороне срезается.
+local function coverArt(f, atlas)
   local info = C_Texture.GetAtlasInfo(atlas)
   if not info then return false end
-  hero.art:SetAtlas(atlas)
-  hero.glow:SetAtlas(atlas)
+  f.art:SetAtlas(atlas)
+  f.glow:SetAtlas(atlas)
   local l, r, t, b = info.leftTexCoord, info.rightTexCoord, info.topTexCoord, info.bottomTexCoord
   local aw, ah = info.width or 0, info.height or 0
   if l and r and t and b and aw > 0 and ah > 0 then
-    local want, have = (INNER - 8) / ((height or HERO_H) - 8), aw / ah
+    local want, have = (WIDTH - 8) / (HEIGHT - 8), aw / ah
     if have > want then
       local cut = (r - l) * (1 - want / have) / 2
       l, r = l + cut, r - cut
@@ -390,8 +376,8 @@ local function coverArt(hero, atlas, height)
       local cut = (b - t) * (1 - have / want) / 2
       t, b = t + cut, b - cut
     end
-    hero.art:SetTexCoord(l, r, t, b)
-    hero.glow:SetTexCoord(l, r, t, b)
+    f.art:SetTexCoord(l, r, t, b)
+    f.glow:SetTexCoord(l, r, t, b)
   end
   return true
 end
@@ -402,33 +388,28 @@ local function fill(f, key)
   local rank, maxRank, learned = TJ:GetSkill(key)
   f.key = key
   f.title:SetText(T("Какую профессию выбрать"))
-  local y = 26 + f.title:GetStringHeight() + 10 + 1 + 20
 
-  -- панель профессии
-  local hero = f.hero
-  hero:ClearAllPoints()
-  hero:SetPoint("TOPLEFT", SIDE, -y)
+  -- фон окна
   local col = info[4]
-  hero.wash:SetColorTexture(col[1] * 0.4, col[2] * 0.4, col[3] * 0.4, 1)
+  f.wash:SetVertexColor(col[1] * 0.35, col[2] * 0.35, col[3] * 0.35, 1)
   local atlas = artAtlas(key)
-  local shown = atlas and coverArt(hero, atlas) or false
-  hero.art:SetShown(shown)
-  hero.glow:SetShown(shown)
-  hero.emblem:SetShown(not shown)
+  local shown = atlas and coverArt(f, atlas) or false
+  f.art:SetShown(shown)
+  f.glow:SetShown(shown)
+  f.emblem:SetShown(not shown)
   if not shown then
-    hero.emblem:SetTexture(TJ.Icon(p.icon))
-    hero.emblem:SetAlpha(0.5)
+    f.emblem:SetTexture(TJ.Icon(p.icon))
+    f.emblem:SetAlpha(0.45)
   end
-  hero.badge:SetIcon(TJ.Icon(p.icon))
-  hero.name:SetText(TJ:N(p))
-  hero.kind:SetText(p.kind == "secondary" and T("Вторичная") or T("Основная"))
-  hero.why:SetText(T(info[1]))
-  -- где кончается полоса «зачем» (от верха панели)
-  local stripEnd = 44 + 56 + 16 + 1 + 12 + hero.why:GetStringHeight() + 12 + 1
-  hero.route:SetText(T("Открыть маршрут"))
-  hero.route:SetShown(learned)
-  hero.route.tip = T("Маршрут прокачки этой профессии в окне EasyCraft.")
-  hero.route:SetScript("OnClick", function() f:Hide(); TJ.UI:Open(key) end)
+
+  f.kind:SetText(p.kind == "secondary" and T("Вторичная") or T("Основная"))
+  f.badge:SetIcon(TJ.Icon(p.icon))
+  f.name:SetText(TJ:N(p))
+  f.state:SetText(learned and ("|cff33dd33" .. format(T("Изучена: %d/%d"), rank, maxRank) .. "|r")
+    or ("|cffb0aca0" .. T("Не изучена") .. "|r"))
+  f.why:SetText(T(info[1]))
+  -- где кончается полоса «зачем» (от верха окна)
+  local stripEnd = TOP + 26 + 64 + 12 + f.state:GetStringHeight() + 14 + 1 + 12 + f.why:GetStringHeight() + 12 + 1
 
   -- 1. что создаёт или добывает: предметы с подсказками
   local c1 = f.cards[1]
@@ -478,22 +459,15 @@ local function fill(f, key)
     c3.caption:SetText(T(who))
   end
 
-  -- группы значков - на панели под полосой; высота панели - по содержимому
   local h = 0
   for _, c in ipairs(f.cards) do h = max(h, 40 + 44 + 12 + c.caption:GetStringHeight() + 6) end
   for i, c in ipairs(f.cards) do
     c:SetHeight(h)
     c:ClearAllPoints()
-    c:SetPoint("TOPLEFT", SIDE + 20 + (i - 1) * f.colW, -(y + stripEnd + 10))
+    c:SetPoint("TOPLEFT", LEFT + (i - 1) * f.colW, -(stripEnd + 22))
   end
-  local heroH = stripEnd + 10 + h + 16
-  hero:SetHeight(heroH)
-  if shown then coverArt(hero, atlas, heroH) end
-  y = y + heroH + 20
 
-  -- низ
-  f.state:SetText(learned and ("|cff33dd33" .. format(T("Изучена: %d/%d"), rank, maxRank) .. "|r")
-    or ("|cff9d9d9d" .. T("Не изучена") .. "|r"))
+  -- низ: «учитель», «маршрут» (если изучена), «к аддону» - в ряд по центру
   local npc = TJ:NearestTrainer(key)
   f.trainer:SetText(T("Учитель на карте"))
   f.trainer:SetEnabled(npc ~= nil)
@@ -501,21 +475,33 @@ local function fill(f, key)
     or T("Учителя этой профессии аддон не знает.")
   f.trainer:SetScript("OnClick", function() if npc then TJ:Waypoint(npc, true) end end)
   f.go:SetText(T("Перейти к аддону"))
-  f:SetHeight(y + f.state:GetStringHeight() + 10 + 40 + 22)
+  f.route:SetText(T("Открыть маршрут"))
+  f.route:SetShown(learned)
+  f.route.tip = T("Маршрут прокачки этой профессии в окне EasyCraft.")
+  f.route:SetScript("OnClick", function() f:Hide(); TJ.UI:Open(key) end)
+  f.trainer:ClearAllPoints()
+  f.go:ClearAllPoints()
+  f.route:ClearAllPoints()
+  if learned then
+    f.route:SetPoint("BOTTOM", 0, 29)
+    f.trainer:SetPoint("RIGHT", f.route, "LEFT", -10, 0)
+    f.go:SetPoint("LEFT", f.route, "RIGHT", 10, 0)
+    f.trainer:SetWidth(210)
+    f.go:SetWidth(210)
+  else
+    f.trainer:SetPoint("BOTTOM", -131, 22)
+    f.go:SetPoint("BOTTOM", 131, 22)
+    f.trainer:SetWidth(250)
+    f.go:SetWidth(250)
+  end
 
-  for _, b in ipairs(f.tabs) do
-    local sel = b.key == key
-    b.text:SetText(TJ:N(TJ.Profs[b.key]))
-    if sel then
-      b:SetBackdropColor(0.22, 0.16, 0.05, 1)
-      b:SetBackdropBorderColor(1, 0.82, 0, 1)
-      b.text:SetTextColor(1, 0.82, 0)
-    else
-      b:SetBackdropColor(0.06, 0.05, 0.04, 0.95)
-      b:SetBackdropBorderColor(0.5, 0.4, 0.22, 1)
-      b.text:SetTextColor(W.LIGHT[1], W.LIGHT[2], W.LIGHT[3])
-    end
-    b.check:SetShown(TJ.char.profs[b.key] ~= nil)
+  for _, t in ipairs(f.tabs) do
+    local q = TJ.Profs[t.key]
+    local r2, m2, l2 = TJ:GetSkill(t.key)
+    t.tip = TJ:N(q)
+    t.tip2 = l2 and format("%d/%d", r2, m2) or T("Не изучена")
+    t:SetChecked(t.key == key)
+    t.check:SetShown(l2 and true or false)
   end
 end
 
