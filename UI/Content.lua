@@ -478,10 +478,11 @@ function C:RouteModeCard(UI)
     end
   end
   if not any then return end
-  local c = UI:Card("normal")
-  c:Head({ ring = "Interface\\Icons\\INV_Misc_Map_01" }, T("Путь прокачки"),
-    { { T("Как идти до 300. Выбери один раз - действует на все профессии."), "small" } }, 32)
-  c:Space(4)
+  -- прямо на пергаменте, без тёмной карточки: это переключатель, а не ещё
+  -- одна карточка профессии
+  local c = UI:Card("flat")
+  c:Text(T("Путь прокачки"), "title", { x = UI.PAD, gap = 2 })
+  c:Text(T("Как идти до 300. Выбери один раз - действует на все профессии."), "small", { x = UI.PAD, gap = 6 })
   local tiles = {}
   for _, md in ipairs(ns.ROUTE_MODES) do
     tiles[#tiles + 1] = { text = T(ns.ROUTE_MODE_NAME[md]), icon = MODE_ICON[md], tip = T(ns.ROUTE_MODE_TIP[md]), sel = md == mode,
@@ -491,13 +492,13 @@ function C:RouteModeCard(UI)
         UI:Render(true)
       end }
   end
-  c:HeadTiles(tiles, { equal = true, h = 54 })
+  c:Segments(tiles)
   -- что значит выбранный режим - словами под переключателем
-  c:Text(T(ns.ROUTE_MODE_TIP[mode]), "body", { gap = 2 })
+  c:Text(T(ns.ROUTE_MODE_TIP[mode]), "small", { x = UI.PAD, gap = 4 })
   if waiting then
-    c:Text(YELLOW .. T("Для этого режима нужны цены: открой аукцион. Пока показан обычный маршрут.") .. "|r", "small", { gap = 4 })
+    c:Text("|cffa03000" .. T("Для этого режима нужны цены: открой аукцион. Пока показан обычный маршрут.") .. "|r", "small", { x = UI.PAD, gap = 4 })
   end
-  UI:End(c, 10)
+  UI:End(c, 12)
 end
 
 -- Гайды вкладок снова (кнопка «?», настройки, /ec помощь): показать на

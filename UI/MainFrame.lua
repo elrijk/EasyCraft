@@ -1416,13 +1416,107 @@ function Card:HeadTiles(buttons, opts)
       W.Sound("IG_MAINMENU_OPTION_CHECKBOX_ON")
       if fn then fn(s) end
     end)
-    local tw = eqW or max(HEAD_TILE_MIN, 10 + ringSize + 9 + ceil(t.title:GetStringWidth() or 80) + 16)
+    -- у выбранной плитки справа галочка: под неё место, чтобы не наезжала на надпись
+    local tw = eqW or max(HEAD_TILE_MIN, 10 + ringSize + 9 + ceil(t.title:GetStringWidth() or 80) + 16 + (d.sel ~= nil and 26 or 0))
+    if d.sel ~= nil then
+      t.title:SetWidth(max(20, tw - 10 - ringSize - 9 - 36))
+      t.title:SetWordWrap(false)
+    else
+      t.title:SetWidth(0)
+    end
     if x > PAD and x + tw > CARD_W - PAD + 1 then x, row = PAD, row + 1 end
     t:SetWidth(tw)
     t:SetPoint("TOPLEFT", c, "TOPLEFT", x, -(c.y + row * (H + HEAD_TILE_GAP)))
     x = x + tw + HEAD_TILE_GAP
   end
   c.y = c.y + (row + 1) * (H + HEAD_TILE_GAP)
+end
+
+-- Переключатель с текущей строки карточки (c.y): одна тёмная полоса в
+-- рамке во всю ширину, внутри сегменты через тонкие разделители. Выбранный
+-- сегмент залит золотом с тёмной надписью (как табличка «Текущий шаг»),
+-- остальные - золотая надпись на тёмном.
+-- list = { { text =, icon =, tip =, sel =, onClick = } }.
+local SEG_H = 42
+function Card:Segments(list)
+  local c = self
+  local bar = c:Take("segbar", function()
+    local f = CreateFrame("Frame", nil, c, BackdropTemplateMixin and "BackdropTemplate" or nil)
+    W.Backdrop(f, "Interface\\Buttons\\WHITE8X8", nil, 14, 0.07, 0.05, 0.03, 1, 0.75, 0.6, 0.3, 1)
+    f.segs = {}
+    return f
+  end)
+  local IN = 4 -- от рамки полосы до сегментов
+  local barW = CARD_W - PAD * 2
+  bar:SetSize(barW, SEG_H)
+  bar:SetPoint("TOPLEFT", c, "TOPLEFT", PAD, -c.y)
+  local n = #list
+  local segW = (barW - IN * 2) / n
+  for i = 1, max(n, #bar.segs) do
+    local d, t = list[i], bar.segs[i]
+    if d and not t then
+      t = CreateFrame("Button", nil, bar)
+      t.fill = t:CreateTexture(nil, "BACKGROUND")
+      t.fill:SetAllPoints()
+      local hl = t:CreateTexture(nil, "HIGHLIGHT")
+      hl:SetAllPoints()
+      hl:SetColorTexture(1, 0.82, 0, 0.12)
+      t.div = t:CreateTexture(nil, "BORDER")
+      t.div:SetColorTexture(0.75, 0.6, 0.3, 0.45)
+      t.div:SetWidth(1)
+      t.div:SetPoint("TOPRIGHT", 0, -5)
+      t.div:SetPoint("BOTTOMRIGHT", 0, 5)
+      t.icon = t:CreateTexture(nil, "ARTWORK")
+      t.icon:SetSize(22, 22)
+      t.icon:SetTexCoord(0.08, 0.92, 0.08, 0.92)
+      t.title = W.Text(t, "title", false)
+      t.title:SetPoint("LEFT", t.icon, "RIGHT", 8, 0)
+      t:SetScript("OnEnter", function(s2)
+        if not s2.tip then return end
+        GameTooltip:SetOwner(s2, "ANCHOR_BOTTOM")
+        GameTooltip:SetText(s2.title:GetText() or "", 1, 0.82, 0)
+        GameTooltip:AddLine(s2.tip, 1, 1, 1, true)
+        GameTooltip:Show()
+      end)
+      t:SetScript("OnLeave", function() GameTooltip:Hide() end)
+      bar.segs[i] = t
+    end
+    if t then
+      t:SetShown(d ~= nil)
+      if d then
+        t:ClearAllPoints()
+        t:SetPoint("TOPLEFT", bar, "TOPLEFT", IN + floor((i - 1) * segW + 0.5), -IN)
+        t:SetSize(floor(segW + 0.5), SEG_H - IN * 2)
+        t.icon:SetTexture(ns.Icon(d.icon))
+        t.title:SetText(d.text)
+        -- значок с надписью - одной группой по центру сегмента
+        local tw = ceil(t.title:GetStringWidth() or 60)
+        t.icon:ClearAllPoints()
+        t.icon:SetPoint("LEFT", t, "CENTER", -floor((22 + 8 + tw) / 2), 0)
+        t.tip = d.tip
+        -- разделитель - только между двумя невыбранными соседями
+        local nextSel = list[i + 1] and list[i + 1].sel
+        t.div:SetShown(i < n and not d.sel and not nextSel)
+        if d.sel then
+          t.fill:SetColorTexture(CUR_FILL[1], CUR_FILL[2], CUR_FILL[3], 1)
+          t.title:SetTextColor(CUR_INK[1], CUR_INK[2], CUR_INK[3], 1)
+          t.icon:SetDesaturated(false)
+          t.icon:SetAlpha(1)
+        else
+          t.fill:SetColorTexture(0, 0, 0, 0)
+          t.title:SetTextColor(0.9, 0.74, 0.3, 1)
+          t.icon:SetDesaturated(true)
+          t.icon:SetAlpha(0.8)
+        end
+        local fn = d.onClick
+        t:SetScript("OnClick", function(s2)
+          W.Sound("IG_CHARACTER_INFO_TAB")
+          if fn then fn(s2) end
+        end)
+      end
+    end
+  end
+  c.y = c.y + SEG_H + 6
 end
 
 function UI:PageHeader(title, text, buttons)

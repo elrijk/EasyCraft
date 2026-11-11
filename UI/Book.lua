@@ -85,8 +85,8 @@ end
 function C:BookFilter(UI)
   local c = UI:Card("flat")
   local function pick(mode) return function() UI.bookMode = mode; UI:Render(true) end end
-  -- переключатель плитками, как «Путь прокачки» на главной: выбранная - в
-  -- золотой рамке с галочкой
+  -- переключатель полосой, как «Путь прокачки» на главной: выбранный
+  -- сегмент залит золотом
   local ICONS = { d = "INV_Misc_Key_03", r = "INV_Misc_Head_Dragon_01", p = "INV_Sword_27" }
   local list = { { text = T("Все рецепты"), icon = "INV_Scroll_03", sel = UI.bookMode == nil, onClick = pick(nil),
     tip = T("Все рецепты твоих профессий по выгоде на аукционе.") } }
@@ -95,7 +95,7 @@ function C:BookFilter(UI)
       tip = T("Только то, что считается лучшим для этого занятия.") }
   end
   c.y = c.y + 2
-  c:HeadTiles(list, { equal = true })
+  c:Segments(list)
   if UI.bookMode then
     c:Check(T("Только для моего класса"), UI.bookMine, function(v) UI.bookMine = v; UI:Render(true) end,
       T("Скрыть то, что нужно другим классам. Сделать на продажу можно и это - сними галочку."))
