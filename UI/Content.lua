@@ -1497,9 +1497,9 @@ function C:AuctionButton(UI, c, y)
   return true
 end
 
--- Кнопки создания справа в нижней строке, как в окне профессии игры:
--- «Создать все», число со стрелками, «Создать». При закрытом окне кнопки
--- сами откроют профессию; для чар и неизвестных рецептов - «Открыть рецепт».
+-- Кнопка создания справа в нижней строке: одна, «Создать все (N)» - сколько
+-- нужно до конца шага. При закрытом окне она сама откроет профессию; для
+-- чар и неизвестных рецептов - «Открыть рецепт».
 function C:CraftButtons(UI, c, key, s, left, y)
   if ns:RecipeKnown(key, s.spell) == false then
     -- сначала выучить; окно закрыто - может, уже выучил: окно обновит скан
@@ -1510,8 +1510,6 @@ function C:CraftButtons(UI, c, key, s, left, y)
     end
     return false
   end
-  UI.craftCount = UI.craftCount or {}
-  local R = UI.CARD_W - UI.PAD -- правый край
   local open = ns:IsProfOpen(key)
   local n, tip
   if open then
@@ -1527,23 +1525,13 @@ function C:CraftButtons(UI, c, key, s, left, y)
       tip = T("Откроет окно профессии. Тогда здесь появятся кнопки создания.") }, UI.PAD, y, true)
     return true
   end
-  local createW, allW, gap = 110, 150, 12
-  local spinW = 83
-  local createX = R - createW
-  local spinX = createX - gap - spinW
-  local allX = spinX - gap - allW
-  -- Кнопки откроют окно профессии (если закрыто) и начнут создавать.
-  local function Go(count) ns:CraftOrOpen(key, s.spell, count) end
   -- «Создать все» - сколько нужно до конца шага (не больше, чем хватит)
   local all = (left and left > 0) and min(n, left) or n
   -- не из чего - кнопок создания нет: что докупить и чем заняться пока,
   -- видно на карточке выше
   if n <= 0 then return false end
-  c:Button({ text = format(T("Создать все (%d)"), all), w = allW, tip = tip,
-    onClick = function() Go(all) end }, allX, y)
-  local want = UI.craftCount[s.spell] or max(1, all)
-  local box = c:Spinner(spinX, y + 1, want, max(n, 1), function(v) UI.craftCount[s.spell] = v end)
-  c:Button({ text = T("Создать"), w = createW, tip = tip,
-    onClick = function() Go(box:GetCount()) end }, createX, y)
+  -- кнопка откроет окно профессии (если закрыто) и начнёт создавать
+  c:Button({ text = format(T("Создать все (%d)"), all), w = 190, tip = tip,
+    onClick = function() ns:CraftOrOpen(key, s.spell, all) end }, UI.PAD, y, true)
   return true
 end
