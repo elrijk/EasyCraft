@@ -1478,8 +1478,9 @@ function ns:UpdateAuctionPanel()
     if shown >= AH_MAX then hidden = hidden + 1; return end
     shown = shown + 1
     -- каждый предмет - своя строка со своей лупой: щелчок ищет его
-    y = f:Row({ id = id, mark = SEARCH_ICON, markY = -2,
-      right = "|cffffffff" .. buy .. "|r" .. (cost and ("  " .. W.Money(cost)) or ("  |cff9d9d9d" .. T("нет цены") .. "|r")),
+    -- сколько купить - числом на значке, справа только цена
+    y = f:Row({ id = id, count = buy, mark = SEARCH_ICON, markY = -2,
+      right = cost and W.Money(cost) or ("|cff9d9d9d" .. T("нет цены") .. "|r"),
       tip = format(T("Купить %d"), buy) .. (cost and (": " .. W.Money(cost)) or "") .. "\n" .. T("Щелчок - найти на аукционе."),
       onClick = function() ns:SearchAuction(id, buy) end }, y)
   end

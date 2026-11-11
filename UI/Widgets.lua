@@ -740,7 +740,8 @@ function W.HintPanel(name, width, title, key)
     return y + 26
   end
   -- строка предмета: значок, название (цвет редкости), справа текст и значок
-  -- (лупа - найти, галочка - брать); d = { id, text, right, mark, dim, tip, onClick }
+  -- (лупа - найти, галочка - брать); d = { id, text, right, mark, dim, tip, onClick,
+  -- count - число на значке, как у стопки в сумке }
   function f:Row(d, y)
     self.nr = self.nr + 1
     local r = self.rows[self.nr]
@@ -751,6 +752,8 @@ function W.HintPanel(name, width, title, key)
       r.icon:SetSize(22, 22)
       r.icon:SetPoint("LEFT", 6, 0)
       r.icon:SetTexCoord(0.08, 0.92, 0.08, 0.92)
+      r.count = r:CreateFontString(nil, "OVERLAY", "NumberFontNormalSmall")
+      r.count:SetPoint("BOTTOMRIGHT", r.icon, "BOTTOMRIGHT", 3, -3)
       r.mark = r:CreateTexture(nil, "ARTWORK")
       r.mark:SetSize(16, 16)
       r.mark:SetPoint("RIGHT", -8, 0)
@@ -784,6 +787,7 @@ function W.HintPanel(name, width, title, key)
     r:SetSize(self.w - W.HINT_PAD * 2 + 8, W.HINT_ROW)
     r.icon:SetTexture(d.id and ns:ItemIcon(d.id) or d.tex or ns.Icon(nil))
     r.icon:SetDesaturated(d.dim and true or false)
+    r.count:SetText(d.count and tostring(d.count) or "")
     r:SetAlpha(d.dim and 0.6 or 1)
     if d.id then
       local qr, qg, qb = ns:ItemQualityColor(d.id)
