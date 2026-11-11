@@ -481,8 +481,11 @@ function C:RouteModeCard(UI)
   -- прямо на пергаменте, без тёмной карточки: это переключатель, а не ещё
   -- одна карточка профессии
   local c = UI:Card("flat")
-  c:Text(T("Путь прокачки"), "title", { x = UI.PAD, gap = 2 })
-  c:Text(T("Как идти до 300. Выбери один раз - действует на все профессии."), "small", { x = UI.PAD, gap = 6 })
+  -- заголовок - как заголовок страницы («Профессия до 300 - шаг за шагом»);
+  -- под ним одна короткая подпись: что значит выбранный режим
+  c:Text(T("Путь прокачки"), "huge", { x = UI.PAD, gap = 8 })
+  c:Text(T(ns.ROUTE_MODE_TIP[mode]), "body", { x = UI.PAD, gap = 4 })
+  c:Space(6)
   local tiles = {}
   for _, md in ipairs(ns.ROUTE_MODES) do
     tiles[#tiles + 1] = { text = T(ns.ROUTE_MODE_NAME[md]), icon = MODE_ICON[md], tip = T(ns.ROUTE_MODE_TIP[md]), sel = md == mode,
@@ -493,8 +496,6 @@ function C:RouteModeCard(UI)
       end }
   end
   c:Segments(tiles)
-  -- что значит выбранный режим - словами под переключателем
-  c:Text(T(ns.ROUTE_MODE_TIP[mode]), "small", { x = UI.PAD, gap = 4 })
   if waiting then
     c:Text("|cffa03000" .. T("Для этого режима нужны цены: открой аукцион. Пока показан обычный маршрут.") .. "|r", "small", { x = UI.PAD, gap = 4 })
   end
