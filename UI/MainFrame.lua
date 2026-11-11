@@ -49,11 +49,16 @@ local STYLE = {
 UI.STYLE = STYLE
 -- Тёмные чернила для текста на пергаменте (как в книге заклинаний).
 local INK = {
-  huge = { 1, 0.82, 0 },
-  title = { 1, 0.82, 0 }, head = { 1, 0.82, 0 },
-  body = { 0.9, 0.87, 0.8 }, small = { 0.62, 0.62, 0.62 },
+  huge = { 0.16, 0.08, 0 }, -- шапка страницы - те же чернила, что в MacroCoach
+  title = { 0.22, 0.12, 0.02 }, head = { 0.22, 0.12, 0.02 },
+  body = { 0.2, 0.13, 0.05 }, small = { 0.36, 0.27, 0.16 },
 }
-local INK_HEAD_TEXT = { 0.9, 0.87, 0.8 }
+local INK_HEAD_TEXT = { 0.24, 0.14, 0.04 }
+-- Тот же цвет чернил, что у заголовков на пергаменте в MacroCoach.
+if type(SPELLBOOK_FONT_COLOR) == "table" and SPELLBOOK_FONT_COLOR.GetRGB then
+  local r, g, b = SPELLBOOK_FONT_COLOR:GetRGB()
+  INK.title, INK.head = { r, g, b }, { r, g, b }
+end
 
 local Card = {}
 local function ceilDiv(a, b) return floor((a + b - 1) / b) end
@@ -1339,11 +1344,6 @@ function UI:PageHeader(title, text, buttons)
   local c = self:Card("flat")
   c:Text(title, "huge", { x = PAD, gap = 8 })
   if text and text ~= "" then c:Text(text, "body", { x = PAD, gap = 4, color = INK_HEAD_TEXT }) end
-  local rule = c:Take("rule", function() return c:CreateTexture(nil, "ARTWORK") end)
-  rule:SetColorTexture(0.75, 0.6, 0.3, 0.55)
-  rule:SetPoint("TOPLEFT", c, "TOPLEFT", PAD, -(c.y + 2))
-  rule:SetSize(CARD_W - PAD * 2, 1)
-  c.y = c.y + 10
   if buttons and #buttons > 0 then
     c:Space(6)
     local x = PAD
@@ -1670,7 +1670,7 @@ local ROW_REAGENTS = 3
 -- Сетка мини-окна: шапка (значки 24 в кольцах и «Шаг N» по их центру),
 -- между частями - одинаковый отступ; рамки - от MINI_PAD - 4 до края.
 local HEAD_ICON = 24
-local INK_T, INK_B = { 1, 0.82, 0 }, { 0.9, 0.87, 0.8 } -- текст на тёмной странице
+local INK_T, INK_B = { 0.16, 0.08, 0 }, { 0.24, 0.14, 0.04 } -- чернила на пергаменте
 local HEAD_MID = 8 + 18 -- середина шапки от верха окна
 local HEAD_H = HEAD_MID + 18 + 6 -- где начинается содержимое
 local NewHeadIcons -- ниже
@@ -2370,7 +2370,7 @@ function Mini:Update()
     -- скоро упрёшься в предел, а ранг ещё нельзя - сказать, когда можно
     local _, why = TJ:NeededTrainer(key)
     if why then
-      f.note:SetText("|cffff5555" .. format(T("Предел навыка %d."), maxRank) .. "|r " .. why)
+      f.note:SetText("|cffa03000" .. format(T("Предел навыка %d."), maxRank) .. "|r " .. why)
       y = place(f.note, f, y) + GAP_SECTION - 4
     end
   end

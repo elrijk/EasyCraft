@@ -19,7 +19,6 @@ W.S = {
   btn = 22,      -- высота обычной кнопки
   btnBig = 26,   -- высота главной кнопки
   btnMin = 110,  -- кнопка не уже этого; шире - по тексту (+30)
-  bgTop = { 0.115, 0.09, 0.065 }, bgBottom = { 0.05, 0.038, 0.028 }, -- фон страницы: сверху и снизу
   GREEN = "|cff33dd33", RED = "|cffff5555", YELLOW = "|cffffd100", GREY = "|cff9d9d9d",
 }
 W.GOLD = { 1, 0.82, 0 }
@@ -604,7 +603,7 @@ end
 --  f:Head(i) - заголовок части, f:Row(i) - строка-кнопка предмета,
 --  f:CheckHead(i) - заголовок части с галочкой.
 -------------------------------------------------------------------------------
-local INK_T, INK_B = { 1, 0.82, 0 }, { 0.9, 0.87, 0.8 }
+local INK_T, INK_B = { 0.16, 0.08, 0 }, { 0.24, 0.14, 0.04 }
 W.INK_T, W.INK_B = INK_T, INK_B
 W.HINT_PAD, W.HINT_ROW = 12, 34
 
@@ -720,7 +719,7 @@ function W.HintPanel(name, width, title, key)
     c:ClearAllPoints()
     c:SetPoint("TOPLEFT", self, "TOPLEFT", W.HINT_PAD, -y)
     c:SetWidth(self.w - W.HINT_PAD * 2)
-    local col = on and INK_T or { 0.62, 0.62, 0.62 }
+    local col = on and INK_T or { 0.45, 0.4, 0.33 }
     c.text:SetTextColor(col[1], col[2], col[3])
     c.right:SetTextColor(INK_B[1], INK_B[2], INK_B[3])
     c.text:SetText(text)
@@ -992,15 +991,18 @@ end
 -- Пергамент: страница книги заклинаний игры (без рамок по краям); нет
 -- атласа - ровный цвет пергамента.
 function W.Parchment(tex)
-  -- Фон страницы - тёмный, как у окон игры (репутация, навыки, испытания):
-  -- тёплый коричнево-чёрный, сверху чуть светлее. Название функции осталось
-  -- с тех пор, когда здесь был пергамент.
-  local top, bottom = W.S.bgTop, W.S.bgBottom
-  tex:SetTexCoord(0, 1, 0, 1)
-  tex:SetColorTexture(1, 1, 1, 1)
-  local ok = CreateColor and pcall(tex.SetGradient, tex, "VERTICAL",
-    CreateColor(bottom[1], bottom[2], bottom[3], 1), CreateColor(top[1], top[2], top[3], 1))
-  if not ok then tex:SetColorTexture(top[1], top[2], top[3], 1) end
+  local info = W.HasAtlas("spellbook-Page-Right-C60") and C_Texture.GetAtlasInfo("spellbook-Page-Right-C60")
+  local file = info and (info.file or info.filename)
+  if file and info.leftTexCoord and info.topTexCoord then
+    local l, r, t, b = info.leftTexCoord, info.rightTexCoord, info.topTexCoord, info.bottomTexCoord
+    local w, h = r - l, b - t
+    tex:SetTexture(file)
+    tex:SetTexCoord(l + w * 0.025, r - w * 0.02, t + h * 0.085, b - h * 0.025)
+  elseif info then
+    tex:SetAtlas("spellbook-Page-Right-C60", false)
+  else
+    tex:SetColorTexture(0.86, 0.77, 0.6)
+  end
 end
 
 -- Сумма не рвётся переносом строки: между золотом, серебром и медью
