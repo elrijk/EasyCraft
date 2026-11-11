@@ -1575,3 +1575,6 @@ for k, v in pairs({
   ["Напомнит о новом ранге и поставит метку."] = "Reminds you of the next rank and sets a waypoint.",
   ["Поехали"] = "Let's go",
 }) do if TJ.EN[k] == nil then TJ.EN[k] = v end end
+
+-- 1.2: окно выбора профессии - заголовок
+TJ.EN["Какую профессию выбрать"] = "Which profession to pick"
