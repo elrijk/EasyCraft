@@ -109,3 +109,81 @@ function TJ:ShareColors()
       .. "\ngithub.com/elrijk/EasyCraft/issues", nil, code)
   end
 end
+
+-------------------------------------------------------------------------------
+--  Просьба поделиться наблюдениями: отдельная подсказка под мини-окном у
+--  окна профессии. Раз за сессию, только когда накопилось новое. Кнопка
+--  открывает код для отправки, крестик просто закрывает.
+-------------------------------------------------------------------------------
+local ASK_MIN = 10 -- меньше стольких рецептов не просим
+local askPanel
+
+local function seenCount(self)
+  local n = 0
+  for _, t in pairs(self.db and self.db.seen or {}) do
+    for _ in pairs(t) do n = n + 1 end
+  end
+  return n
+end
+
+local function profWindow()
+  for _, name in ipairs({ "ProfessionsFrame", "TradeSkillFrame", "CraftFrame" }) do
+    local w = _G[name]
+    if type(w) == "table" and w.IsShown and w:IsShown() then return w end
+  end
+end
+
+function TJ:AskShare()
+  if self.askedShare or not self.db or not (self.W and self.W.HintPanel) then return end
+  if self.settings and self.settings.askShare == false then return end
+  local n = seenCount(self)
+  if n < ASK_MIN or n <= (self.db.seenSent or 0) then return end
+  local win = profWindow()
+  if not win then return end
+  self.askedShare = true
+  local W, T = self.W, self.T
+  local f = askPanel
+  if not f then
+    f = W.HintPanel("EasyCraftSharePanel", 270, T("Помоги улучшить EasyCraft"))
+    askPanel = f
+    local x = CreateFrame("Button", nil, f, "UIPanelCloseButton")
+    x:SetPoint("TOPRIGHT", 2, 2)
+    x:SetScript("OnClick", function() f:Hide() end)
+  end
+  f:Reset()
+  f.note:SetText(format(T("Аддон запомнил цвета рецептов: %d. Отправь их автору - маршруты станут точнее у всех. Личного в коде нет: только рецепты и навык."), n))
+  f.note:ClearAllPoints()
+  f.note:SetPoint("TOPLEFT", f, "TOPLEFT", W.HINT_PAD, -f.top)
+  f.note:Show()
+  local y = f.top + f.note:GetStringHeight() + 10
+  f.btn:SetText(T("Отправить данные"))
+  f.btn:ClearAllPoints()
+  f.btn:SetPoint("TOPLEFT", f, "TOPLEFT", W.HINT_PAD, -y)
+  f.btn:SetScript("OnClick", function()
+    TJ.db.seenSent = seenCount(TJ)
+    f:Hide()
+    TJ:ShareColors()
+  end)
+  f.btn:Show()
+  f:SetHeight(y + 22 + 14)
+  f:ClearAllPoints()
+  local mini = self.Tracker and self.Tracker.f
+  if type(mini) == "table" and mini.IsShown and mini:IsShown() then
+    f:SetPoint("TOPLEFT", mini, "BOTTOMLEFT", 0, -6)
+  else
+    f:SetPoint("TOPLEFT", win, "BOTTOMLEFT", 0, -6)
+  end
+  f:Show()
+end
+
+-- Окно профессии закрыли - подсказка уходит вместе с ним.
+local askEv = CreateFrame("Frame")
+for _, e in ipairs({ "TRADE_SKILL_SHOW", "TRADE_SKILL_CLOSE", "CRAFT_CLOSE" }) do pcall(askEv.RegisterEvent, askEv, e) end
+askEv:SetScript("OnEvent", function(_, e)
+  if e == "TRADE_SKILL_SHOW" then
+    -- после чтения окна (Tracking.lua) и появления мини-окна
+    if C_Timer and C_Timer.After then C_Timer.After(2, function() pcall(TJ.AskShare, TJ) end) end
+  elseif askPanel then
+    askPanel:Hide()
+  end
+end)

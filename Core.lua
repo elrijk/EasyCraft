@@ -225,7 +225,7 @@ end
 ---------------------------------------------------------------------------
 local DEFAULTS = {
   hideDone = false, mapMine = true, mapShow = true, mapAreaAlpha = 0.5, minimap = true, miniGuide = true, itemTips = true, trainerStars = true,
-  minimapAngle = 205, scale = 1, ahScan = true, useAlts = true, routeMode = "guide",
+  minimapAngle = 205, scale = 1, ahScan = true, askShare = true, useAlts = true, routeMode = "guide",
 }
 
 function TJ:InitDB()

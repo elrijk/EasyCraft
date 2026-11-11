@@ -1680,3 +1680,11 @@ for k, v in pairs({
   ["наблюдений пока нет: открой окно профессии."] = "no observations yet: open a profession window.",
   ["Цвета рецептов (%d). Скопируй код (Ctrl+C) и отправь автору аддона:"] = "Recipe colours (%d). Copy the code (Ctrl+C) and send it to the addon author:",
 }) do if TJ.EN[k] == nil then TJ.EN[k] = v end end
+
+-- 1.2: просьба поделиться наблюдениями
+for k, v in pairs({
+  ["Помоги улучшить EasyCraft"] = "Help improve EasyCraft",
+  ["Аддон запомнил цвета рецептов: %d. Отправь их автору - маршруты станут точнее у всех. Личного в коде нет: только рецепты и навык."] = "The addon has recorded recipe colours: %d. Send them to the author - routes get more accurate for everyone. Nothing personal in the code: only recipes and skill.",
+  ["Отправить данные"] = "Send data",
+  ["Напоминать поделиться данными о рецептах"] = "Remind me to share recipe data",
+}) do if TJ.EN[k] == nil then TJ.EN[k] = v end end
