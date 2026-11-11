@@ -1728,7 +1728,7 @@ function UI:UpdateSideTabs()
       t.view = v
       if v == "home" then
         t.icon:SetTexture(HOME_ICON)
-        t.tip, t.tip2 = ns.T("Главная"), ns.T("Профессии, карта, лагерь")
+        t.tip, t.tip2 = ns.T("Главная"), ns.T("Профессии, покупки, рецепты, лагерь")
       else
         local p = ns.Profs[v]
         local rank, maxRank = ns:GetSkill(v)

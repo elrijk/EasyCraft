@@ -22,13 +22,6 @@ goes up. No guide in a second window, no counting materials by hand.
 
 `/ec` opens the window. `/ec commands` lists the rest.
 
-## Optional addons
-
-EasyCraft works on its own. These add convenience:
-
-- **Syndicator (Baganator)** or **BagBrother (Bagnon)**: reagents on characters you have not logged into since installing EasyCraft.
-- **TomTom**: arrow to trainers and vendors.
-
 ## Languages
 
 English and Russian are written by hand. German, French, Spanish, Italian,
@@ -46,7 +39,3 @@ values only, nothing about your character.
 ## License
 
 MIT, see `LICENSE`. Third-party data and sources: `THIRD-PARTY.md`.
-
-## Credits
-
-Map and name data: pfQuest by Shagu (MIT). See `THIRD-PARTY.md`.

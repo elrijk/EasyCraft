@@ -4,8 +4,8 @@
 
 **Works on its own**
 
-- Auction prices are read by EasyCraft itself when you open the auction house. Auctionator and TSM are no longer used. The addon reminds you to visit the auction house when it has no prices or they are older than 3 days. `/ec scan` reads prices on demand.
-- Reagents on your other characters are counted by EasyCraft itself (bags, bank, mail). Syndicator and BagBrother are still used when installed. A setting turns alt counting off.
+- Auction prices are read by EasyCraft itself when you open the auction house. No other addon is needed. The addon reminds you to visit the auction house when it has no prices or they are older than 3 days. `/ec scan` reads prices on demand.
+- Reagents on your other characters are counted by EasyCraft itself (bags, bank, mail). A setting turns alt counting off.
 
 **Recipes**
 
@@ -41,7 +41,6 @@
 
 ## 1.1.0
 
-- Reagents on alts are read from Syndicator (Baganator) when it is installed; BagBrother still works.
 - A character with no professions sees a short guide on which profession to pick.
 - Shopping tab shows the cost of the whole remaining route to 300 for each profession.
 - Camp tab: "Share finds" gives a code with blueprint drop spots you discovered, to send to the author.
@@ -52,7 +51,7 @@ First public release.
 
 - Step-by-step leveling routes 1-300 for all 12 professions.
 - Mini window next to the profession window with the current step and a craft button.
-- Shopping list that counts bags, bank, mail and alts, with Auctionator or TSM prices.
+- Shopping list that counts bags, bank, mail and alts, with auction prices.
 - Buttons at the vendor, the bank and the auction house to get what is missing.
 - Gathering areas on the world map and your own finds as pins; node colour in tooltips.
 - Camp tab: campfire items of your professions and where their blueprints drop.
