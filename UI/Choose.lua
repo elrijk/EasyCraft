@@ -396,8 +396,17 @@ end
 
 -- Открыть окно выбора на профессии key (или на той, что была; первый раз -
 -- на первой неизученной).
-function TJ:ShowChoose(key)
-  if not win then win = build() end
+-- after - что сделать, когда окно закроют (любым способом), один раз.
+function TJ:ShowChoose(key, after)
+  if not win then
+    win = build()
+    win:SetScript("OnHide", function(s)
+      local fn = s.after
+      s.after = nil
+      if fn then TJ:Safe(fn) end
+    end)
+  end
+  if after then win.after = after end
   if not key then
     key = win.key
     if not key then

@@ -175,24 +175,44 @@ local function show(f, n)
   end)
 end
 
--- Показать знакомство (кнопка «?», настройки, первое открытие окна).
-function TJ:ShowIntro()
+-- Показать знакомство (кнопка «?», настройки, первое открытие аддона).
+-- after - что сделать, когда окно закроют (любым способом), один раз.
+function TJ:ShowIntro(after)
   local UI = self.UI
-  if not (UI.frame and UI.frame:IsShown()) then
-    UI.tab.home = UI.tab.home or 1
-    UI:Open("home")
+  if not win then
+    win = build()
+    win:SetScript("OnHide", function(s)
+      local fn = s.after
+      s.after = nil
+      if fn then TJ:Safe(fn) end
+    end)
   end
-  if not win then win = build() end
+  local main = UI.frame and UI.frame:IsShown() and UI.frame
   win:ClearAllPoints()
-  win:SetPoint("CENTER", UI.frame or UIParent, "CENTER", 0, 0)
+  win:SetPoint("CENTER", main or UIParent, "CENTER", 0, main and 0 or 40)
   win:SetScale(self.settings.scale or 1)
   self.db.onboarded = true
+  win.after = after
   self:Safe(show, win, 1)
   win:Show()
   win:Raise()
 end
 
--- Первый раз окно EasyCraft открылось - показать знакомство само.
-function TJ:IntroOnce()
-  if self.db and not self.db.onboarded then self:ShowIntro() end
+-- Первое открытие аддона: сначала знакомство; когда его закроют - выбор
+-- профессии (если профессий ещё нет), и только потом само окно EasyCraft.
+-- Возвращает true, если знакомство показано и окно открывать пока не надо.
+function TJ:IntroFirst()
+  if not self.db or self.db.onboarded then return false end
+  local function openMain()
+    local UI = TJ.UI
+    if not (UI.frame and UI.frame:IsShown()) then TJ:ToggleFrame() end
+  end
+  self:ShowIntro(function()
+    if #TJ:LearnedList() == 0 and TJ.ShowChoose then
+      TJ:ShowChoose(nil, openMain)
+    else
+      openMain()
+    end
+  end)
+  return true
 end

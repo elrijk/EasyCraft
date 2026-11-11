@@ -1632,7 +1632,10 @@ end
 function TJ:ToggleFrame()
   UI:Create()
   if UI.frame:IsShown() then UI.frame:Hide(); return end
-  -- Первый раз - на главную, к знакомству.
+  -- Первое открытие аддона: сначала знакомство, потом выбор профессии (если
+  -- их нет), и только затем это окно (UI/Intro.lua).
+  if TJ.IntroFirst and TJ:IntroFirst() then return end
+  -- Первый раз - на главную.
   if not TJ.db.introDone then
     UI.tab.home = 1
     UI:Open("home")
@@ -1640,8 +1643,6 @@ function TJ:ToggleFrame()
     local last = TJ.char.lastView
     UI:Open((last and TJ.char.profs[last]) and last or "home")
   end
-  -- знакомство отдельным окном - один раз (UI/Intro.lua)
-  if TJ.IntroOnce then TJ:IntroOnce() end
 end
 
 TJ:RegisterRefresh(function() UI:Render(true) end)
