@@ -533,19 +533,20 @@ local function headButtons(UI, tab, data)
     -- профессий страница выбора открыта и так - кнопка не нужна.
     local choose
     if #ns:LearnedList() > 0 then
-      choose = { text = T("Выбор профессии"), onClick = function() ns:ShowChoose() end,
+      choose = { text = T("Выбор профессии"), icon = "INV_Misc_Book_09", onClick = function() ns:ShowChoose() end,
         tip = T("Что делает каждая профессия и какой сбор к ней нужен. Пригодится, если решишь сменить профессию.") }
     end
     local list = {
-      { text = T("Покупки до учителя"), onClick = goTab(4), tip = T("Что докупить до следующего учителя по всем профессиям.") },
-      { text = T("Карта сбора"), onClick = goTab(2), tip = T("Руда и травы, которые сейчас дают навык.") },
-      { text = T("Настройки"), onClick = function() ns:OpenSettings() end },
+      { text = T("Покупки"), icon = "INV_Misc_Coin_02", onClick = goTab(4), tip = T("Что докупить до следующего учителя по всем профессиям.") },
+      { text = T("Карта сбора"), icon = "INV_Misc_Map_01", onClick = goTab(2), tip = T("Руда и травы, которые сейчас дают навык.") },
+      { text = T("Лагерь"), icon = "Spell_Fire_Fire", onClick = goTab(3), tip = T("Бонусы у костра и где падают чертежи.") },
+      { text = T("Рецепты"), icon = "INV_Scroll_03", onClick = goTab(5), tip = T("Что выгодно создавать, очередь и откаты.") },
     }
     if choose then tinsert(list, 1, choose) end
     return list
   elseif tab == 2 then
     return {
-      { text = T("Открыть карту"), onClick = function() if ns.MapOverlay then ns.MapOverlay:OpenMap() end end,
+      { text = T("Открыть карту"), icon = "INV_Misc_Map_01", onClick = function() if ns.MapOverlay then ns.MapOverlay:OpenMap() end end,
         tip = T("Карта мира с местами сбора.") },
     }
   elseif tab == 4 then
@@ -553,7 +554,7 @@ local function headButtons(UI, tab, data)
     local open = ns:IsAuctionOpen()
     local has = ns:HasAuctionator()
     return {
-      { text = open and T("Найти на аукционе") or T("В список Auctionator"), enabled = #list > 0 and has,
+      { text = open and T("Найти на аукционе") or T("В список Auctionator"), icon = "INV_Misc_Coin_01", enabled = #list > 0 and has,
         tip = has and (open and T("Найдёт всё нужное на аукционе.") or T("Добавит всё нужное в список «EasyCraft» в Auctionator."))
           or T("Нужен аддон Auctionator: через него EasyCraft ищет сразу весь список."),
         onClick = function() ns:SendToAuction(list) end },
@@ -880,7 +881,7 @@ end
 -- профессии, ниже блоки в ряд (по 3): значок предмета, название, что даёт и
 -- с какого навыка; под ними - кнопки «где взять рецепт» (учитель, чертёж,
 -- даже если где падает - неизвестно) и «Использовать», если он в сумках.
-local CAMP_COLS, CAMP_GAP, CAMP_ICON = 3, 20, 32
+local CAMP_COLS, CAMP_GAP, CAMP_ICON = 2, 32, 32
 function C:CampCard(UI, key)
   local p = ns.Profs[key]
   local rank, _, learned = ns:GetSkill(key)

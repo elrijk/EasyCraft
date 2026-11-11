@@ -1328,24 +1328,63 @@ end
 
 -- Шапка страницы прямо на пергаменте, как во всех страницах MacroCoach:
 -- крупный заголовок тёмными чернилами и одна-две строки под ним.
--- buttons - кнопки столбиком под текстом (куда идти дальше), как у страниц
--- MacroCoach: { { text =, onClick =, tip =, enabled = } }.
+-- buttons - плитки в один ряд под текстом (куда идти дальше): значок в
+-- кольце и название, что это - в подсказке:
+-- { { text =, icon =, onClick =, tip =, enabled = } }.
+local HEAD_TILE_H, HEAD_TILE_GAP = 44, 8
 function UI:PageHeader(title, text, buttons)
   local c = self:Card("flat")
   c:Text(title, "huge", { x = PAD, gap = 8 })
   if text and text ~= "" then c:Text(text, "body", { x = PAD, gap = 4, color = INK_HEAD_TEXT }) end
   if buttons and #buttons > 0 then
-    -- кнопки крупные, столбиком, одной ширины - по самой длинной надписи
-    c:Space(6)
-    local list, w = {}, 280
+    c:Space(8)
+    -- до пяти плиток в ряд; одна-две плитки не растягиваются на всю ширину
+    local cols = min(5, max(3, #buttons))
+    local tw = floor((CARD_W - PAD * 2 - HEAD_TILE_GAP * (cols - 1)) / cols)
     for i, d in ipairs(buttons) do
-      local b = c:Button(d, PAD, c.y + (i - 1) * 38)
-      local fs = b.GetFontString and b:GetFontString()
-      w = max(w, floor((fs and fs:GetStringWidth() or 90) + 48))
-      list[i] = b
+      local t = c:Take("headtile", function()
+        local b = CreateFrame("Button", nil, c, BackdropTemplateMixin and "BackdropTemplate" or nil)
+        W.Backdrop(b, "Interface\\Buttons\\WHITE8X8", nil, 10, 0.1, 0.075, 0.05, 0.95, 0.6, 0.48, 0.25, 1)
+        b:SetHeight(HEAD_TILE_H)
+        local hl = b:CreateTexture(nil, "HIGHLIGHT")
+        hl:SetPoint("TOPLEFT", 2, -2)
+        hl:SetPoint("BOTTOMRIGHT", -2, 2)
+        hl:SetColorTexture(1, 0.82, 0, 0.12)
+        b.ring = W.RingIcon(b, 24)
+        b.ring:SetPoint("LEFT", 10, 0)
+        b.title = W.Text(b, "head")
+        b.title:SetTextColor(W.GOLD[1], W.GOLD[2], W.GOLD[3], 1)
+        b.title:SetJustifyV("MIDDLE")
+        b.title:SetPoint("LEFT", b.ring, "RIGHT", 9, 0)
+        b.title:SetPoint("RIGHT", b, "RIGHT", -8, 0)
+        b.title:SetHeight(HEAD_TILE_H - 8)
+        if b.title.SetMaxLines then b.title:SetMaxLines(2) end
+        b:SetScript("OnEnter", function(s)
+          if not s.tip then return end
+          GameTooltip:SetOwner(s, "ANCHOR_BOTTOM")
+          GameTooltip:SetText(s.title:GetText() or "", 1, 0.82, 0)
+          GameTooltip:AddLine(s.tip, 1, 1, 1, true)
+          GameTooltip:Show()
+        end)
+        b:SetScript("OnLeave", function() GameTooltip:Hide() end)
+        return b
+      end)
+      local on = d.enabled ~= false
+      t.ring:SetIcon(ns.Icon(d.icon))
+      t.title:SetText(d.text)
+      t.tip = d.tip
+      t:SetAlpha(on and 1 or 0.5)
+      local fn = d.onClick
+      t:SetScript("OnClick", function(s)
+        if not on then return end
+        W.Sound("IG_MAINMENU_OPTION_CHECKBOX_ON")
+        if fn then fn(s) end
+      end)
+      local col, row = (i - 1) % cols, floor((i - 1) / cols)
+      t:SetWidth(tw)
+      t:SetPoint("TOPLEFT", c, "TOPLEFT", PAD + col * (tw + HEAD_TILE_GAP), -(c.y + row * (HEAD_TILE_H + HEAD_TILE_GAP)))
     end
-    for _, b in ipairs(list) do b:SetSize(w, 32) end
-    c.y = c.y + #list * 38
+    c.y = c.y + math.ceil(#buttons / cols) * (HEAD_TILE_H + HEAD_TILE_GAP)
   end
   self:End(c)
   self.y = self.y - 4
@@ -1413,10 +1452,26 @@ function UI:Create()
     if type(f.CloseButton) ~= "table" then f.CloseButton = close end
   end
 
-  -- «?» рядом с крестиком: вернуть знакомство с аддоном.
+  -- шестерёнка слева от крестика: настройки аддона
+  local gear = CreateFrame("Button", nil, f)
+  gear:SetSize(20, 20)
+  if type(f.CloseButton) == "table" then gear:SetPoint("RIGHT", f.CloseButton, "LEFT", -2, 0)
+  else gear:SetPoint("TOPRIGHT", -28, -1) end
+  gear:SetFrameLevel(f:GetFrameLevel() + 10)
+  gear:SetNormalTexture("Interface\\Buttons\\UI-OptionsButton")
+  gear:SetHighlightTexture("Interface\\Buttons\\UI-OptionsButton", "ADD")
+  gear:SetScript("OnClick", function() W.Sound("IG_MAINMENU_OPTION_CHECKBOX_ON"); ns:OpenSettings() end)
+  gear:SetScript("OnEnter", function(s)
+    GameTooltip:SetOwner(s, "ANCHOR_BOTTOM")
+    GameTooltip:SetText(ns.T("Настройки"), 1, 0.82, 0)
+    GameTooltip:Show()
+  end)
+  gear:SetScript("OnLeave", function() GameTooltip:Hide() end)
+  f.gearButton = gear
+
+  -- «?» левее шестерёнки: вернуть знакомство с аддоном.
   local help = W.Button(f, "?", 22, 20)
-  if type(f.CloseButton) == "table" then help:SetPoint("RIGHT", f.CloseButton, "LEFT", -2, 0)
-  else help:SetPoint("TOPRIGHT", -28, -1) end
+  help:SetPoint("RIGHT", gear, "LEFT", -4, 0)
   help:SetFrameLevel(f:GetFrameLevel() + 10)
   help:SetScript("OnClick", function() W.Sound("IG_MAINMENU_OPTION_CHECKBOX_ON"); ns:ShowIntro() end)
   help:SetScript("OnEnter", function(s)
