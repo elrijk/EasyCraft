@@ -239,5 +239,5 @@ ev:SetScript("OnEvent", function()
     local ok, changed = pcall(TJ.ApplyRoutes, TJ)
     if ok and changed then TJ:RefreshAll() end
   end
-  if C_Timer and C_Timer.After then C_Timer.After(4, run) else run() end
+  C_Timer.After(4, run)
 end)

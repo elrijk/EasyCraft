@@ -233,13 +233,11 @@ function TJ:CraftOrOpen(key, spell, count)
     return false
   end
   -- Не дождались рецептов: окно открыто - просим нажать самому.
-  if C_Timer and C_Timer.After then
-    C_Timer.After(PENDING_SEC, function()
-      if TJ.pendingCraft ~= pc then return end
-      TJ.pendingCraft = nil
-      if TJ:IsProfOpen(pc.key) then askAgain() end
-    end)
-  end
+  C_Timer.After(PENDING_SEC, function()
+    if TJ.pendingCraft ~= pc then return end
+    TJ.pendingCraft = nil
+    if TJ:IsProfOpen(pc.key) then askAgain() end
+  end)
   return true
 end
 
@@ -290,7 +288,7 @@ function TJ:AutoCraft(key, spell, count)
       askAgain()
     end
   end
-  if C_Timer and C_Timer.After then C_Timer.After(1.5, function() TJ:Safe(check) end) else check() end
+  C_Timer.After(1.5, function() TJ:Safe(check) end)
 end
 
 local function flushPendingCraft(self)
@@ -305,7 +303,7 @@ local function flushPendingCraft(self)
   if not st or st.unknown then
     -- Список рецептов ещё грузится: заглянем чуть позже, но недолго.
     if pc.waiting then return end
-    if pc.tries >= 4 or not (C_Timer and C_Timer.After) then
+    if pc.tries >= 4 then
       self.pendingCraft = nil
       self:Print(TJ.T("не нашёл рецепт в окне профессии: выбери его там и нажми «Создать»."))
       return
@@ -423,7 +421,7 @@ end
 --  Цены аукциона: из Auctionator (если его нет - из TSM).
 -------------------------------------------------------------------------------
 local CALLER = "EasyCraft"
-local GetItemInfoFn = (C_Item and C_Item.GetItemInfo) or GetItemInfo
+local GetItemInfoFn = C_Item.GetItemInfo
 
 local function AuctionatorAPI()
   if type(Auctionator) == "table" and type(Auctionator.API) == "table" then return Auctionator.API.v1 end
@@ -638,9 +636,6 @@ function TJ:RecordMerchantPrices()
       if C_MerchantFrame and C_MerchantFrame.GetItemInfo then
         local info = C_MerchantFrame.GetItemInfo(i)
         price, stack, extended = info and info.price, info and info.stackCount, info and info.hasExtendedCost
-      elseif GetMerchantItemInfo then
-        local _, _, p, q, _, _, _, ext = GetMerchantItemInfo(i)
-        price, stack, extended = p, q, ext
       end
       if price and price > 0 and not extended then
         self.db.vprice[id] = math.floor(price / math.max(1, stack or 1) + 0.5)
@@ -933,7 +928,7 @@ mailEv:SetScript("OnEvent", function(_, e, ...) local fn = mailOn[e]; if fn then
 
 local mailScanQueued
 local function queueMailScan(delay)
-  if mailScanQueued or not (C_Timer and C_Timer.After) then return end
+  if mailScanQueued then return end
   mailScanQueued = true
   C_Timer.After(delay, function() mailScanQueued = nil; TJ:Safe(TJ.ScanMail, TJ) end)
 end
@@ -993,37 +988,8 @@ if AH and AH.PlaceBid and AH.GetAuctionInfoByID then
   end)
 end
 
--- Аукцион классического вида: выкуп подтверждает строка «Вы выиграли аукцион: ...».
-local classicWaiting
-if PlaceAuctionBid and GetAuctionItemInfo then
-  local waiting = {}
-  hooksecurefunc("PlaceAuctionBid", function(listType, index, bid)
-    local name, _, count, _, _, _, _, _, _, buyout, _, _, _, _, _, _, itemID = GetAuctionItemInfo(listType, index)
-    if name and itemID and buyout and buyout > 0 and bid and bid >= buyout then
-      tinsert(waiting, { name = name, id = itemID, qty = count or 1, t = GetTime() })
-    end
-  end)
-  onMail("CHAT_MSG_SYSTEM", function(msg)
-    if #waiting == 0 or not ERR_AUCTION_WON_S or secret(msg) or type(msg) ~= "string" then return end
-    -- старые ставки (выкуп не прошёл) выбрасываем; берём самую свежую с этим именем
-    local now = GetTime()
-    for i = #waiting, 1, -1 do
-      if now - waiting[i].t > 10 then tremove(waiting, i) end
-    end
-    for i = #waiting, 1, -1 do
-      local w = waiting[i]
-      if msg == format(ERR_AUCTION_WON_S, w.name) then
-        tremove(waiting, i)
-        TJ:AddBought(w.id, w.qty)
-        return
-      end
-    end
-  end)
-  classicWaiting = waiting
-end
--- Аукцион закрыли: ставки без ответа больше не ждём, сообщения в чат - заново.
+-- Аукцион закрыли: сообщения о покупках в чат - заново.
 onMail("AUCTION_HOUSE_CLOSED", function()
-  if classicWaiting then wipe(classicWaiting) end
   TJ.boughtSaid = nil
 end)
 
@@ -1046,9 +1012,6 @@ function TJ:MerchantNeeds()
       if C_MerchantFrame and C_MerchantFrame.GetItemInfo then
         local info = C_MerchantFrame.GetItemInfo(i)
         price, stack, avail = info and info.price, info and info.stackCount, info and info.numAvailable
-      elseif GetMerchantItemInfo then
-        local _, _, p, q, na = GetMerchantItemInfo(i)
-        price, stack, avail = p, q, na
       end
       stack = math.max(1, stack or 1)
       local bundles = math.ceil(a.buy / stack)
@@ -1135,9 +1098,9 @@ end
 --  переносится в сумки целыми стопками, как правый щелчок.
 -------------------------------------------------------------------------------
 local CT = C_Container
-local GetSlots = (CT and CT.GetContainerNumSlots) or GetContainerNumSlots
-local GetFree = (CT and CT.GetContainerNumFreeSlots) or GetContainerNumFreeSlots
-local UseItem = (CT and CT.UseContainerItem) or UseContainerItem
+local GetSlots = CT.GetContainerNumSlots
+local GetFree = CT.GetContainerNumFreeSlots
+local UseItem = CT.UseContainerItem
 local bankOpen = false
 
 local function SlotInfo(bag, slot)
@@ -1164,9 +1127,9 @@ local function BankBags()
     end
   end
   if own == 0 then -- личный банк старого вида: -1 и сумки банка
-    add(BANK_CONTAINER or -1)
+    add(-1)
     local first = (NUM_TOTAL_EQUIPPED_BAG_SLOTS or NUM_BAG_SLOTS or 4) + 1
-    for b = first, first + (NUM_BANKBAGSLOTS or 7) - 1 do add(b) end
+    for b = first, first + (7) - 1 do add(b) end
   end
   return ids
 end
@@ -1185,7 +1148,7 @@ local function BagFreeSlots()
   return plain, reagent
 end
 
-local ItemInstant = (C_Item and C_Item.GetItemInfoInstant) or GetItemInfoInstant
+local ItemInstant = C_Item.GetItemInfoInstant
 local function IsTradeGood(id)
   return ItemInstant and select(6, ItemInstant(id)) == 7 -- 7: ремесленные товары
 end
@@ -1304,10 +1267,8 @@ function TJ:DepositReagents(prev)
     return
   end
   for i = 1, math.min(#list, 12) do UseItem(list[i].bag, list[i].slot) end
-  if C_Timer and C_Timer.After then
-    local n = #list
-    C_Timer.After(0.4, function() TJ:DepositReagents(n) end)
-  end
+  local n = #list
+  C_Timer.After(0.4, function() TJ:DepositReagents(n) end)
 end
 
 -- Окно банка: игры или Bagnon (он прячет окно игры). Нет - блок вверху экрана.
@@ -1425,7 +1386,7 @@ end
 local bankEv = CreateFrame("Frame")
 local bankQueued
 local function bankRefresh()
-  if bankQueued or not (C_Timer and C_Timer.After) then return end
+  if bankQueued then return end
   bankQueued = true
   C_Timer.After(0.3, function() bankQueued = nil; TJ:Safe(TJ.UpdateBankButton, TJ) end)
 end
@@ -1572,7 +1533,6 @@ end
 -- Окно аукциона появляется чуть позже события, а при первом открытии игра
 -- ещё догружает его код: пробуем несколько раз и ловим само появление окна.
 local function ahSoon()
-  if not (C_Timer and C_Timer.After) then return TJ:Safe(TJ.UpdateAuctionPanel, TJ) end
   for _, t in ipairs({ 0.1, 0.5, 1.2 }) do
     C_Timer.After(t, function() if not (ahPanel and ahPanel:IsShown()) then TJ:Safe(TJ.UpdateAuctionPanel, TJ) end end)
   end
@@ -1613,10 +1573,6 @@ local function SpellNameByID(id)
     local ok, n = pcall(C_Spell.GetSpellName, id)
     if ok and n then return n end
   end
-  if GetSpellInfo then
-    local ok, n = pcall(GetSpellInfo, id)
-    if ok and n then return n end
-  end
 end
 
 -- Поиск на миникарте для профессии: {index, name, icon, active} или nil (нет такого поиска).
@@ -1655,7 +1611,7 @@ end
 local trackEv = CreateFrame("Frame")
 pcall(trackEv.RegisterEvent, trackEv, "MINIMAP_UPDATE_TRACKING")
 trackEv:SetScript("OnEvent", function()
-  if C_Timer and C_Timer.After then C_Timer.After(0.3, function() TJ:RefreshAll() end) else TJ:RefreshAll() end
+  C_Timer.After(0.3, function() TJ:RefreshAll() end)
 end)
 
 -- Наживка: {id, +к ловле, с какого навыка}, лучшая первой.
@@ -1664,7 +1620,7 @@ local LURES = { { 6533, 100, 100 }, { 6532, 75, 100 }, { 7307, 75, 100 }, { 6530
 -- Есть подходящая наживка, удочка в руках и без неё: id наживки и прибавка.
 function TJ:LureHint(rank)
   local pole = GetInventoryItemID and GetInventoryItemID("player", 16)
-  local info = C_Item and C_Item.GetItemInfoInstant or GetItemInfoInstant
+  local info = C_Item.GetItemInfoInstant
   if not (pole and info) then return nil end
   local classID, subID = select(6, info(pole))
   if classID ~= 2 or subID ~= 20 then return nil end -- не удочка
@@ -2000,10 +1956,6 @@ local function SpellName(id)
     local ok, n = pcall(C_Spell.GetSpellName, id)
     if ok and n then return n end
   end
-  if GetSpellInfo then
-    local ok, n = pcall(GetSpellInfo, id)
-    if ok and n then return n end
-  end
 end
 
 -- Профессия учителя: по тому, к какой профессии относятся его рецепты.
@@ -2162,7 +2114,7 @@ trainerEv:SetScript("OnEvent", function(_, event, name)
   TJ:Safe(HookTrainer)
   TJ:Safe(RefreshTrainer)
   -- список у учителя иногда заполняется чуть позже - пометим ещё раз
-  if event == "TRAINER_SHOW" and C_Timer and C_Timer.After then
+  if event == "TRAINER_SHOW" then
     C_Timer.After(0.5, function() trainerState = nil; TJ:Safe(RefreshTrainer) end)
   end
 end)

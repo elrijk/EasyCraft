@@ -347,13 +347,11 @@ ev:SetScript("OnEvent", function(_, _, _, _, spellID)
       if it.n <= 0 then tremove(q, i) end
       queueChanged()
       -- сумки изменятся и окно перерисуется само; откат - проверить позже
-      if C_Timer and C_Timer.After then
-        local key = it.k
-        C_Timer.After(1, function()
-          local b = TJ.char.book and TJ.char.book[key] and TJ.char.book[key][spellID]
-          if b and TJ:IsProfOpen(key) then TJ:NoteCooldown(key, spellID, b) end
-        end)
-      end
+      local key = it.k
+      C_Timer.After(1, function()
+        local b = TJ.char.book and TJ.char.book[key] and TJ.char.book[key][spellID]
+        if b and TJ:IsProfOpen(key) then TJ:NoteCooldown(key, spellID, b) end
+      end)
       return
     end
   end

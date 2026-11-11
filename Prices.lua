@@ -46,7 +46,7 @@ local function refreshSoon()
   if dirty then return end
   dirty = true
   local function run() dirty = nil TJ:Safe(TJ.RefreshAll, TJ) end
-  if C_Timer and C_Timer.After then C_Timer.After(0.5, run) else run() end
+  C_Timer.After(0.5, run)
 end
 
 -- Запомнить цену. exact - точная (поиск одного предмета), иначе в пределах
@@ -142,7 +142,7 @@ local function onEvent(e, a)
   if e == "AUCTION_HOUSE_SHOW" then
     TJ.ahOpen = true
     local function go() if TJ.ahOpen then TJ:ScanAuction() end end
-    if C_Timer and C_Timer.After then C_Timer.After(1, go) else go() end
+    C_Timer.After(1, go)
   elseif e == "AUCTION_HOUSE_CLOSED" then
     TJ.ahOpen = nil
     finish(false)

@@ -317,7 +317,7 @@ local QUALITY_ATLAS = {
   [6] = "auctionhouse-itemicon-border-artifact", [7] = "auctionhouse-itemicon-border-account",
 }
 
-local GetItemInfoFn = (C_Item and C_Item.GetItemInfo) or GetItemInfo
+local GetItemInfoFn = C_Item.GetItemInfo
 function W.ItemQuality(id)
   if type(id) ~= "number" then return nil end
   if C_Item and C_Item.GetItemQualityByID then

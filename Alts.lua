@@ -144,7 +144,7 @@ end
 local bankOpen
 local function later(sec, withBank)
   local function run() pcall(TJ.SaveOwnItems, TJ, withBank and bankOpen) end
-  if C_Timer and C_Timer.After then C_Timer.After(sec, run) else run() end
+  C_Timer.After(sec, run)
 end
 -- Банк читается, только пока он открыт: записываем при открытии и при
 -- перекладывании, а при закрытии - уже нет.

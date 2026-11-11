@@ -66,7 +66,7 @@ local function priceLines(e)
 end
 
 local function chatLink(id)
-  local _, link = ((C_Item and C_Item.GetItemInfo) or GetItemInfo)(id)
+  local _, link = C_Item.GetItemInfo(id)
   W.InsertLink(link)
 end
 

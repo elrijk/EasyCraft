@@ -762,7 +762,7 @@ function C:MyPointsCard(UI)
     if not UI.armClear then
       UI.armClear = true
       UI:Render(true)
-      if C_Timer and C_Timer.After then C_Timer.After(3, function() UI.armClear = nil; UI:Render(true) end) end
+      C_Timer.After(3, function() UI.armClear = nil; UI:Render(true) end)
       return
     end
     UI.armClear = nil
@@ -1046,7 +1046,7 @@ function C:BuildShopping(UI, d)
           right = right,
           onClick = function()
             if IsModifiedClick and IsModifiedClick("CHATLINK") then
-              local _, link = ((C_Item and C_Item.GetItemInfo) or GetItemInfo)(id)
+              local _, link = C_Item.GetItemInfo(id)
               W.InsertLink(link)
             elseif TJ:IsAuctionOpen() and not TJ:IsVendorItem(id) then
               TJ:SendToAuction({ { id = id, buy = buy } })

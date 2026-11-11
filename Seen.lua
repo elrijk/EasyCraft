@@ -197,7 +197,7 @@ for _, e in ipairs({ "TRADE_SKILL_SHOW", "TRADE_SKILL_CLOSE", "CRAFT_CLOSE" }) d
 askEv:SetScript("OnEvent", function(_, e)
   if e == "TRADE_SKILL_SHOW" then
     -- после чтения окна (Tracking.lua) и появления мини-окна
-    if C_Timer and C_Timer.After then C_Timer.After(2, function() pcall(TJ.AskShare, TJ) end) end
+    C_Timer.After(2, function() pcall(TJ.AskShare, TJ) end)
   elseif askPanel then
     askPanel:Hide()
   end
@@ -208,7 +208,7 @@ end)
 local noteColors = TJ.NoteColors
 function TJ:NoteColors(key, colors, rank)
   noteColors(self, key, colors, rank)
-  if not self.askedShare and C_Timer and C_Timer.After then
+  if not self.askedShare then
     C_Timer.After(2, function() pcall(TJ.AskShare, TJ) end)
   end
 end

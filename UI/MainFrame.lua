@@ -156,7 +156,7 @@ function Card:Hover(itemID, y0, y1, tip)
     b:SetScript("OnLeave", function() GameTooltip:Hide() end)
     b:SetScript("OnClick", function(s)
       if s.itemID and IsModifiedClick and IsModifiedClick("CHATLINK") then
-        local _, link = ((C_Item and C_Item.GetItemInfo) or GetItemInfo)(s.itemID)
+        local _, link = C_Item.GetItemInfo(s.itemID)
         W.InsertLink(link)
       end
     end)
@@ -1043,7 +1043,7 @@ local function MakeTile(parent, mode, wide)
   b:SetScript("OnLeave", function() GameTooltip:Hide() end)
   b:SetScript("OnClick", function(s)
     if s.item and IsModifiedClick and IsModifiedClick("CHATLINK") then
-      local _, link = ((C_Item and C_Item.GetItemInfo) or GetItemInfo)(s.item)
+      local _, link = C_Item.GetItemInfo(s.item)
       W.InsertLink(link)
       return
     end

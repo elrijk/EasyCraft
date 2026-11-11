@@ -194,7 +194,7 @@ function TJ:BuildSettings()
       if TJ.MapOverlay and WorldMapFrame and WorldMapFrame:IsShown() and not al.pending then
         al.pending = true
         local function go() al.pending = nil; TJ.MapOverlay:Refresh() end
-        if C_Timer and C_Timer.After then C_Timer.After(0.05, go) else go() end
+        C_Timer.After(0.05, go)
       end
     end)
     panel.areaAlpha = al
@@ -228,9 +228,6 @@ function TJ:BuildSettings()
   if Settings and Settings.RegisterCanvasLayoutCategory then
     settingsCategory = Settings.RegisterCanvasLayoutCategory(panel, panel.name)
     Settings.RegisterAddOnCategory(settingsCategory)
-  elseif InterfaceOptions_AddCategory then
-    InterfaceOptions_AddCategory(panel)
-    settingsCategory = panel
   end
 end
 
@@ -293,8 +290,5 @@ function TJ:OpenSettings()
   end
   if Settings and Settings.OpenToCategory and settingsCategory.GetID then
     Settings.OpenToCategory(settingsCategory:GetID())
-  elseif InterfaceOptionsFrame_OpenToCategory then
-    InterfaceOptionsFrame_OpenToCategory(settingsCategory)
-    InterfaceOptionsFrame_OpenToCategory(settingsCategory)
   end
 end

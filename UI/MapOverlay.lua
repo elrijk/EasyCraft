@@ -417,7 +417,7 @@ function M:Rescale()
     if not self.rescalePending then
       self.rescalePending = true
       local function go() self.rescalePending = nil; self.sig = nil; TJ:Safe(M.Refresh, M) end
-      if C_Timer and C_Timer.After then C_Timer.After(0.05, go) else go() end
+      C_Timer.After(0.05, go)
     end
     return
   end

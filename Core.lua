@@ -39,9 +39,9 @@ function TJ.Lower(s)
   return s
 end
 
-local GetItemInfoFn = (C_Item and C_Item.GetItemInfo) or GetItemInfo
-local GetItemIconFn = (C_Item and C_Item.GetItemIconByID) or GetItemIcon
-local GetItemCountFn = (C_Item and C_Item.GetItemCount) or GetItemCount
+local GetItemInfoFn = C_Item.GetItemInfo
+local GetItemIconFn = C_Item.GetItemIconByID
+local GetItemCountFn = C_Item.GetItemCount
 
 -- Предметы, сведения о которых аддон сам запросил у сервера (игра их ещё
 -- не знала): перерисовываемся только когда пришли они, а не любой предмет
@@ -296,31 +296,6 @@ function TJ:ScanSkills()
       end
     end
   end
-  if GetNumSkillLines and GetSkillLineInfo then
-    -- старый список навыков: раскрываем свёрнутые разделы, только если новый
-    -- способ (GetProfessions) ничего не дал - иначе не трогаем, что свернул игрок
-    -- (или когда из известных профессий что-то не нашлось: Первая помощь
-    -- бывает только в старом списке, под свёрнутым разделом)
-    local lost = not next(found)
-    if not lost then
-      for key in pairs(self.char.profs) do if not found[key] then lost = true break end end
-    end
-    if ExpandSkillHeader and lost then
-      for i = GetNumSkillLines(), 1, -1 do
-        local _, isHeader, isExpanded = GetSkillLineInfo(i)
-        if isHeader and not isExpanded then pcall(ExpandSkillHeader, i) end
-      end
-    end
-    local n = GetNumSkillLines() or 0
-    if n > 0 then enumerated = true end
-    for i = 1, n do
-      local name, isHeader, _, rank, _, _, maxRank = GetSkillLineInfo(i)
-      if name and not isHeader then
-        local key = self.NameToKey[name] or self.NameToKey[self.Lower(name)]
-        if key and not found[key] then addFound(found, key, rank, maxRank) end
-      end
-    end
-  end
   if not enumerated then return end
   local changed = false
   for key, v in pairs(found) do
@@ -399,10 +374,6 @@ function TJ:SpellName(id)
   if C_Spell and C_Spell.GetSpellName then
     local ok, n = pcall(C_Spell.GetSpellName, id)
     if ok and n then return n end
-  end
-  if GetSpellInfo then
-    local ok, n = pcall(GetSpellInfo, id)
-    if ok and type(n) == "string" then return n end
   end
 end
 
@@ -857,7 +828,7 @@ function TJ:RefreshAll()
     pending = false
     for _, fn in ipairs(TJ.refreshers) do TJ:Safe(fn) end
   end
-  if C_Timer and C_Timer.After then C_Timer.After(wait, run) else run() end
+  C_Timer.After(wait, run)
 end
 
 -- Создание предмета прошло: подержать перерисовку до прихода навыка.

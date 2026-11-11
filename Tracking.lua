@@ -188,7 +188,7 @@ function TJ:ScanTradeSkill()
   -- свои наблюдения цветов (Seen.lua): из них получаются пороги рецептов
   if self.NoteColors then self:Safe(self.NoteColors, self, key, colors, rank) end
   -- книга рецептов и откаты (Book.lua): все выученные рецепты окна
-  if not isCraft and self.ScanBook then self:Safe(self.ScanBook, self, key) end
+  if self.ScanBook then self:Safe(self.ScanBook, self, key) end
   -- сверка маршрута с игрой: только когда сменился навык или число рецептов
   local sig = tostring(rank) .. ":" .. ncolors
   if ncolors > 0 and self.CheckRoute and routeSig[key] ~= sig then
