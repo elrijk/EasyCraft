@@ -1332,23 +1332,24 @@ end
 
 -- Шапка страницы прямо на пергаменте, как во всех страницах MacroCoach:
 -- крупный заголовок тёмными чернилами и одна-две строки под ним.
--- buttons - кнопки в ряд под текстом (куда идти дальше), как у страниц
+-- buttons - кнопки столбиком под текстом (куда идти дальше), как у страниц
 -- MacroCoach: { { text =, onClick =, tip =, enabled = } }.
 function UI:PageHeader(title, text, buttons)
   local c = self:Card("flat")
   c:Text(title, "huge", { x = PAD, gap = 8 })
   if text and text ~= "" then c:Text(text, "body", { x = PAD, gap = 4, color = INK_HEAD_TEXT }) end
   if buttons and #buttons > 0 then
+    -- кнопки крупные, столбиком, одной ширины - по самой длинной надписи
     c:Space(6)
-    local x = PAD
-    for _, d in ipairs(buttons) do
-      local b = c:Button(d, x, c.y)
+    local list, w = {}, 280
+    for i, d in ipairs(buttons) do
+      local b = c:Button(d, PAD, c.y + (i - 1) * 38)
       local fs = b.GetFontString and b:GetFontString()
-      local w = d.w or max(110, floor((fs and fs:GetStringWidth() or 90) + 30))
-      b:SetWidth(w)
-      x = x + w + 8
+      w = max(w, floor((fs and fs:GetStringWidth() or 90) + 48))
+      list[i] = b
     end
-    c.y = c.y + 30
+    for _, b in ipairs(list) do b:SetSize(w, 32) end
+    c.y = c.y + #list * 38
   end
   self:End(c)
   self.y = self.y - 4
