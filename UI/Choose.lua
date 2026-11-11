@@ -183,33 +183,52 @@ local function build()
   f.whyBg:SetPoint("BOTTOMRIGHT", f.lineBot, "TOPRIGHT", 0, 0)
   f.whyBg:SetColorTexture(0, 0, 0, 0.45)
 
-  -- колесо мыши листает профессии
-  f:EnableMouseWheel(true)
-  f:SetScript("OnMouseWheel", function(s, delta)
+  -- листать профессии: колесо мыши и стрелки по краям окна
+  local function turn(delta)
     local order = TJ.ProfOrder
     for i, k in ipairs(order) do
-      if k == s.key then
-        local n = i - delta
+      if k == f.key then
+        local n = i + delta
         if n < 1 then n = #order elseif n > #order then n = 1 end
+        W.Sound("IG_ABILITY_PAGE_TURN")
         TJ:ShowChoose(order[n])
         return
       end
     end
-  end)
+  end
+  f:EnableMouseWheel(true)
+  f:SetScript("OnMouseWheel", function(_, delta) turn(-delta) end)
+  for _, d in ipairs({ { "Prev", "LEFT", 12, -1 }, { "Next", "RIGHT", -12, 1 } }) do
+    local b = CreateFrame("Button", nil, f)
+    b:SetSize(32, 32)
+    b:SetPoint(d[2], d[3], 10)
+    b:SetNormalTexture("Interface\\Buttons\\UI-SpellbookIcon-" .. d[1] .. "Page-Up")
+    b:SetPushedTexture("Interface\\Buttons\\UI-SpellbookIcon-" .. d[1] .. "Page-Down")
+    b:SetHighlightTexture("Interface\\Buttons\\UI-Common-MouseHilight", "ADD")
+    b:SetScript("OnClick", function() turn(d[4]) end)
+  end
 
   -- три преимущества: значок, подпись серым, значение
   f.chips = {}
   for i = 1, 3 do
+    -- строка, как характеристики в окне персонажа: тёмная полоса, значок,
+    -- подпись золотом слева, значение светлым справа
     local c = CreateFrame("Frame", nil, f)
-    c:SetSize(TEXT_W, 34)
-    if i == 1 then c:SetPoint("TOPLEFT", f.lineBot, "BOTTOMLEFT", 8, -16)
-    else c:SetPoint("TOPLEFT", f.chips[i - 1], "BOTTOMLEFT", 0, -8) end
-    c.icon = W.RingIcon(c, 28)
-    c.icon:SetPoint("LEFT", 4, 0)
-    c.label = W.Text(c, "small", false)
-    c.label:SetPoint("TOPLEFT", c.icon, "TOPRIGHT", 12, 2)
-    c.value = W.Text(c, "body", false)
-    c.value:SetPoint("TOPLEFT", c.label, "BOTTOMLEFT", 0, -2)
+    c:SetSize(TEXT_W + 20, 36)
+    if i == 1 then c:SetPoint("TOPLEFT", f.lineBot, "BOTTOMLEFT", 0, -14)
+    else c:SetPoint("TOPLEFT", f.chips[i - 1], "BOTTOMLEFT", 0, -4) end
+    c.bg = c:CreateTexture(nil, "BACKGROUND")
+    c.bg:SetAllPoints()
+    c.bg:SetColorTexture(0, 0, 0, 0.4)
+    c.icon = W.RingIcon(c, 24)
+    c.icon:SetPoint("LEFT", 10, 0)
+    c.label = W.Text(c, "head", false)
+    c.label:SetPoint("LEFT", c.icon, "RIGHT", 12, 0)
+    c.value = W.Text(c, "body")
+    c.value:SetWidth(230)
+    c.value:SetJustifyH("RIGHT")
+    c.value:SetJustifyV("MIDDLE")
+    c.value:SetPoint("RIGHT", -10, 0)
     f.chips[i] = c
   end
 

@@ -1535,3 +1535,10 @@ for k, v in pairs({
   ["Дальше"] = "Next",
   ["Назад"] = "Back",
 }) do if TJ.EN[k] == nil then TJ.EN[k] = v end end
+
+-- 1.2: короткие подписи вкладки «Рецепты»
+for k, v in pairs({
+  ["Пусто. Щёлкни по рецепту ниже."] = "Empty. Click a recipe below.",
+  ["Пусто. Создай предмет с откатом - аддон его запомнит."] = "Empty. Craft an item with a cooldown and the addon remembers it.",
+  ["Открой окно профессии - аддон прочитает рецепты."] = "Open the profession window and the addon reads your recipes.",
+}) do TJ.EN[k] = v end

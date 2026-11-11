@@ -100,7 +100,7 @@ function C:QueueCard(UI)
   local c = UI:Card(#q > 0 and "current" or "normal")
   if #q == 0 then
     c:Head({ ring = "Interface\\Icons\\INV_Misc_Note_02" }, T("Очередь крафта"),
-      { { T("Пока пусто. Щёлкни по рецепту ниже - он попадёт сюда."), "small" } }, 32)
+      { { T("Пусто. Щёлкни по рецепту ниже."), "small" } }, 32)
     UI:End(c)
     return
   end
@@ -159,7 +159,7 @@ function C:CooldownCard(UI)
   local list = TJ:CooldownList()
   local c = UI:Card()
   c:Head({ ring = "Interface\\Icons\\INV_Misc_PocketWatch_01" }, T("Откаты по персонажам"),
-    { { #list == 0 and T("Пока пусто. Создай предмет с откатом при открытом окне профессии - аддон запомнит его для этого персонажа.")
+    { { #list == 0 and T("Пусто. Создай предмет с откатом - аддон его запомнит.")
       or T("Что уже можно создавать снова и сколько ждать остальное."), "small" } }, 32)
   for _, e in ipairs(list) do
     local who = e.who:match("^[^-]+") or e.who
@@ -244,7 +244,7 @@ function C:BookCard(UI, key, known, unknown, scanned)
   end
   c:Head({ ring = TJ.Icon(p.icon) }, TJ:N(p),
     { { scanned and format(T("Выучено рецептов: %d. Сверху - самые выгодные."), #known)
-      or T("Открой окно профессии: аддон прочитает все твои рецепты и посчитает выгоду."), "small" } }, 32)
+      or T("Открой окно профессии - аддон прочитает рецепты."), "small" } }, 32)
   local rows = {}
   for i, e in ipairs(known) do
     if not all and i > SHOWN then break end
