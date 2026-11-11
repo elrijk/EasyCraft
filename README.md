@@ -8,10 +8,10 @@ goes up. No guide in a second window, no counting materials by hand.
 
 - **Routes 1-300** for all 12 professions: Alchemy, Blacksmithing, Enchanting, Engineering, Leatherworking, Tailoring, Mining, Herbalism, Skinning, Cooking, First Aid, Fishing.
 - **Mini window** beside the profession window: the recipe of the current step, what you have, and a Create button.
-- **Route modes**: Standard, Cheaper or Faster, switched above the route.
+- **Leveling route**: Standard, Cheaper or Faster. One switch on the home page for all professions.
 - **Shopping to the next trainer**: counts your bags, bank, mail and alts, so you never buy twice. Prices are read at the auction house by the addon itself; no other addon needed.
 - **Recipes**: every recipe of your professions, learned or not, with cost, profit (auction, vendor or disenchant) and where to get it. A craft queue, cooldowns of all characters, and "what to craft for yourself now".
-- **Choosing a profession**: what each one makes, who should take it, the cost of the path to 300 and the whole route before you learn it.
+- **Choosing a profession**: what each one makes, who should take it, the cost of the route to 300 and the whole route before you learn it.
 - **One-click helpers**: buy missing reagents at a vendor, take the right stacks from the bank, search everything at the auction house.
 - **Trainers and recipes**: the nearest trainer or recipe vendor with a map pin; stars in the trainer window on recipes your route needs.
 - **Gathering on the map**: zones for your faction and level, highlighted areas where herbs and ore are dense, node colour in the tooltip.

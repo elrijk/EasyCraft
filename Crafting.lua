@@ -441,7 +441,7 @@ function ns:OwnGather(id)
 end
 
 function ns:IsAuctionOpen()
-  return self.ahOpen or (AuctionHouseFrame and AuctionHouseFrame:IsShown()) or (AuctionFrame and AuctionFrame:IsShown()) or false
+  return self.ahOpen or (AuctionHouseFrame and AuctionHouseFrame:IsShown()) or false
 end
 
 -- Название на языке клиента: по нему ищет аукцион.
@@ -1316,7 +1316,7 @@ local AH_W, AH_PAD, AH_ROW, AH_MAX = 340, 12, 34, 60 -- список прокр�
 local SEARCH_ICON = "Interface\\Common\\UI-Searchbox-Icon"
 local ahPanel
 
--- Найти один предмет на аукционе поиском самой игры.
+-- Find one item at the auction house with the game's own search.
 function ns:SearchAuction(id, buy)
   local name = self:ClientItemName(id)
   if not name then self:Print(ns.T("названия предметов ещё загружаются: нажми ещё раз через секунду.")) return end
@@ -1324,20 +1324,12 @@ function ns:SearchAuction(id, buy)
   local bar = AuctionHouseFrame and AuctionHouseFrame.SearchBar
   if bar and bar.SearchBox and bar.StartSearch then
     ok = pcall(function() bar.SearchBox:SetText(name); bar:StartSearch() end)
-  elseif BrowseName and AuctionFrameBrowse_Search then
-    ok = pcall(function()
-      if AuctionFrameTab1 and AuctionFrameTab1.Click then AuctionFrameTab1:Click() end
-      BrowseName:SetText(name)
-      AuctionFrameBrowse_Search()
-    end)
   end
   if not ok then self:Print(format(ns.T("найди на аукционе: %s"), name)) end
 end
 
 local function AuctionWindow()
-  for _, f in ipairs({ AuctionHouseFrame or false, AuctionFrame or false }) do
-    if f and f.IsVisible and f:IsVisible() then return f end
-  end
+  if AuctionHouseFrame and AuctionHouseFrame:IsVisible() then return AuctionHouseFrame end
 end
 
 local function AhPanel()
@@ -1443,7 +1435,7 @@ local function ahSoon()
 end
 local hookedAH = {}
 local function hookAH()
-  for _, n in ipairs({ "AuctionHouseFrame", "AuctionFrame" }) do
+  for _, n in ipairs({ "AuctionHouseFrame" }) do
     local w = _G[n]
     if type(w) == "table" and w.HookScript and not hookedAH[n] then
       hookedAH[n] = true

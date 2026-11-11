@@ -3,11 +3,11 @@ local C, T, W = ns.Content, ns.T, ns.W
 local floor, max, min = math.floor, math.max, math.min
 
 -------------------------------------------------------------------------------
---  «Опыт: максимум в час» во вкладке «Лагерь»: бонусы к опыту, которые дают
---  профессии, - палатка (кожевничество) и еда (кулинария).
---  Цифры - из гайдов (wowforeverleveling.com, wow-professions.com, mmoexp.com,
---  ноябрь 2026). Часть из них Blizzard не подтверждала: сверяй с подсказкой
---  бафа в игре.
+--  The "XP bonuses from professions" card on the Camp tab: the Camp Tent
+--  (leatherworking) and cooked food (cooking).
+--  The numbers come from player guides (wowforeverleveling.com,
+--  wow-professions.com, mmoexp.com, November 2026). Blizzard has not confirmed
+--  some of them: check the buff tooltip in the game.
 -------------------------------------------------------------------------------
 local ICON = "Interface\\Icons\\"
 -- XP_GAP - просвет между блоками, XP_BP - поле внутри блока (со всех сторон), XP_BG - насколько блок темнее карточки
@@ -26,7 +26,7 @@ local SOURCES = {
 function C:XpCard(UI)
   local PAD, CW = UI.PAD, UI.CARD_W
   local c = UI:Card()
-  c:Head({ ring = ICON .. "Spell_Holy_BlessingOfStrength" }, T("Опыт: максимум в час"),
+  c:Head({ ring = ICON .. "Spell_Holy_BlessingOfStrength" }, T("Бонусы к опыту от профессий"),
     { { T("Бонусы складываются."), "small" } }, 32)
   -- источники блоками по два в ряд: значок, название и бонус зелёным,
   -- ниже - что сделать и подробности

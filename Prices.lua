@@ -49,16 +49,17 @@ local function refreshSoon()
   C_Timer.After(0.5, run)
 end
 
--- Запомнить цену. exact - точная (поиск одного предмета), иначе в пределах
--- одного списка берём меньшую: у предмета бывает несколько строк (суффиксы).
+-- Remember a price. exact: a search for one item gives the exact price;
+-- otherwise the lowest one within a list wins, because an item can have
+-- several rows (suffixes). scan.n counts items, not rows.
 local function note(id, price, exact)
   if type(id) ~= "number" or type(price) ~= "number" or price <= 0 then return end
   local s = store()
   if not s then return end
   if not exact and batch[id] and s.p[id] then s.p[id] = min(s.p[id], price) else s.p[id] = price end
+  if not batch[id] then scan.n = (scan.n or 0) + 1 end
   batch[id] = true
   s.d[id] = today()
-  scan.n = (scan.n or 0) + 1
 end
 
 local function harvest(list)

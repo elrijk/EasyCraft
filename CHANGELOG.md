@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.2.1
+
+- Fully standalone: EasyCraft no longer reads anything from other addons. Reagents on your other characters come from its own records (a character is counted after it has logged in once with EasyCraft), and trainers get the game's own map pin.
+- Buttons widen to fit their label in every language.
+- Clearer names: the "Leveling route" switch and the "XP bonuses from professions" card.
+- The "auction prices read" chat line counts items, not auction rows.
+- Fixed the Home tab tooltip and the `/ec help` description, which named things that no longer exist.
+- Lighter: about 650 unused translation strings and code for windows this client does not have are removed.
+
 ## 1.2.0
 
 **Works on its own**
@@ -16,15 +25,15 @@
 - "What to craft for yourself now": gear better than what you wear and consumables for your level.
 - "Dungeons", "Raids" and "PvP" filter: what is considered the best to craft and for which classes. Starter list, not yet checked against WoW Forever.
 
-**Leveling path**
+**Leveling route**
 
-- A "Leveling path" switch on the home page: Standard, Cheaper (least gold per skill point) or Faster (fewest crafts). One choice for all professions.
-- EasyCraft records the colours of your recipes at each skill and uses them for the paths. `/ec colors` or a once-per-session hint gives a link to a pre-filled GitHub issue, so thresholds improve for everyone.
+- A "Leveling route" switch on the home page: Standard, Cheaper (least gold per skill point) or Faster (fewest crafts). One choice for all professions.
+- EasyCraft records the colours of your recipes at each skill and uses them for the routes. `/ec colors` or a once-per-session hint gives a link to a pre-filled GitHub issue, so thresholds improve for everyone.
 
 **Choosing a profession**
 
 - A separate window: what each profession makes, what it pairs with, who should take it, where the trainer is.
-- The cost of the path to 300 and a preview of the whole route before you learn the profession. `/ec choose` opens it.
+- The cost of the route to 300 and a preview of the whole route before you learn the profession. `/ec choose` opens it.
 
 **Camp**
 

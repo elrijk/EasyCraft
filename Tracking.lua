@@ -213,8 +213,8 @@ local function windowShown(names)
   end
   return false
 end
--- окно профессии игра подгружает при первом открытии, под одним из этих имён
-local TRADE_FRAMES = { "ProfessionsFrame", "TradeSkillFrame" }
+-- the game loads the profession window on its first opening
+local TRADE_FRAMES = { "ProfessionsFrame" }
 for _, e in ipairs({ "TRADE_SKILL_SHOW", "TRADE_SKILL_LIST_UPDATE", "TRADE_SKILL_DATA_SOURCE_CHANGED" }) do
   on(e, function()
     if e == "TRADE_SKILL_SHOW" then tradeOpen = true end

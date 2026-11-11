@@ -12,7 +12,7 @@
 ## Notes-zhCN: WoW Forever 专业升级，一步一步：当前步骤和要做的数量、制作按钮、训练师和配方、带拍卖价格的采购、地图上的采集区域。/ec
 ## Notes-zhTW: WoW Forever 專業升級，一步一步：目前步驟和要做的數量、製作按鈕、訓練師和配方、帶拍賣價格的採購、地圖上的採集區域。/ec
 ## Author: DesignerGod
-## Version: 1.2.0
+## Version: 1.2.1
 ## Category: Professions
 ## Category-ruRU: Профессии
 ## IconTexture: Interface\AddOns\EasyCraft\Media\Icon

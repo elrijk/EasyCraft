@@ -274,7 +274,7 @@ local function seenCount(self)
 end
 
 local function profWindow()
-  for _, name in ipairs({ "ProfessionsFrame", "TradeSkillFrame", "CraftFrame" }) do
+  for _, name in ipairs({ "ProfessionsFrame" }) do
     local w = _G[name]
     if type(w) == "table" and w.IsShown and w:IsShown() then return w end
   end
@@ -336,9 +336,9 @@ function ns:AskShare()
   f:Raise()
 end
 
--- Окно профессии закрыли - подсказка уходит вместе с ним.
+-- The profession window is closed: the hint goes away with it.
 local askEv = CreateFrame("Frame")
-for _, e in ipairs({ "TRADE_SKILL_SHOW", "TRADE_SKILL_CLOSE", "CRAFT_CLOSE" }) do pcall(askEv.RegisterEvent, askEv, e) end
+for _, e in ipairs({ "TRADE_SKILL_SHOW", "TRADE_SKILL_CLOSE" }) do askEv:RegisterEvent(e) end
 askEv:SetScript("OnEvent", function(_, e)
   if e == "TRADE_SKILL_SHOW" then
     -- после чтения окна (Tracking.lua) и появления мини-окна

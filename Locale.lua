@@ -127,7 +127,6 @@ ns.EN = {
   ["Подмастерье (75-150)"] = "Journeyman (75-150)",
   ["Умелец (150-225)"] = "Expert (150-225)",
   ["Искусник (225-300)"] = "Artisan (225-300)",
-  ["На карте"] = "On the map",
   ["Лагерь"] = "Camp",
   ["Очистить"] = "Clear",
   ["Выполнено"] = "Done",
@@ -444,7 +443,7 @@ for k, v in pairs({
   ["Нет в сумках: "] = "Not in your bags: ",
   ["с навыка %d, %s"] = "from skill %d, %s",
   ["Показать предметы всех профессий"] = "Show items of all professions",
-  ["Ссылка в чат"] = "Link to chat",
+  ["Ссылка в чат"] = "Link in chat",
   ["Окно профессии"] = "Profession window",
   ["Маршрут пройден"] = "Route complete",
   ["Все шаги до 300 выполнены."] = "All steps up to 300 are done.",
@@ -917,11 +916,6 @@ for k, v in pairs({
   ["Основных можно взять две, вторичные - все три. Посмотри, что даёт каждая."] = "You can have two primary professions and all three secondary ones. See what each one gives.",
 }) do ns.EN[k] = v end
 
--- 1.2: знакомство отдельным окном
-for k, v in pairs({
-  ["Создать"] = "Craft",
-}) do if ns.EN[k] == nil then ns.EN[k] = v end end
-
 -- 1.2: короткие подписи вкладки «Рецепты»
 for k, v in pairs({
   ["Пусто. Щёлкни по рецепту ниже."] = "Empty. Click a recipe below.",
@@ -972,11 +966,11 @@ for k, v in pairs({
   ["открой аукцион: цены читаются там."] = "open the auction house: prices are read there.",
   ["читаю цены аукциона..."] = "reading auction prices...",
   ["Осталось до 300: "] = "Left to 300: ",
-  ["Путь до 300: "] = "Path to 300: ",
+  ["Путь до 300: "] = "Route to 300: ",
   ["покупать нечего"] = "nothing to buy",
   ["цен пока нет - открой аукцион"] = "no prices yet - open the auction house",
   ["Смотреть маршрут"] = "Preview route",
-  ["Все шаги до 300 и цена пути - до того, как учить профессию."] = "Every step to 300 and the cost of the path - before you learn the profession.",
+  ["Все шаги до 300 и цена пути - до того, как учить профессию."] = "Every step to 300 and the cost of the route, before you learn the profession.",
   ["Маршрут: %s"] = "Route: %s",
   ["Маршрута пока нет."] = "No route yet.",
 }) do if ns.EN[k] == nil then ns.EN[k] = v end end
@@ -995,7 +989,7 @@ for k, v in pairs({
 
 -- 1.2: опыт в «Лагере» и спальник
 for k, v in pairs({
-  ["Опыт: максимум в час"] = "XP: the most per hour",
+  ["Бонусы к опыту от профессий"] = "XP bonuses from professions",
   ["Палатка лагеря"] = "Camp Tent",
   ["отдых до 5%"] = "rested up to 5%",
   ["Кожевничество 20, 5 лёгкой кожи. Поставь у костра и посиди минуту."] = "Leatherworking 20, 5 Light Leather. Place it at a campfire and sit for a minute.",
@@ -1078,7 +1072,7 @@ for k, v in pairs({
 
 -- 1.2: «Путь прокачки» на главной
 for k, v in pairs({
-  ["Путь прокачки"] = "Leveling path",
+  ["Путь прокачки"] = "Leveling route",
 }) do if ns.EN[k] == nil then ns.EN[k] = v end end
 
 -- 1.2: цены только свои, напоминание сходить на аукцион

@@ -625,10 +625,11 @@ function Card:Button(d, x, y, right)
     btn:SetScript("OnLeave", function() GameTooltip:Hide() end)
     return btn
   end)
-  -- две высоты (обычная и главная - d.big); ширина по тексту, если не задана
+  -- two heights (normal and the main one, d.big); the width follows the label,
+  -- d.w is only the least width, so a longer translation is never cut off
   b:SetText(d.text)
-  local bfs = b.GetFontString and b:GetFontString()
-  local bw = d.w or max(W.S.btnMin, floor((bfs and bfs:GetStringWidth() or 90) + 30))
+  local bfs = b:GetFontString()
+  local bw = max(d.w or W.S.btnMin, floor((bfs and bfs:GetStringWidth() or 90) + 30))
   b:SetSize(bw, d.big and W.S.btnBig or W.S.btn)
   b:SetEnabled(d.enabled ~= false)
   -- подсказка и у выключенной кнопки: почему она выключена
@@ -669,8 +670,10 @@ function Card:CornerButtons(list, y)
   for i = #list, 1, -1 do
     local d = list[i]
     local b = self:Take("cbutton", function() return W.Button(self, "", 100, 22) end)
-    b:SetSize(d.w or 120, 22)
     b:SetText(d.text)
+    -- d.w is the least width: a longer label in another language widens the button
+    local cfs = b:GetFontString()
+    b:SetSize(max(d.w or 120, floor((cfs and cfs:GetStringWidth() or 0) + 30)), 22)
     b:SetEnabled(d.enabled ~= false)
     local fn = d.onClick
     b:SetScript("OnClick", function(s) W.Sound("IG_MAINMENU_OPTION_CHECKBOX_ON"); if fn then fn(s) end end)
@@ -1688,6 +1691,7 @@ function UI:Create()
   head:SetPoint("TOPLEFT", f, "TOPLEFT", 66, -26)
   head:SetPoint("BOTTOMRIGHT", f, "TOPRIGHT", -10, -ATTIC + 2)
   head.link = W.Button(head, ns.T("Ссылка в чат"), 130, 24)
+  head.link:SetWidth(max(130, floor((head.link:GetFontString():GetStringWidth() or 0) + 30))) -- longer in some languages
   head.link:SetPoint("RIGHT", head, "RIGHT", 0, 0)
   head.bar = W.Bar(head)
   head.bar:SetHeight(18)
@@ -1888,10 +1892,10 @@ function BookShown()
   for _, f in ipairs({ _G.ProfessionsBookFrame or false, _G.SpellBookProfessionFrame or false }) do
     if f and f.IsVisible and f:IsVisible() then return true end
   end
-  -- В WoW Forever «Профессии» - страница того же окна профессии (вкладка с
-  -- молотком): заголовок окна - «Профессии», списка рецептов и кнопки
-  -- «Создать» нет. Подсказка нужна только там, где рецепты.
-  for _, w in ipairs({ _G.ProfessionsFrame or false, _G.TradeSkillFrame or false }) do
+  -- In WoW Forever "Professions" is a page of the same profession window (the
+  -- hammer tab): the window title is "Professions" and it has no recipe list
+  -- and no Create button. The hint is needed only where the recipes are.
+  for _, w in ipairs({ _G.ProfessionsFrame or false }) do
     if w and w.IsVisible and w:IsVisible() then
       local tc = rawget(w, "TitleContainer")
       local name = w.GetName and w:GetName()
@@ -1901,29 +1905,18 @@ function BookShown()
     end
   end
   local known = false
-  for _, name in ipairs({ "TradeSkillCreateButton", "CraftCreateButton", "TradeSkillListScrollFrame", "CraftListScrollFrame" }) do
-    local b = _G[name]
-    if type(b) == "table" and b.IsVisible then
-      known = true
-      if b:IsVisible() then return false end
-    end
-  end
   local pf = _G.ProfessionsFrame
   local cp = type(pf) == "table" and pf:IsVisible() and rawget(pf, "CraftingPage")
   if type(cp) == "table" and cp.IsVisible then
     known = true
     if cp:IsVisible() then return false end
   end
-  return known -- окно знакомое, но страницы с рецептами не видно
+  return known -- the window is known, but the page with recipes is not shown
 end
 
--- Окно профессии игры. В классике у чар своё окно (CraftFrame) - для них оно первое.
-local function ProfWindow(key)
-  local order = key == "enchanting" and { CraftFrame or false, ProfessionsFrame or false, TradeSkillFrame or false }
-    or { ProfessionsFrame or false, TradeSkillFrame or false, CraftFrame or false }
-  for _, f in ipairs(order) do
-    if f and f:IsShown() then return f end
-  end
+-- The game's profession window, while it is shown.
+local function ProfWindow()
+  if ProfessionsFrame and ProfessionsFrame:IsShown() then return ProfessionsFrame end
 end
 
 -- Что торчит справа из окна профессии (вкладки других профессий и т. п.):
@@ -2181,7 +2174,6 @@ function Mini:CreateRest(f)
   local thl = f.trainer:CreateTexture(nil, "HIGHLIGHT")
   thl:SetAllPoints()
   thl:SetColorTexture(1, 0.82, 0, 0.1)
-  f.pin = W.Button(f.box, ns.T("На карте"), 68, 22)
   -- черта между частями окна
   f.seps = {}
   for i = 1, 3 do
