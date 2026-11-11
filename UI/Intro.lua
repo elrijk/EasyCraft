@@ -12,6 +12,7 @@ local WIDTH = 760
 local SIDE = 28 -- поля окна слева и справа
 local GAP = 12 -- между блоками
 local COLS = 3
+local MORE_W = 112 -- ширина ячейки в ряду «И ещё»
 
 local TITLE = "EasyCraft: профессия до 300 без гайдов"
 -- Главное: крупный значок, два-три слова и одна короткая строка.
@@ -75,18 +76,16 @@ local function build()
   f.title:SetPoint("TOP", 0, -26)
   local file, _, flags = f.title:GetFont()
   if file then f.title:SetFont(file, 24, flags) end
-  f.rule = rule(f, 360)
-  f.rule:SetPoint("TOP", f.title, "BOTTOM", 0, -10)
   -- три главные возможности: крупные блоки в золотой рамке
   f.killer = {}
   for i = 1, #KILLER do
     local c = CreateFrame("Frame", nil, f, BackdropTemplateMixin and "BackdropTemplate" or nil)
     W.Backdrop(c, "Interface\\Buttons\\WHITE8X8", nil, 14, 0.2, 0.14, 0.05, 0.9, 1, 0.82, 0, 1)
     c.icon = W.RingIcon(c, 80)
-    c.icon:SetPoint("TOP", 0, -20)
+    c.icon:SetPoint("TOP", 0, -32) -- кольцо шире значка: видимый отступ как снизу
     c.head = W.Text(c, "title")
     c.head:SetJustifyH("CENTER")
-    c.head:SetPoint("TOP", c.icon, "BOTTOM", 0, -12)
+    c.head:SetPoint("TOP", c.icon, "BOTTOM", 0, -24)
     c.text = W.Text(c, "body")
     c.text:SetJustifyH("CENTER")
     c.text:SetTextColor(0.92, 0.9, 0.84)
@@ -135,7 +134,7 @@ end
 
 local function show(f)
   f.title:SetText(T(TITLE))
-  local y = 26 + f.title:GetStringHeight() + 10 + 1 + 24
+  local y = 26 + f.title:GetStringHeight() + 24
 
   -- главные возможности
   local colW = floor((WIDTH - SIDE * 2 - GAP * (COLS - 1)) / COLS)
@@ -147,7 +146,7 @@ local function show(f)
     c.head:SetText(T(d[2]))
     c.text:SetWidth(colW - 28)
     c.text:SetText(T(d[3]))
-    h = max(h, 20 + 80 + 12 + c.head:GetStringHeight() + 8 + c.text:GetStringHeight() + 20)
+    h = max(h, 32 + 80 + 24 + c.head:GetStringHeight() + 8 + c.text:GetStringHeight() + 24)
     c:ClearAllPoints()
     c:SetPoint("TOPLEFT", SIDE + (i - 1) * (colW + GAP), -y)
     c:SetWidth(colW)
@@ -169,9 +168,10 @@ local function show(f)
   f.moreR:SetPoint("LEFT", f.moreHead, "RIGHT", 16, 0)
   y = y + f.moreHead:GetStringHeight() + 18
 
-  -- остальное: все значки в один ряд
+  -- остальное: значки в один ряд, рядом друг с другом, по центру окна
   local n = #MORE
-  local cellW = floor((WIDTH - SIDE * 2) / n)
+  local cellW = MORE_W
+  local x0 = floor((WIDTH - n * cellW) / 2)
   local mh = 0
   for i, c in ipairs(f.more) do
     local d = MORE[i]
@@ -180,7 +180,7 @@ local function show(f)
     c.head:SetText(T(d[2]))
     mh = max(mh, 44 + 8 + c.head:GetStringHeight())
     c:ClearAllPoints()
-    c:SetPoint("TOPLEFT", SIDE + (i - 1) * cellW, -y)
+    c:SetPoint("TOPLEFT", x0 + (i - 1) * cellW, -y)
     c:SetWidth(cellW)
   end
   for _, c in ipairs(f.more) do c:SetHeight(mh) end
