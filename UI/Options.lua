@@ -262,7 +262,7 @@ function ns:BuildSettings()
   cmds:SetWidth(560)
   cmds:SetJustifyH("LEFT")
   if cmds.SetSpacing then cmds:SetSpacing(4) end
-  cmds:SetText(table.concat(ns:CommandLines(), "\n") .. "\n|cff9d9d9d" .. ns.T("То же по-русски: /ремесла, /ec помощь, /ec настройки, /ec миникарта.") .. "|r")
+  cmds:SetText(table.concat(ns:CommandLines(), "\n"))
 
   panel:SetScript("OnShow", function()
     ns:RefreshOptions()

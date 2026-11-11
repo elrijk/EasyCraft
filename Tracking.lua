@@ -345,7 +345,6 @@ on("LOOT_READY", onLoot)
 ---------------------------------------------------------------------------
 SLASH_EASYCRAFT1 = "/ec"
 SLASH_EASYCRAFT2 = "/easycraft"
-SLASH_EASYCRAFT3 = "/ремесла"
 SlashCmdList.EASYCRAFT = function(msg)
   msg = ns.Lower(strtrim(msg or ""))
   if msg == "reset" then
@@ -356,20 +355,20 @@ SlashCmdList.EASYCRAFT = function(msg)
     ns:ScanSkills()
     ns:Print(ns.T("данные персонажа сброшены."))
     ns:RefreshAll()
-  elseif msg == "minimap" or msg == "миникарта" then
+  elseif msg == "minimap" then
     ns:SetMinimapHidden(ns.settings.minimap)
     ns:Print(ns.settings.minimap and ns.T("кнопка у миникарты показана.") or ns.T("кнопка у миникарты скрыта (вернуть: /ec minimap)."))
-  elseif msg == "choose" or msg == "выбор" then
+  elseif msg == "choose" then
     ns:ShowChoose()
-  elseif msg == "colors" or msg == "цвета" then
+  elseif msg == "colors" then
     ns:ShareColors()
-  elseif msg == "scan" or msg == "цены" then
+  elseif msg == "scan" then
     ns:ScanAuction(true)
-  elseif msg == "check" or msg == "сверка" then
+  elseif msg == "check" then
     ns:PrintRouteCheck()
-  elseif msg == "options" or msg == "config" or msg == "настройки" then
+  elseif msg == "options" or msg == "config" then
     ns:OpenSettings()
-  elseif msg == "help" or msg == "intro" or msg == "помощь" then
+  elseif msg == "help" or msg == "intro" then
     ns:ShowIntro()
   elseif msg == "" then
     if ns.ToggleFrame then ns:ToggleFrame() end
