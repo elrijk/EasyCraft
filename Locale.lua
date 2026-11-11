@@ -1691,3 +1691,7 @@ for k, v in pairs({
 
 -- 1.2: больше не напоминать
 if ns.EN["Больше не напоминать"] == nil then ns.EN["Больше не напоминать"] = "Don't remind me again" end
+
+if ns.EN["Что уже можно создавать снова и сколько ждать остальное."] == nil then
+  ns.EN["Что уже можно создавать снова и сколько ждать остальное."] = "What you can craft again and how long to wait for the rest."
+end
