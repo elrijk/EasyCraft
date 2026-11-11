@@ -76,6 +76,10 @@ local function compute(self, key, mode)
       caps[s.at] = true
     end
   end
+  -- выученные рецепты не из маршрута: пороги - по своим наблюдениям цветов
+  if self.SeenCandidates then
+    for _, c in ipairs(self:SeenCandidates(key, seen)) do pool[#pool + 1] = c end
+  end
   if #pool < 2 or last <= first then return nil end
 
   local book = self.char and self.char.book and self.char.book[key]

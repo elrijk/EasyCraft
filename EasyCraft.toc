@@ -46,6 +46,7 @@ Tracking.lua
 Crafting.lua
 Prices.lua
 Routes.lua
+Seen.lua
 Data\Best.lua
 Book.lua
 UI\Widgets.lua

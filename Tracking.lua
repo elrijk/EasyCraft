@@ -185,6 +185,8 @@ function TJ:ScanTradeSkill()
     and sameCounts(prev.avail, next(avail) and avail or nil)
   self.char.scan[key] = { t = time(), list = list, rank = rank, max = maxRank, colors = next(colors) and colors or nil,
     avail = next(avail) and avail or nil }
+  -- свои наблюдения цветов (Seen.lua): из них получаются пороги рецептов
+  if self.NoteColors then self:Safe(self.NoteColors, self, key, colors, rank) end
   -- книга рецептов и откаты (Book.lua): все выученные рецепты окна
   if not isCraft and self.ScanBook then self:Safe(self.ScanBook, self, key) end
   -- сверка маршрута с игрой: только когда сменился навык или число рецептов
@@ -355,6 +357,8 @@ SlashCmdList.EASYCRAFT = function(msg)
   elseif msg == "minimap" or msg == "миникарта" then
     TJ:SetMinimapHidden(TJ.settings.minimap)
     TJ:Print(TJ.settings.minimap and TJ.T("кнопка у миникарты показана.") or TJ.T("кнопка у миникарты скрыта (вернуть: /ec minimap)."))
+  elseif msg == "colors" or msg == "цвета" then
+    TJ:ShareColors()
   elseif msg == "scan" or msg == "цены" then
     TJ:ScanAuction(true)
   elseif msg == "check" or msg == "сверка" then

@@ -1674,3 +1674,9 @@ for k, v in pairs({
   ["Ячейка пустая"] = "The slot is empty",
   ["реагенты есть"] = "reagents on hand",
 }) do if TJ.EN[k] == nil then TJ.EN[k] = v end end
+
+-- 1.2: свои наблюдения цветов рецептов
+for k, v in pairs({
+  ["наблюдений пока нет: открой окно профессии."] = "no observations yet: open a profession window.",
+  ["Цвета рецептов (%d). Скопируй код (Ctrl+C) и отправь автору аддона:"] = "Recipe colours (%d). Copy the code (Ctrl+C) and send it to the addon author:",
+}) do if TJ.EN[k] == nil then TJ.EN[k] = v end end
