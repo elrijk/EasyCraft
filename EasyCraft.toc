@@ -50,6 +50,7 @@ Seen.lua
 Sale.lua
 Data\Best.lua
 Book.lua
+Recipes.lua
 UI\Widgets.lua
 UI\Content.lua
 UI\Choose.lua

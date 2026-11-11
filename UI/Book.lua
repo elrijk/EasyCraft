@@ -13,6 +13,7 @@ local format, min = string.format, math.min
 local GREEN, RED, GREY, GOLD = "|cff33dd33", "|cffff5555", "|cff9d9d9d", "|cffffd100"
 local MAP_ICON, SCROLL_ICON = "Interface\\Icons\\INV_Misc_Map_01", "Interface\\Icons\\INV_Scroll_03"
 local SHOWN = 10 -- строк в списке, пока не нажали «Показать все»
+local SHOWN_MAX = 100 -- и не больше стольких после: в базе сотни рецептов
 
 local function profitText(p)
   if not p then return GREY .. T("нет цены") .. "|r" end
@@ -222,6 +223,8 @@ local function unknownRow(key, e)
     icons = { MAP_ICON, vendor and src.item and ns:ItemIcon(src.item) or SCROLL_ICON }
   elseif src and src.info and src.info ~= "" then
     sub = src.info
+  elseif e.src and e.src ~= "" then
+    sub = e.src -- строка игры «где взять» из базы рецептов
   else
     sub = GREY .. T("Где взять рецепт, аддон пока не знает.") .. "|r"
   end
@@ -255,7 +258,7 @@ function C:BookCard(UI, key, known, unknown, scanned)
       or T("Открой окно профессии - аддон прочитает рецепты."), "small" } }, 32)
   local rows = {}
   for i, e in ipairs(known) do
-    if not all and i > SHOWN then break end
+    if (not all and i > SHOWN) or i > SHOWN_MAX then break end
     rows[#rows + 1] = knownRow(UI, key, e, i == 1)
   end
   c:Items(rows, 1, 28)
@@ -264,7 +267,7 @@ function C:BookCard(UI, key, known, unknown, scanned)
     c:Text(T("Ещё не выучены"), "head", { gap = 6 })
     rows = {}
     for i, e in ipairs(unknown) do
-      if not all and i > SHOWN then break end
+      if (not all and i > SHOWN) or i > SHOWN_MAX then break end
       rows[#rows + 1] = unknownRow(key, e)
     end
     c:Items(rows, 1, 28)

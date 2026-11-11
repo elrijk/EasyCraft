@@ -189,6 +189,8 @@ function ns:ScanTradeSkill()
   if self.NoteColors then self:Safe(self.NoteColors, self, key, colors, rank) end
   -- книга рецептов и откаты (Book.lua): все выученные рецепты окна
   if self.ScanBook then self:Safe(self.ScanBook, self, key) end
+  -- полная база рецептов профессии, выученных и нет (Recipes.lua)
+  if self.ScanAllRecipes then self:Safe(self.ScanAllRecipes, self, key) end
   -- сверка маршрута с игрой: только когда сменился навык или число рецептов
   local sig = tostring(rank) .. ":" .. ncolors
   if ncolors > 0 and self.CheckRoute and routeSig[key] ~= sig then
