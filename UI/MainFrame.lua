@@ -512,7 +512,7 @@ function Card:Steps(list)
     if i < n then
       local a = self:Take("steparrow", function()
         local t = self:CreateTexture(nil, "ARTWORK")
-        t:SetTexture("Interface\Buttons\UI-SpellbookIcon-NextPage-Up")
+        t:SetTexture("Interface\\Buttons\\UI-SpellbookIcon-NextPage-Up")
         t:SetSize(STEP_ARROW + 4, STEP_ARROW + 4)
         return t
       end)

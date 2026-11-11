@@ -60,6 +60,9 @@ local function compute(self, key, mode)
   local p = self.Profs[key]
   local base = baseSteps(p)
   local pool, seen = {}, {}
+  -- разовые шаги (жезл, философский камень: одно создание на один пункт)
+  -- остаются на своём месте и в выбор не идут
+  local pinAt = {}
   local first, last = huge, 0
   local caps = {} -- навык, на котором нужен новый ранг: шаг там обрывается
   for _, s in ipairs(base) do
@@ -68,7 +71,10 @@ local function compute(self, key, mode)
       if s.t > last then last = s.t end
       local sk = s.sk
       local id = recipeKey(s)
-      if sk and s.rc and id and not seen[id] and sk[2] and sk[4] then
+      if s.n == 1 and s.t - s.f == 1 then
+        pinAt[s.f] = s
+        if id then seen[id] = true end
+      elseif sk and s.rc and id and not seen[id] and sk[2] and sk[4] then
         seen[id] = true
         pool[#pool + 1] = { s = s, learn = sk[1] or 0, yellow = sk[2], grey = sk[4] }
       end
@@ -116,27 +122,32 @@ local function compute(self, key, mode)
   local runs, cur = {}, nil
   for skill = first, last - 1 do
     local best, bestScore
-    for _, c in ipairs(pool) do
-      if skill >= c.learn then
-        local sc = score(c, skill)
-        if sc and (not bestScore or sc < bestScore) then best, bestScore = c, sc end
+    if pinAt[skill] then
+      runs[#runs + 1] = { fixed = pinAt[skill], f = skill, t = skill + 1 }
+      cur = nil
+    else
+      for _, c in ipairs(pool) do
+        if skill >= c.learn then
+          local sc = score(c, skill)
+          if sc and (not bestScore or sc < bestScore) then best, bestScore = c, sc end
+        end
       end
+      if cur and cur.c ~= best and not cur.c.plain and not caps[skill] then
+        local mine = score(cur.c, skill)
+        if mine and bestScore and mine <= bestScore * KEEP then best = cur.c end
+      end
+      if not best then best = fallback(skill) end
+      if not best then return nil end
+      local same = cur and (cur.c == best or (best.plain and cur.c.plain and cur.c.s == best.s))
+      if not same or caps[skill] then
+        cur = { c = best, f = skill, t = skill, crafts = 0 }
+        runs[#runs + 1] = cur
+      end
+      local ch = chance(best, skill)
+      if ch <= 0 then ch = 1 end
+      cur.crafts = cur.crafts + 1 / ch
+      cur.t = skill + 1
     end
-    if cur and cur.c ~= best and not cur.c.plain and not caps[skill] then
-      local mine = score(cur.c, skill)
-      if mine and bestScore and mine <= bestScore * KEEP then best = cur.c end
-    end
-    if not best then best = fallback(skill) end
-    if not best then return nil end
-    local same = cur and (cur.c == best or (best.plain and cur.c.plain and cur.c.s == best.s))
-    if not same or caps[skill] then
-      cur = { c = best, f = skill, t = skill, crafts = 0 }
-      runs[#runs + 1] = cur
-    end
-    local ch = chance(best, skill)
-    if ch <= 0 then ch = 1 end
-    cur.crafts = cur.crafts + 1 / ch
-    cur.t = skill + 1
   end
 
   -- шаги не-ремёсла (учитель, книга, задание) встают туда же по навыку, где
@@ -158,22 +169,26 @@ local function compute(self, key, mode)
       out[#out + 1] = others[oi].s
       oi = oi + 1
     end
-    local src = r.c.s
-    local step = {}
-    for k, v in pairs(src) do step[k] = v end
-    local n = ceil(r.crafts - 1e-6)
-    if n < 1 then n = 1 end
-    step.f, step.t, step.n = r.f, r.t, n
-    if src.rc then
-      local m = {}
-      for i = 1, #src.rc - 1, 2 do
-        m[i] = src.rc[i]
-        m[i + 1] = (src.rc[i + 1] or 1) * n
+    if r.fixed then
+      out[#out + 1] = r.fixed
+    else
+      local src = r.c.s
+      local step = {}
+      for k, v in pairs(src) do step[k] = v end
+      local n = ceil(r.crafts - 1e-6)
+      if n < 1 then n = 1 end
+      step.f, step.t, step.n = r.f, r.t, n
+      if src.rc then
+        local m = {}
+        for i = 1, #src.rc - 1, 2 do
+          m[i] = src.rc[i]
+          m[i + 1] = (src.rc[i + 1] or 1) * n
+        end
+        step.m = m
       end
-      step.m = m
+      step.gen = mode
+      out[#out + 1] = step
     end
-    step.gen = mode
-    out[#out + 1] = step
   end
   while others[oi] do
     out[#out + 1] = others[oi].s
