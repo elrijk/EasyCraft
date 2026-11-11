@@ -22,7 +22,8 @@ local WIDTH = 760
 local SIDE = 28 -- поля окна слева и справа
 local GAP = 12 -- между блоками
 local INNER = WIDTH - SIDE * 2
-local HERO_H = 176
+local HERO_H = 330 -- примерная высота панели профессии (точная - по содержимому)
+local STRIP_W = 470 -- ширина полосы «зачем»
 local TAB_W, TAB_H, TAB_STEP = 178, 34, 37
 local MAX_ICONS = 4
 
@@ -144,11 +145,13 @@ end
 -- Блок-инфографика: заголовок золотом, ряд значков по центру, подпись.
 local function infoCard(parent, width)
   local c = CreateFrame("Frame", nil, parent, BackdropTemplateMixin and "BackdropTemplate" or nil)
-  W.Backdrop(c, "Interface\\Buttons\\WHITE8X8", nil, 14, 0.2, 0.14, 0.05, 0.9, 1, 0.82, 0, 1)
+  -- без рамки и подложки: значки лежат прямо на рисунке панели
   c:SetWidth(width)
   c.head = W.Text(c, "head", false)
   c.head:SetJustifyH("CENTER")
-  c.head:SetPoint("TOP", 0, -12)
+  c.head:SetPoint("TOP", 0, -8)
+  c.head:SetShadowOffset(1, -1)
+  c.head:SetShadowColor(0, 0, 0, 0.9)
   c.items, c.rings, c.classes = {}, {}, {}
   for i = 1, MAX_ICONS do
     c.items[i] = W.ItemIcon(c, 36)
@@ -162,6 +165,8 @@ local function infoCard(parent, width)
   c.caption:SetJustifyH("CENTER")
   c.caption:SetWidth(width - 20)
   c.caption:SetTextColor(0.92, 0.9, 0.84)
+  c.caption:SetShadowOffset(1, -1)
+  c.caption:SetShadowColor(0, 0, 0, 0.9)
   -- kind: "items" | "rings" | "classes"; n значков по центру на высоте y
   function c:Row(kind, n, size)
     for _, list in pairs({ self.items, self.rings, self.classes }) do
@@ -239,36 +244,48 @@ local function build()
   hero.emblem:SetTexCoord(0.08, 0.92, 0.08, 0.92)
   hero.shade = hero:CreateTexture(nil, "BORDER", nil, 3) -- слева темнее: там текст
   hero.shade:SetPoint("TOPLEFT", 4, -4)
-  hero.shade:SetPoint("BOTTOMLEFT", 4, 4)
-  hero.shade:SetWidth(floor(INNER * 0.7))
+  hero.shade:SetPoint("BOTTOMRIGHT", -4, 4)
   hero.shade:SetColorTexture(1, 1, 1, 1)
-  ok = CreateColor and pcall(hero.shade.SetGradient, hero.shade, "HORIZONTAL", CreateColor(0, 0, 0, 0.85), CreateColor(0, 0, 0, 0))
+  ok = CreateColor and pcall(hero.shade.SetGradient, hero.shade, "HORIZONTAL", CreateColor(0, 0, 0, 0.85), CreateColor(0, 0, 0, 0.1))
   if not ok then hero.shade:SetColorTexture(0, 0, 0, 0.45) end
-  hero.badge = W.RingIcon(hero, 64)
-  hero.badge:SetPoint("TOPLEFT", 22, -24)
+  -- основная она или вторичная - мелко над названием
+  hero.kind = W.Text(hero, "head", false)
+  hero.kind:SetPoint("TOPLEFT", 26, -20)
+  hero.kind:SetShadowOffset(1, -1)
+  hero.kind:SetShadowColor(0, 0, 0, 0.9)
+  hero.badge = W.RingIcon(hero, 56)
+  hero.badge:SetPoint("TOPLEFT", 24, -44)
   hero.name = W.Text(hero, "huge", false)
-  hero.name:SetPoint("TOPLEFT", hero.badge, "TOPRIGHT", 16, -4)
+  hero.name:SetPoint("LEFT", hero.badge, "RIGHT", 16, 0)
   file, _, flags = hero.name:GetFont()
-  if file then hero.name:SetFont(file, 34, flags) end
+  if file then hero.name:SetFont(file, 44, flags) end
   hero.name:SetShadowOffset(2, -2)
   hero.name:SetShadowColor(0, 0, 0, 0.9)
-  hero.kind = W.Text(hero, "body", false)
-  hero.kind:SetTextColor(0.75, 0.72, 0.65)
-  hero.kind:SetPoint("TOPLEFT", hero.name, "BOTTOMLEFT", 2, -4)
+  -- строка «зачем» на тёмной полосе между двумя линиями
+  hero.lineTop = rule(hero, STRIP_W, 0.7)
+  hero.lineTop:SetPoint("TOPLEFT", hero.badge, "BOTTOMLEFT", -4, -16)
   hero.why = W.Text(hero, "title")
-  hero.why:SetWidth(floor(INNER * 0.58))
+  hero.why:SetWidth(STRIP_W - 28)
   hero.why:SetTextColor(0.95, 0.93, 0.88)
-  hero.why:SetShadowOffset(1, -1)
-  hero.why:SetShadowColor(0, 0, 0, 0.9)
-  hero.why:SetPoint("TOPLEFT", hero.badge, "BOTTOMLEFT", 2, -16)
+  hero.why:SetPoint("TOPLEFT", hero.lineTop, "BOTTOMLEFT", 14, -12)
+  hero.lineBot = rule(hero, STRIP_W, 0.7)
+  hero.lineBot:SetPoint("TOPLEFT", hero.why, "BOTTOMLEFT", -14, -12)
+  hero.whyBg = hero:CreateTexture(nil, "BORDER", nil, 5)
+  hero.whyBg:SetPoint("TOPLEFT", hero.lineTop, "BOTTOMLEFT", 0, 0)
+  hero.whyBg:SetPoint("BOTTOMRIGHT", hero.lineBot, "TOPRIGHT", 0, 0)
+  hero.whyBg:SetColorTexture(0, 0, 0, 0.55)
   hero.route = W.Button(hero, "", 180, S.btn)
-  hero.route:SetPoint("BOTTOMRIGHT", -14, 12)
+  hero.route:SetPoint("TOPRIGHT", -14, -14)
   tipButton(hero.route)
 
   -- три блока-инфографики
-  local colW = floor((INNER - GAP * 2) / 3)
+  -- лежат на панели профессии, под полосой «зачем»
+  local colW = floor((INNER - 40) / 3)
   f.cards = {}
-  for i = 1, 3 do f.cards[i] = infoCard(f, colW) end
+  for i = 1, 3 do
+    f.cards[i] = infoCard(f, colW)
+    f.cards[i]:SetFrameLevel(hero:GetFrameLevel() + 3)
+  end
   f.colW = colW
 
   -- низ: изучена ли, крупная кнопка учителя, листание
@@ -338,7 +355,7 @@ local function build()
 end
 
 -- Рисунок на всю панель без искажения: лишнее по длинной стороне срезается.
-local function coverArt(hero, atlas)
+local function coverArt(hero, atlas, height)
   local info = C_Texture.GetAtlasInfo(atlas)
   if not info then return false end
   hero.art:SetAtlas(atlas)
@@ -346,7 +363,7 @@ local function coverArt(hero, atlas)
   local l, r, t, b = info.leftTexCoord, info.rightTexCoord, info.topTexCoord, info.bottomTexCoord
   local aw, ah = info.width or 0, info.height or 0
   if l and r and t and b and aw > 0 and ah > 0 then
-    local want, have = (INNER - 8) / (HERO_H - 8), aw / ah
+    local want, have = (INNER - 8) / ((height or HERO_H) - 8), aw / ah
     if have > want then
       local cut = (r - l) * (1 - want / have) / 2
       l, r = l + cut, r - cut
@@ -387,11 +404,12 @@ local function fill(f, key)
   hero.name:SetText(TJ:N(p))
   hero.kind:SetText(p.kind == "secondary" and T("Вторичная") or T("Основная"))
   hero.why:SetText(T(info[1]))
+  -- где кончается полоса «зачем» (от верха панели)
+  local stripEnd = 44 + 56 + 16 + 1 + 12 + hero.why:GetStringHeight() + 12 + 1
   hero.route:SetText(T("Открыть маршрут"))
   hero.route:SetShown(learned)
   hero.route.tip = T("Маршрут прокачки этой профессии в окне EasyCraft.")
   hero.route:SetScript("OnClick", function() f:Hide(); TJ.UI:Open(key) end)
-  y = y + HERO_H + GAP
 
   -- 1. что создаёт или добывает: предметы с подсказками
   local c1 = f.cards[1]
@@ -441,15 +459,18 @@ local function fill(f, key)
     c3.caption:SetText(T(who))
   end
 
-  -- блоки одной высоты
+  -- группы значков - на панели под полосой; высота панели - по содержимому
   local h = 0
-  for _, c in ipairs(f.cards) do h = max(h, 40 + 44 + 12 + c.caption:GetStringHeight() + 16) end
+  for _, c in ipairs(f.cards) do h = max(h, 40 + 44 + 12 + c.caption:GetStringHeight() + 6) end
   for i, c in ipairs(f.cards) do
     c:SetHeight(h)
     c:ClearAllPoints()
-    c:SetPoint("TOPLEFT", SIDE + (i - 1) * (f.colW + GAP), -y)
+    c:SetPoint("TOPLEFT", SIDE + 20 + (i - 1) * f.colW, -(y + stripEnd + 10))
   end
-  y = y + h + 20
+  local heroH = stripEnd + 10 + h + 16
+  hero:SetHeight(heroH)
+  if shown then coverArt(hero, atlas, heroH) end
+  y = y + heroH + 20
 
   -- низ
   f.state:SetText(learned and ("|cff33dd33" .. format(T("Изучена: %d/%d"), rank, maxRank) .. "|r")
