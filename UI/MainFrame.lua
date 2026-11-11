@@ -533,6 +533,8 @@ end
 -- середине края; opts.right - от правого края; opts.y - не на краю, а
 -- внутри карточки (центр таблички на этой высоте); opts.edge - цвет рамки
 -- (по умолчанию золотой); opts.tip и opts.onClick - подсказка и щелчок.
+-- цвета таблички «Текущий шаг»: заливка, рамка, надпись
+local CUR_FILL, CUR_EDGE, CUR_INK = { 0.95, 0.72, 0.08 }, { 1, 0.92, 0.5 }, { 0.14, 0.08, 0 }
 function Card:EdgeBadge(x, text, opts)
   opts = opts or {}
   local b = self:Take("edgebadge", function()
@@ -556,11 +558,23 @@ function Card:EdgeBadge(x, text, opts)
   end)
   b:SetFrameLevel(self:GetFrameLevel() + 7)
   local e = opts.edge or { 1, 0.82, 0 }
-  if b.SetBackdropBorderColor then b:SetBackdropBorderColor(e[1], e[2], e[3], 1) end
-  b.text:SetTextColor(1, 0.82, 0)
-  -- big - крупнее (текущий шаг)
+  -- big - «Текущий шаг»: крупнее, золотая заливка и тёмная надпись, чтобы
+  -- табличка была видна сразу; обычная - тёмная с золотыми буквами
   b.text:SetFontObject(opts.big and (_G.SystemFont_Med3 or GameFontNormal) or GameFontNormalSmall)
-  b.text:SetTextColor(1, 0.82, 0)
+  if opts.big then
+    if b.SetBackdropColor then
+      b:SetBackdropColor(CUR_FILL[1], CUR_FILL[2], CUR_FILL[3], 1)
+      b:SetBackdropBorderColor(CUR_EDGE[1], CUR_EDGE[2], CUR_EDGE[3], 1)
+    end
+    b.text:SetTextColor(CUR_INK[1], CUR_INK[2], CUR_INK[3])
+  else
+    if b.SetBackdropColor then
+      b:SetBackdropColor(0.07, 0.05, 0.03, 1)
+      b:SetBackdropBorderColor(e[1], e[2], e[3], 1)
+    end
+    b.text:SetTextColor(1, 0.82, 0)
+  end
+  b.text:SetShadowOffset(0, 0)
   b.text:SetText(text or "")
   b:SetHeight(opts.big and 28 or 22)
   b:SetWidth((b.text:GetStringWidth() or 70) + (opts.big and 30 or 22))
@@ -930,14 +944,14 @@ UI.TILE_MODE, UI.TILE_TOP = TILE_MODE, TILE_TOP
 -- wide - широкая плитка текущего шага на главной: значок слева, рядом
 -- название и строка «что нужно», справа табличка «Текущий шаг» (как на
 -- карточке шага) и стрелка.
--- Тёмная табличка в золотой рамке, как «Текущий шаг» на карточке шага.
+-- Золотая табличка с тёмной надписью, как «Текущий шаг» на карточке шага.
 local function GoldPlate(parent, edgeSize)
   local f = CreateFrame("Frame", nil, parent, BackdropTemplateMixin and "BackdropTemplate" or nil)
   if f.SetBackdrop then
     f:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8X8", edgeFile = "Interface\\Tooltips\\UI-Tooltip-Border",
       edgeSize = edgeSize or 10, insets = { left = 2, right = 2, top = 2, bottom = 2 } })
-    f:SetBackdropColor(0.07, 0.05, 0.03, 1)
-    f:SetBackdropBorderColor(1, 0.82, 0, 1)
+    f:SetBackdropColor(CUR_FILL[1], CUR_FILL[2], CUR_FILL[3], 1)
+    f:SetBackdropBorderColor(CUR_EDGE[1], CUR_EDGE[2], CUR_EDGE[3], 1)
   end
   return f
 end
@@ -986,13 +1000,14 @@ local function MakeTile(parent, mode, wide)
     b.plate:SetFrameLevel(b:GetFrameLevel() + 3)
     b.label = b.plate:CreateFontString(nil, "OVERLAY")
     b.label:SetFontObject(_G.SystemFont_Med3 or GameFontNormal)
-    b.label:SetTextColor(1, 0.82, 0, 1)
+    b.label:SetTextColor(CUR_INK[1], CUR_INK[2], CUR_INK[3], 1)
+    b.label:SetShadowOffset(0, 0)
     b.label:SetPoint("LEFT", 12, -1)
     b.arrow = b.plate:CreateTexture(nil, "OVERLAY")
     b.arrow:SetSize(14, 14)
     b.arrow:SetPoint("RIGHT", -8, 0)
-    W.SetTex(b.arrow, ARROW_TEX, 1, 0.82, 0, 1)
-    b.arrow:SetVertexColor(1, 0.82, 0, 1)
+    W.SetTex(b.arrow, ARROW_TEX, CUR_INK[1], CUR_INK[2], CUR_INK[3], 1)
+    b.arrow:SetVertexColor(CUR_INK[1], CUR_INK[2], CUR_INK[3], 1)
     b.wname = W.Text(b, "body", false)
     b.wname:SetTextColor(1, 1, 1, 1)
     b.wfoot = W.Text(b, "small", false)
