@@ -1505,4 +1505,6 @@ ns.LOCALES.zhTW = function() return {
   ["at the auction house"] = "在拍賣場",
   ["to a vendor"] = "賣給商人",
   ["disenchant, roughly"] = "分解，約數",
+  ["read prices at the open auction house"] = "在打開的拍賣場讀取價格",
+  ["a code with recipe colours for the author"] = "給作者的配方顏色代碼",
 } end

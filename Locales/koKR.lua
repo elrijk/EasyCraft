@@ -1504,4 +1504,6 @@ ns.LOCALES.koKR = function() return {
   ["at the auction house"] = "경매장에서",
   ["to a vendor"] = "상인에게",
   ["disenchant, roughly"] = "마력 추출, 대략",
+  ["read prices at the open auction house"] = "열려 있는 경매장에서 가격 읽기",
+  ["a code with recipe colours for the author"] = "제작자에게 보낼 제조법 색상 코드",
 } end

@@ -1490,4 +1490,6 @@ ns.LOCALES.deDE = function() return {
   ["at the auction house"] = "im Auktionshaus",
   ["to a vendor"] = "an einen Händler",
   ["disenchant, roughly"] = "entzaubern, ungefähr",
+  ["read prices at the open auction house"] = "Preise im offenen Auktionshaus lesen",
+  ["a code with recipe colours for the author"] = "ein Code mit Rezeptfarben für den Autor",
 } end

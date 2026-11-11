@@ -1492,4 +1492,6 @@ ns.LOCALES.ptBR = function() return {
   ["at the auction house"] = "na casa de leilões",
   ["to a vendor"] = "a um comerciante",
   ["disenchant, roughly"] = "desencantar, aproximado",
+  ["read prices at the open auction house"] = "ler os preços na casa de leilões aberta",
+  ["a code with recipe colours for the author"] = "um código com as cores das receitas para o autor",
 } end

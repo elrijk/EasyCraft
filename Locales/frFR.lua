@@ -1489,4 +1489,6 @@ ns.LOCALES.frFR = function() return {
   ["at the auction house"] = "à l'hôtel des ventes",
   ["to a vendor"] = "à un marchand",
   ["disenchant, roughly"] = "désenchanter, approximatif",
+  ["read prices at the open auction house"] = "lire les prix à l'hôtel des ventes ouvert",
+  ["a code with recipe colours for the author"] = "un code avec les couleurs des recettes pour l'auteur",
 } end
