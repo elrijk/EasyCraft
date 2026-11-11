@@ -1506,4 +1506,6 @@ ns.LOCALES.ptBR = function() return {
   ["General"] = "Geral",
   ["Hints"] = "Dicas",
   ["Map and auction house"] = "Mapa e leilão",
+  ["Leveling path"] = "Caminho de evolução",
+  ["How to get to 300. Pick once - it applies to all professions."] = "Como chegar a 300. Escolha uma vez: vale para todas as profissões.",
 } end

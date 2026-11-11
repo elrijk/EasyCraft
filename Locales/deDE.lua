@@ -1504,4 +1504,6 @@ ns.LOCALES.deDE = function() return {
   ["General"] = "Allgemein",
   ["Hints"] = "Hinweise",
   ["Map and auction house"] = "Karte und Auktionshaus",
+  ["Leveling path"] = "Levelweg",
+  ["How to get to 300. Pick once - it applies to all professions."] = "Wie du auf 300 kommst. Einmal wählen - gilt für alle Berufe.",
 } end

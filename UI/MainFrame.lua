@@ -1351,57 +1351,87 @@ end
 -- { { text =, icon =, onClick =, tip =, enabled = } }.
 local HEAD_TILE_H, HEAD_TILE_GAP, HEAD_TILE_MIN = 44, 8, 160
 local ceil = math.ceil
+-- Ряд плиток на карточке с её текущей строки (c.y). d.sel ~= nil -
+-- переключатель: выбранная плитка в яркой золотой рамке с галочкой.
+-- opts.equal - все плитки одной ширины на всю ширину карточки;
+-- opts.h - высота плитки.
+function Card:HeadTiles(buttons, opts)
+  opts = opts or {}
+  local c = self
+  local H = opts.h or HEAD_TILE_H
+  local ringSize = H >= 52 and 30 or 24
+  local n = #buttons
+  local eqW = opts.equal and floor((CARD_W - PAD * 2 - HEAD_TILE_GAP * (n - 1)) / n) or nil
+  -- надпись в одну строку, ширина плитки - по надписи (не уже
+  -- HEAD_TILE_MIN); не влезла в ряд - на следующий
+  local x, row = PAD, 0
+  for _, d in ipairs(buttons) do
+    local t = c:Take("headtile" .. ringSize, function()
+      local b = CreateFrame("Button", nil, c, BackdropTemplateMixin and "BackdropTemplate" or nil)
+      W.Backdrop(b, "Interface\\Buttons\\WHITE8X8", nil, 10, 0.1, 0.075, 0.05, 0.95, 0.6, 0.48, 0.25, 1)
+      local hl = b:CreateTexture(nil, "HIGHLIGHT")
+      hl:SetPoint("TOPLEFT", 2, -2)
+      hl:SetPoint("BOTTOMRIGHT", -2, 2)
+      hl:SetColorTexture(1, 0.82, 0, 0.12)
+      b.ring = W.RingIcon(b, ringSize)
+      b.ring:SetPoint("LEFT", 10, 0)
+      b.title = W.Text(b, ringSize > 24 and "title" or "head", false)
+      b.title:SetPoint("LEFT", b.ring, "RIGHT", 9, 0)
+      b.check = b:CreateTexture(nil, "OVERLAY")
+      b.check:SetSize(20, 20)
+      b.check:SetPoint("RIGHT", -10, 0)
+      b.check:SetTexture("Interface\\RaidFrame\\ReadyCheck-Ready")
+      b:SetScript("OnEnter", function(s)
+        if not s.tip then return end
+        GameTooltip:SetOwner(s, "ANCHOR_BOTTOM")
+        GameTooltip:SetText(s.title:GetText() or "", 1, 0.82, 0)
+        GameTooltip:AddLine(s.tip, 1, 1, 1, true)
+        GameTooltip:Show()
+      end)
+      b:SetScript("OnLeave", function() GameTooltip:Hide() end)
+      return b
+    end)
+    local on = d.enabled ~= false
+    t:SetHeight(H)
+    t.ring:SetIcon(ns.Icon(d.icon))
+    t.title:SetText(d.text)
+    t.tip = d.tip
+    t:SetAlpha(on and 1 or 0.5)
+    -- переключатель: выбранная - ярко, остальные - приглушённо
+    t.check:SetShown(d.sel == true)
+    if d.sel == true then
+      t:SetBackdropColor(0.26, 0.19, 0.06, 1)
+      t:SetBackdropBorderColor(1, 0.82, 0, 1)
+      t.title:SetTextColor(1, 1, 1, 1)
+      t.ring:SetAlpha(1)
+    else
+      t:SetBackdropColor(0.1, 0.075, 0.05, 0.95)
+      t:SetBackdropBorderColor(0.6, 0.48, 0.25, 1)
+      t.title:SetTextColor(W.GOLD[1], W.GOLD[2], W.GOLD[3], 1)
+      t.ring:SetAlpha(d.sel == false and 0.75 or 1)
+    end
+    local fn = d.onClick
+    t:SetScript("OnClick", function(s)
+      if not on then return end
+      W.Sound("IG_MAINMENU_OPTION_CHECKBOX_ON")
+      if fn then fn(s) end
+    end)
+    local tw = eqW or max(HEAD_TILE_MIN, 10 + ringSize + 9 + ceil(t.title:GetStringWidth() or 80) + 16)
+    if x > PAD and x + tw > CARD_W - PAD + 1 then x, row = PAD, row + 1 end
+    t:SetWidth(tw)
+    t:SetPoint("TOPLEFT", c, "TOPLEFT", x, -(c.y + row * (H + HEAD_TILE_GAP)))
+    x = x + tw + HEAD_TILE_GAP
+  end
+  c.y = c.y + (row + 1) * (H + HEAD_TILE_GAP)
+end
+
 function UI:PageHeader(title, text, buttons)
   local c = self:Card("flat")
   c:Text(title, "huge", { x = PAD, gap = 8 })
   if text and text ~= "" then c:Text(text, "body", { x = PAD, gap = 4, color = INK_HEAD_TEXT }) end
   if buttons and #buttons > 0 then
     c:Space(8)
-    -- плитки в ряд; надпись в одну строку, ширина плитки - по надписи
-    -- (не уже HEAD_TILE_MIN); не влезла в ряд - на следующий
-    local x, row = PAD, 0
-    for i, d in ipairs(buttons) do
-      local t = c:Take("headtile", function()
-        local b = CreateFrame("Button", nil, c, BackdropTemplateMixin and "BackdropTemplate" or nil)
-        W.Backdrop(b, "Interface\\Buttons\\WHITE8X8", nil, 10, 0.1, 0.075, 0.05, 0.95, 0.6, 0.48, 0.25, 1)
-        b:SetHeight(HEAD_TILE_H)
-        local hl = b:CreateTexture(nil, "HIGHLIGHT")
-        hl:SetPoint("TOPLEFT", 2, -2)
-        hl:SetPoint("BOTTOMRIGHT", -2, 2)
-        hl:SetColorTexture(1, 0.82, 0, 0.12)
-        b.ring = W.RingIcon(b, 24)
-        b.ring:SetPoint("LEFT", 10, 0)
-        b.title = W.Text(b, "head", false)
-        b.title:SetTextColor(W.GOLD[1], W.GOLD[2], W.GOLD[3], 1)
-        b.title:SetPoint("LEFT", b.ring, "RIGHT", 9, 0)
-        b:SetScript("OnEnter", function(s)
-          if not s.tip then return end
-          GameTooltip:SetOwner(s, "ANCHOR_BOTTOM")
-          GameTooltip:SetText(s.title:GetText() or "", 1, 0.82, 0)
-          GameTooltip:AddLine(s.tip, 1, 1, 1, true)
-          GameTooltip:Show()
-        end)
-        b:SetScript("OnLeave", function() GameTooltip:Hide() end)
-        return b
-      end)
-      local on = d.enabled ~= false
-      t.ring:SetIcon(ns.Icon(d.icon))
-      t.title:SetText(d.text)
-      t.tip = d.tip
-      t:SetAlpha(on and 1 or 0.5)
-      local fn = d.onClick
-      t:SetScript("OnClick", function(s)
-        if not on then return end
-        W.Sound("IG_MAINMENU_OPTION_CHECKBOX_ON")
-        if fn then fn(s) end
-      end)
-      local tw = max(HEAD_TILE_MIN, 10 + 24 + 9 + ceil(t.title:GetStringWidth() or 80) + 16)
-      if x > PAD and x + tw > CARD_W - PAD then x, row = PAD, row + 1 end
-      t:SetWidth(tw)
-      t:SetPoint("TOPLEFT", c, "TOPLEFT", x, -(c.y + row * (HEAD_TILE_H + HEAD_TILE_GAP)))
-      x = x + tw + HEAD_TILE_GAP
-    end
-    c.y = c.y + (row + 1) * (HEAD_TILE_H + HEAD_TILE_GAP)
+    c:HeadTiles(buttons)
   end
   self:End(c)
   self.y = self.y - 4

@@ -1503,4 +1503,6 @@ ns.LOCALES.frFR = function() return {
   ["General"] = "Général",
   ["Hints"] = "Aides",
   ["Map and auction house"] = "Carte et hôtel des ventes",
+  ["Leveling path"] = "Parcours de progression",
+  ["How to get to 300. Pick once - it applies to all professions."] = "Comment atteindre 300. Choisissez une fois : cela vaut pour tous les métiers.",
 } end

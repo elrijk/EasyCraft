@@ -1512,4 +1512,6 @@ ns.LOCALES.esES = function() return {
   ["General"] = "General",
   ["Hints"] = "Ayudas",
   ["Map and auction house"] = "Mapa y subasta",
+  ["Leveling path"] = "Ruta de subida",
+  ["How to get to 300. Pick once - it applies to all professions."] = "Cómo llegar a 300. Elige una vez: vale para todas las profesiones.",
 } end

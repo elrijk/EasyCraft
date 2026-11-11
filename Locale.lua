@@ -1735,3 +1735,9 @@ for k, v in pairs({
   ["Подсказки"] = "Hints",
   ["Карта и аукцион"] = "Map and auction house",
 }) do if ns.EN[k] == nil then ns.EN[k] = v end end
+
+-- 1.2: «Путь прокачки» на главной
+for k, v in pairs({
+  ["Путь прокачки"] = "Leveling path",
+  ["Как идти до 300. Выбери один раз - действует на все профессии."] = "How to get to 300. Pick once - it applies to all professions.",
+}) do if ns.EN[k] == nil then ns.EN[k] = v end end

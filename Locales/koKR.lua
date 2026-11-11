@@ -1518,4 +1518,6 @@ ns.LOCALES.koKR = function() return {
   ["General"] = "일반",
   ["Hints"] = "도움말",
   ["Map and auction house"] = "지도와 경매장",
+  ["Leveling path"] = "숙련 경로",
+  ["How to get to 300. Pick once - it applies to all professions."] = "300까지 가는 방법입니다. 한 번 고르면 모든 전문 기술에 적용됩니다.",
 } end

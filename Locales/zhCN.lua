@@ -1519,4 +1519,6 @@ ns.LOCALES.zhCN = function() return {
   ["General"] = "常规",
   ["Hints"] = "提示",
   ["Map and auction house"] = "地图和拍卖行",
+  ["Leveling path"] = "升级路线",
+  ["How to get to 300. Pick once - it applies to all professions."] = "怎样升到 300。选一次即可，对所有专业生效。",
 } end

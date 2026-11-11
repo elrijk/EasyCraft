@@ -457,15 +457,47 @@ function C:HomeTabs()
   }
 end
 
--- Вкладки страницы профессии - режимы маршрута: { название, значок, подсказка, режим }.
-local MODE_ICON = { guide = "INV_Misc_Book_09", cheap = "INV_Misc_Coin_02", fast = "Ability_Rogue_Sprint" }
+-- У страницы профессии вкладок нет: режим маршрута выбирают на главной
+-- (RouteModeCard).
 function C:ProfTabs(key)
-  local list = {}
-  if not (ns.HasRouteModes and ns:HasRouteModes(key)) then return list end
-  for _, m in ipairs(ns.ROUTE_MODES) do
-    list[#list + 1] = { T(ns.ROUTE_MODE_NAME[m]), "Interface\\Icons\\" .. MODE_ICON[m], T(ns.ROUTE_MODE_TIP[m]), m }
+  return {}
+end
+
+-- «Путь прокачки»: крупный переключатель режима маршрута на главной. Один
+-- на все профессии; показывается, если хоть у одной изученной есть выбор.
+local MODE_ICON = { guide = "INV_Misc_Book_09", cheap = "INV_Misc_Coin_02", fast = "Ability_Rogue_Sprint" }
+function C:RouteModeCard(UI)
+  if not ns.HasRouteModes then return end
+  local any, waiting = false, false
+  local mode = ns:RouteMode()
+  for _, key in ipairs(ns:LearnedList()) do
+    if ns:HasRouteModes(key) then
+      any = true
+      -- режиму не хватило цен: у профессии пока обычный маршрут
+      if mode ~= "guide" and ns.Profs[key].routeMode ~= mode then waiting = true end
+    end
   end
-  return list
+  if not any then return end
+  local c = UI:Card("normal")
+  c:Head({ ring = "Interface\\Icons\\INV_Misc_Map_01" }, T("Путь прокачки"),
+    { { T("Как идти до 300. Выбери один раз - действует на все профессии."), "small" } }, 32)
+  c:Space(4)
+  local tiles = {}
+  for _, md in ipairs(ns.ROUTE_MODES) do
+    tiles[#tiles + 1] = { text = T(ns.ROUTE_MODE_NAME[md]), icon = MODE_ICON[md], tip = T(ns.ROUTE_MODE_TIP[md]), sel = md == mode,
+      onClick = function()
+        if md == ns:RouteMode() then return end
+        ns:SetRouteMode(md)
+        UI:Render(true)
+      end }
+  end
+  c:HeadTiles(tiles, { equal = true, h = 54 })
+  -- что значит выбранный режим - словами под переключателем
+  c:Text(T(ns.ROUTE_MODE_TIP[mode]), "body", { gap = 2 })
+  if waiting then
+    c:Text(YELLOW .. T("Для этого режима нужны цены: открой аукцион. Пока показан обычный маршрут.") .. "|r", "small", { gap = 4 })
+  end
+  UI:End(c, 10)
 end
 
 -- Гайды вкладок снова (кнопка «?», настройки, /ec помощь): показать на
@@ -614,6 +646,7 @@ function C:BuildHome(UI, tab)
   elseif tab == 5 then
     self:BuildBook(UI)
   else
+    self:RouteModeCard(UI)
     self:BuildProfList(UI)
   end
 end

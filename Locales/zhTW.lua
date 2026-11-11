@@ -1519,4 +1519,6 @@ ns.LOCALES.zhTW = function() return {
   ["General"] = "一般",
   ["Hints"] = "提示",
   ["Map and auction house"] = "地圖和拍賣場",
+  ["Leveling path"] = "升級路線",
+  ["How to get to 300. Pick once - it applies to all professions."] = "怎樣升到 300。選一次即可，對所有專業生效。",
 } end

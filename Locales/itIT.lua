@@ -1512,4 +1512,6 @@ ns.LOCALES.itIT = function() return {
   ["General"] = "Generale",
   ["Hints"] = "Suggerimenti",
   ["Map and auction house"] = "Mappa e asta",
+  ["Leveling path"] = "Percorso di crescita",
+  ["How to get to 300. Pick once - it applies to all professions."] = "Come arrivare a 300. Scegli una volta: vale per tutte le professioni.",
 } end
