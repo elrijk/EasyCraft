@@ -112,15 +112,20 @@ end
 
 -- Текст в правом верхнем углу строки (не сдвигает раскладку). outline -
 -- с тёмной обводкой букв (на пергаменте зелёный и жёлтый иначе плохо видно).
+-- outline - тонкая тёмная тень под буквами (зелёное число на пергаменте).
+-- Шрифт у строки не меняем: после SetFont она перестаёт слушаться своего
+-- шрифта, и обводка оставалась на строках, взятых из запаса повторно.
+-- Строки с тенью - в своём запасе, чтобы тень не попала на обычные.
 function Card:Corner(text, kind, y, color, outline)
-  local fs = self:Take("corner:" .. (kind or "small"), function() return W.Text(self, kind or "small", false) end)
+  local fs = self:Take("corner:" .. (kind or "small") .. (outline and ":shadow" or ""), function()
+    local t = W.Text(self, kind or "small", false)
+    if outline then
+      t:SetShadowColor(0, 0, 0, 0.75)
+      t:SetShadowOffset(1, -1)
+    end
+    return t
+  end)
   local spec = W.FONTS[kind or "small"]
-  -- шрифт заново: строка из запаса могла остаться с обводкой
-  fs:SetFontObject(_G[spec[1]] or _G[spec[2]] or GameFontNormal)
-  if outline then
-    local file, size = fs:GetFont()
-    if file then fs:SetFont(file, size, "OUTLINE") end
-  end
   local c = color or (self.ink and INK[kind or "small"]) or spec[3]
   fs:SetTextColor(c[1], c[2], c[3], 1)
   fs:SetJustifyH("RIGHT")
