@@ -1,6 +1,6 @@
 local ADDON, TJ = ...
 _G.EasyCraft = TJ
-TJ.version = "1.0.0"
+TJ.version = "1.2.0"
 -- значок аддона: список модификаций, портрет окна, кнопка у миникарты
 TJ.ICON = "Interface\\AddOns\\" .. ADDON .. "\\Media\\Icon"
 

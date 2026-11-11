@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.2.0
+
+- New "Recipes" tab: every learned recipe with its profit (sale minus reagents at auction prices), the most profitable on top.
+- Recipes you have not learned yet show where to get them; a click puts a mark on the map.
+- Craft queue: click a recipe to queue it, see what to buy, send it to Auctionator, craft with one button. The queue is ordered by profit.
+- Cooldowns of all your characters in one list.
+- "Dungeons", "Raids" and "PvP" filters: what is considered the best to craft and for which classes. Starter list, not yet checked against WoW Forever.
+- New strings are in English and Russian only; other languages show them in English.
+
 ## 1.0.0
 
 First public release.

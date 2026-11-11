@@ -1427,7 +1427,7 @@ function UI:Create()
 
   -- Вкладки разделов сверху
   self.topTabs = {}
-  for i = 1, 4 do
+  for i = 1, 5 do
     local b = W.TopTab(f)
     if i == 1 then b:SetPoint("BOTTOMLEFT", f, "TOPLEFT", 62, -ATTIC + 1)
     else b:SetPoint("LEFT", self.topTabs[i - 1], "RIGHT", 2, 0) end

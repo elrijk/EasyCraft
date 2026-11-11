@@ -232,6 +232,8 @@ function TJ:ScanTradeSkill(isCraft)
     and sameCounts(prev.avail, next(avail) and avail or nil)
   self.char.scan[key] = { t = time(), list = list, rank = rank, max = maxRank, colors = next(colors) and colors or nil,
     avail = next(avail) and avail or nil }
+  -- книга рецептов и откаты (Book.lua): все выученные рецепты окна
+  if not isCraft and self.ScanBook then self:Safe(self.ScanBook, self, key) end
   -- сверка маршрута с игрой: только когда сменился навык или число рецептов
   local sig = tostring(rank) .. ":" .. ncolors
   if ncolors > 0 and self.CheckRoute and routeSig[key] ~= sig then
