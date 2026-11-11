@@ -966,11 +966,11 @@ local function MakeTile(parent, mode, wide)
   b.badgeText:SetPoint("CENTER", 0, 0)
   b.slot = W.Slot(b, m.icon)
   if wide then
-    -- слева направо по центру высоты: табличка навыка, значок, название и
-    -- «что нужно» (значок и строки ставит Set: ширина таблички известна там)
+    -- табличка навыка - на верхнем крае по центру ширины; значок слева по
+    -- центру высоты, справа от него строки блоком (ставит Set)
     local sx = 12
-    b.badge:SetHeight(24)
-    b.badge:SetPoint("LEFT", sx, 0)
+    b.slot:SetPoint("LEFT", sx, 0)
+    b.badge:SetPoint("CENTER", b, "TOP", 0, 0)
     b.tx = sx + m.icon + 10
     -- справа табличка «Текущий шаг» со стрелкой внутри (плитку можно
     -- открыть): по центру значка, от правого края - как значок от левого
@@ -1066,16 +1066,6 @@ local function MakeTile(parent, mode, wide)
     self.badgeText:SetText(t.badge or "")
     self.badge:SetWidth(max(30, (self.badgeText:GetStringWidth() or 18) + 14))
     if self.plate then
-      -- значок - сразу за табличкой навыка (нет таблички - у левого края)
-      local sx = 12
-      self.slot:ClearAllPoints()
-      if self.badge:IsShown() then
-        self.slot:SetPoint("LEFT", self.badge, "RIGHT", 10, 0)
-        sx = sx + self.badge:GetWidth() + 10
-      else
-        self.slot:SetPoint("LEFT", sx, 0)
-      end
-      self.tx = sx + m.icon + 10
       self.label:SetText(t.label or "")
       self.plate:SetShown((t.label or "") ~= "")
       self.plate:SetWidth(12 + (self.label:GetStringWidth() or 90) + 8 + 14 + 8)
