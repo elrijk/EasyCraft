@@ -10,7 +10,8 @@ local floor, max, min = math.floor, math.max, math.min
 --  бафа в игре.
 -------------------------------------------------------------------------------
 local ICON = "Interface\\Icons\\"
-local XP_COLS, XP_GAP, XP_RING = 2, 28, 26
+-- XP_GAP - просвет между блоками, XP_BP - поле внутри блока (со всех сторон), XP_BG - насколько блок темнее карточки
+local XP_COLS, XP_GAP, XP_RING, XP_BP, XP_BG = 2, 12, 26, 12, 0.55
 
 -- { значок, название, бонус, что сделать, подробности }
 local SOURCES = {
@@ -65,16 +66,17 @@ function C:XpCard(UI)
   c:Head({ ring = ICON .. "Spell_Holy_BlessingOfStrength" }, T("Опыт: максимум в час"),
     { { T("Бонусы складываются."), "small" } }, 32)
   -- источники блоками по два в ряд: значок, название и бонус зелёным,
-  -- ниже - что сделать и подробности
+  -- ниже одна строка - что сделать (подробности - в подсказке бафа в игре)
   local rp = W.RingPad(XP_RING)
   local outer = XP_RING + rp * 2
-  local colW = floor((CW - PAD * 2 - XP_GAP * (XP_COLS - 1)) / XP_COLS)
-  local rowTop = c.y + 10
+  local blockW = floor((CW - PAD * 2 - XP_GAP * (XP_COLS - 1)) / XP_COLS)
+  local colW = blockW - XP_BP * 2
+  local rowTop = c.y + 8 + XP_BP
   for first = 1, #SOURCES, XP_COLS do
     local xs, rowH = {}, 0
     for i = first, min(first + XP_COLS - 1, #SOURCES) do
       local s = SOURCES[i]
-      local x = PAD + (i - first) * (colW + XP_GAP)
+      local x = PAD + XP_BP + (i - first) * (blockW + XP_GAP)
       local by = rowTop
       c:Ring(XP_RING, x + rp, by + rp):SetIcon(ICON .. s[1])
       c:TextBlock(x + outer + 6, by, outer, colW - outer - 6, {
@@ -83,8 +85,6 @@ function C:XpCard(UI)
       })
       by = by + outer + 6
       local fs = c:Text(T(s[4]), "small", { x = x, y = by, w = colW, color = W.LIGHT })
-      by = by + (fs and fs:GetStringHeight() or 14) + 4
-      fs = c:Text(T(s[5]), "small", { x = x, y = by, w = colW })
       by = by + (fs and fs:GetStringHeight() or 14)
       rowH = max(rowH, by - rowTop)
       xs[#xs + 1] = x
@@ -93,53 +93,53 @@ function C:XpCard(UI)
     for _, x in ipairs(xs) do
       local bg = c:Take("xpbg", function()
         local t = c:CreateTexture(nil, "BORDER")
-        t:SetColorTexture(0, 0, 0, 0.3)
+        t:SetColorTexture(0, 0, 0, XP_BG)
         return t
       end)
-      bg:SetPoint("TOPLEFT", c, "TOPLEFT", x - 8, -(rowTop - 8))
-      bg:SetSize(colW + 16, rowH + 16)
+      bg:SetPoint("TOPLEFT", c, "TOPLEFT", x - XP_BP, -(rowTop - XP_BP))
+      bg:SetSize(blockW, rowH + XP_BP * 2)
     end
-    rowTop = rowTop + rowH + XP_GAP
+    rowTop = rowTop + rowH + XP_BP * 2 + XP_GAP
   end
-  c.y = rowTop - XP_GAP + 14
+  -- rowTop - верх содержимого следующего ряда: низ последнего блока выше на поле и просвет
+  c.y = rowTop - XP_BP - XP_GAP + 12
   c:Text(T(ORDER), "small", { gap = 6 })
   local open = UI.xpBag
   c:Buttons({ { text = open and T("Скрыть путь к спальнику") or T("Как добыть спальник"), w = 220,
     tip = T("Шесть заданий с 14 уровня на двух материках."),
     onClick = function() UI.xpBag = not UI.xpBag; UI:Render(true) end } })
   if open then
-    -- шаги блоками: слева название, где и что сделать; справа кнопка метки
+    -- шаги блоками: слева название и где; справа кнопка метки (что сделать
+    -- на месте - в её подсказке)
     local BTN_W = 170
-    local tw = CW - PAD * 2 - BTN_W - 16
+    local tw = CW - PAD * 2 - XP_BP * 2 - BTN_W - 16
     local me = ns:PlayerFaction()
-    local y = c.y + 8
+    local y = c.y + 10 + XP_BP
     for i, b in ipairs(BAG) do
       -- у первого шага место своё у каждой фракции
       local pin = BAG_PIN[i]
       if pin.A then pin = (me == "A") and pin.A or pin.H end
       local z = ns.Zones[pin[1]]
       local top = y
-      local fs = c:Text(b[1] .. ". " .. T(b[2]), "head", { x = PAD, y = y, w = tw, color = W.LIGHT })
+      local fs = c:Text(b[1] .. ". " .. T(b[2]), "head", { x = PAD + XP_BP, y = y, w = tw, color = W.LIGHT })
       y = y + (fs and fs:GetStringHeight() or 16) + 3
-      fs = c:Text(T(b[3]), "small", { x = PAD, y = y, w = tw, color = W.LIGHT })
-      y = y + (fs and fs:GetStringHeight() or 14) + 3
-      fs = c:Text(T(b[4]), "small", { x = PAD, y = y, w = tw })
+      fs = c:Text(T(b[3]), "small", { x = PAD + XP_BP, y = y, w = tw, color = W.LIGHT })
       y = y + (fs and fs:GetStringHeight() or 14)
       c:Button({ text = T("Показать на карте"), w = BTN_W, enabled = z ~= nil,
-        tip = T("Щелчок поставит метку и откроет карту."),
+        tip = T(b[4]) .. "\n" .. T("Щелчок поставит метку и откроет карту."),
         onClick = function()
           ns:MapPoint(z.uiMap or z.ui, pin[2], pin[3], T(b[2]), ns:ZoneName(pin[1]), true)
-        end }, PAD, top, true)
+        end }, PAD + XP_BP, top + 2, true)
       local bg = c:Take("xpbg", function()
         local t = c:CreateTexture(nil, "BORDER")
-        t:SetColorTexture(0, 0, 0, 0.3)
+        t:SetColorTexture(0, 0, 0, XP_BG)
         return t
       end)
-      bg:SetPoint("TOPLEFT", c, "TOPLEFT", PAD - 8, -(top - 8))
-      bg:SetSize(CW - PAD * 2 + 16, y - top + 16)
-      y = y + 16 + 10
+      bg:SetPoint("TOPLEFT", c, "TOPLEFT", PAD, -(top - XP_BP))
+      bg:SetSize(CW - PAD * 2, y - top + XP_BP * 2)
+      y = y + XP_BP * 2 + 8
     end
-    c.y = y - 6
+    c.y = y - XP_BP
     c:Text("|cff9d9d9d" .. T("Путь взят из гайдов; названия заданий в игре могут отличаться.") .. "|r", "small", { gap = 4 })
   end
   UI:End(c)

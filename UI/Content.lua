@@ -865,7 +865,8 @@ end
 -- профессии, ниже блоки в ряд (по 3): значок предмета, название, что даёт и
 -- с какого навыка; под ними - кнопки «где взять рецепт» (учитель, чертёж,
 -- даже если где падает - неизвестно) и «Использовать», если он в сумках.
-local CAMP_COLS, CAMP_GAP, CAMP_ICON = 2, 32, 32
+-- CAMP_GAP - просвет между блоками, CAMP_BP - поле внутри блока (со всех сторон), CAMP_BG - насколько блок темнее карточки
+local CAMP_COLS, CAMP_GAP, CAMP_ICON, CAMP_BP, CAMP_BG = 2, 12, 32, 12, 0.55
 function C:CampCard(UI, key)
   local p = ns.Profs[key]
   local rank, _, learned = ns:GetSkill(key)
@@ -878,13 +879,14 @@ function C:CampCard(UI, key)
   c:Ring(ring, IX + rp, IY + rp):SetIcon(ns.Icon(p.icon))
   c:TextBlock(IX + ring + rp * 2 + UI.ICON_GAP, IY, ring + rp * 2, CW - PAD * 2 - 60, { { ns:N(p), "title" } })
   local y = IY + ring + rp * 2 + 10
-  local colW = floor((CW - PAD * 2 - CAMP_GAP * (CAMP_COLS - 1)) / CAMP_COLS)
+  local blockW = floor((CW - PAD * 2 - CAMP_GAP * (CAMP_COLS - 1)) / CAMP_COLS)
+  local colW = blockW - CAMP_BP * 2
   local ip = W.IconPad(CAMP_ICON)
   local outer = CAMP_ICON + ip * 2
   -- блоки рядами по CAMP_COLS: сверху значок, название и описание, кнопки
   -- «где взять» - по низу блока, на одной линии во всём ряду
   local function cellH(it) return (it.sub and it.sub ~= "") and 40 or 34 end
-  local rowTop = y
+  local rowTop = y + CAMP_BP
   local camp = p.camp
   for first = 1, #camp, CAMP_COLS do
     local blocks = {}
@@ -892,9 +894,9 @@ function C:CampCard(UI, key)
     for ci = first, min(first + CAMP_COLS - 1, #camp) do
       local e = camp[ci]
       local col = ci - first
-      local x = PAD + col * (colW + CAMP_GAP)
+      local x = PAD + CAMP_BP + col * (blockW + CAMP_GAP)
       -- значок и название по центру значка
-      local by = rowTop + 2
+      local by = rowTop
       local icon = c:Icon(CAMP_ICON, x + ip, by + ip)
       if e.out then icon:SetItem(e.out) else icon:SetPlain(ns.Icon("Spell_Fire_Fire")) end
       -- у кольца редкости прозрачные края: текст ближе к значку
@@ -924,11 +926,11 @@ function C:CampCard(UI, key)
     for _, bl in ipairs(blocks) do
       local bg = c:Take("campbg", function()
         local t = c:CreateTexture(nil, "BORDER")
-        t:SetColorTexture(0, 0, 0, 0.3)
+        t:SetColorTexture(0, 0, 0, CAMP_BG)
         return t
       end)
-      bg:SetPoint("TOPLEFT", c, "TOPLEFT", bl.x - 4, -(rowTop - 4))
-      bg:SetSize(colW + 8, rowH + 8)
+      bg:SetPoint("TOPLEFT", c, "TOPLEFT", bl.x - CAMP_BP, -(rowTop - CAMP_BP))
+      bg:SetSize(blockW, rowH + CAMP_BP * 2)
       -- кнопки прижаты к низу блока
       local by = rowTop + rowH - bl.h
       for _, it in ipairs(bl.where or {}) do by = by + c:CellAt(bl.x, by, colW, it, 22) + 4 end
@@ -937,9 +939,10 @@ function C:CampCard(UI, key)
       end
       if bl.have > 0 then c:UseButton(bl.e.out, bl.x, rowTop + rowH - 24, colW) end
     end
-    rowTop = rowTop + rowH + CAMP_GAP + 4
+    rowTop = rowTop + rowH + CAMP_BP * 2 + CAMP_GAP
   end
-  c.y = rowTop - CAMP_GAP + 2
+  -- rowTop - верх содержимого следующего ряда: низ последнего блока выше на поле и просвет
+  c.y = rowTop - CAMP_BP - CAMP_GAP + 6
   UI:End(c, 10)
 end
 
