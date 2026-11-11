@@ -1503,4 +1503,7 @@ ns.LOCALES.ptBR = function() return {
   ["Copy the link"] = "Copiar o link",
   ["link copied: paste it into your browser's address bar."] = "link copiado: cole na barra de endereços do navegador.",
   ["link selected: press Ctrl+C."] = "link selecionado: pressione Ctrl+C.",
+  ["General"] = "Geral",
+  ["Hints"] = "Dicas",
+  ["Map and auction house"] = "Mapa e leilão",
 } end

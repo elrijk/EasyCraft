@@ -1501,4 +1501,7 @@ ns.LOCALES.deDE = function() return {
   ["Copy the link"] = "Link kopieren",
   ["link copied: paste it into your browser's address bar."] = "Link kopiert: Füge ihn in die Adresszeile des Browsers ein.",
   ["link selected: press Ctrl+C."] = "Link markiert: Drücke Strg+C.",
+  ["General"] = "Allgemein",
+  ["Hints"] = "Hinweise",
+  ["Map and auction house"] = "Karte und Auktionshaus",
 } end

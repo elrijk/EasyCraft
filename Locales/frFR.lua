@@ -1500,4 +1500,7 @@ ns.LOCALES.frFR = function() return {
   ["Copy the link"] = "Copier le lien",
   ["link copied: paste it into your browser's address bar."] = "lien copié : collez-le dans la barre d'adresse du navigateur.",
   ["link selected: press Ctrl+C."] = "lien sélectionné : appuyez sur Ctrl+C.",
+  ["General"] = "Général",
+  ["Hints"] = "Aides",
+  ["Map and auction house"] = "Carte et hôtel des ventes",
 } end

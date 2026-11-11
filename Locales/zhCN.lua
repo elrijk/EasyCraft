@@ -1516,4 +1516,7 @@ ns.LOCALES.zhCN = function() return {
   ["Copy the link"] = "复制链接",
   ["link copied: paste it into your browser's address bar."] = "链接已复制：粘贴到浏览器地址栏。",
   ["link selected: press Ctrl+C."] = "链接已选中：按 Ctrl+C。",
+  ["General"] = "常规",
+  ["Hints"] = "提示",
+  ["Map and auction house"] = "地图和拍卖行",
 } end

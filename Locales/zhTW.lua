@@ -1516,4 +1516,7 @@ ns.LOCALES.zhTW = function() return {
   ["Copy the link"] = "複製連結",
   ["link copied: paste it into your browser's address bar."] = "連結已複製：貼到瀏覽器網址列。",
   ["link selected: press Ctrl+C."] = "連結已選取：按 Ctrl+C。",
+  ["General"] = "一般",
+  ["Hints"] = "提示",
+  ["Map and auction house"] = "地圖和拍賣場",
 } end

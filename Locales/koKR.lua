@@ -1515,4 +1515,7 @@ ns.LOCALES.koKR = function() return {
   ["Copy the link"] = "링크 복사",
   ["link copied: paste it into your browser's address bar."] = "링크를 복사했습니다. 브라우저 주소창에 붙여 넣으세요.",
   ["link selected: press Ctrl+C."] = "링크가 선택되었습니다. Ctrl+C를 누르세요.",
+  ["General"] = "일반",
+  ["Hints"] = "도움말",
+  ["Map and auction house"] = "지도와 경매장",
 } end

@@ -79,7 +79,7 @@ function ns:BuildSettings()
   -- «Открыть окно» и «Как пользоваться», настройки, команды.
   local body = ScrollBody(panel)
 
-  local title = body:CreateFontString(nil, "ARTWORK", "GameFontNormalLarge")
+  local title = body:CreateFontString(nil, "ARTWORK", "GameFontNormalHuge")
   title:SetPoint("TOPLEFT", 16, -16)
   title:SetText("|cff33ff99Easy|rCraft")
 
@@ -87,13 +87,13 @@ function ns:BuildSettings()
   local lang = ns:LanguageDropdown(body)
   lang:SetPoint("TOPLEFT", title, "BOTTOMLEFT", 0, -14)
 
-  local sub = body:CreateFontString(nil, "ARTWORK", "GameFontHighlightSmall")
+  local sub = body:CreateFontString(nil, "ARTWORK", "GameFontHighlight")
   sub:SetPoint("TOPLEFT", lang, "BOTTOMLEFT", 0, -6)
   sub:SetWidth(560)
   sub:SetJustifyH("LEFT")
   sub:SetText(ns.T("Прокачка профессий WoW Forever: текущий шаг и цель, кнопки создания, учителя и рецепты, точки на карте."))
 
-  local open = ns.W.Button(body, ns.T("Открыть окно"), 200, 26)
+  local open = ns.W.Button(body, ns.T("Открыть окно"), 200, 28)
   open:SetPoint("TOPLEFT", sub, "BOTTOMLEFT", 0, -14)
   open:SetScript("OnClick", function()
     -- Окно настроек игры не закрываем из кода аддона (это «заражает»
@@ -105,7 +105,7 @@ function ns:BuildSettings()
     f:Raise()
   end)
 
-  local intro = ns.W.Button(body, ns.T("Как пользоваться"), 200, 26)
+  local intro = ns.W.Button(body, ns.T("Как пользоваться"), 200, 28)
   intro:SetPoint("LEFT", open, "RIGHT", 10, 0)
   intro:SetScript("OnClick", function()
     ns.UI:Create()
@@ -115,12 +115,12 @@ function ns:BuildSettings()
   end)
 
   -- отправить автору наблюдения цветов рецептов (Seen.lua)
-  local share = ns.W.Button(body, ns.T("Отправить данные"), 200, 26)
+  local share = ns.W.Button(body, ns.T("Отправить данные"), 200, 28)
   share:SetPoint("LEFT", intro, "RIGHT", 10, 0)
   share:SetScript("OnClick", function() if ns.ShareColors then ns:ShareColors() end end)
 
   -- выбор профессии: окно поверх настроек игры
-  local choose = ns.W.Button(body, ns.T("Выбор профессии"), 200, 26)
+  local choose = ns.W.Button(body, ns.T("Выбор профессии"), 200, 28)
   choose:SetPoint("TOPLEFT", open, "BOTTOMLEFT", 0, -8)
   choose:SetScript("OnClick", function()
     ns:ShowChoose()
@@ -131,40 +131,121 @@ function ns:BuildSettings()
     end
   end)
 
+  -- Всё ниже кнопок - одним столбцом сверху вниз: разделы с линией под
+  -- заголовком, галочки, кнопки, ползунки. y - где встанет следующий элемент.
+  local list = CreateFrame("Frame", nil, body)
+  list:SetSize(600, 10)
+  local LABEL_FONT = _G.GameFontHighlightMedium or GameFontHighlight
+  local function NewHeader(text)
+    local h = CreateFrame("Frame", nil, list)
+    h:SetSize(580, 28)
+    local fs = h:CreateFontString(nil, "ARTWORK", "GameFontNormalLarge")
+    fs:SetPoint("TOPLEFT", 0, 0)
+    fs:SetText(text)
+    local line = h:CreateTexture(nil, "ARTWORK")
+    line:SetColorTexture(1, 1, 1, 0.25)
+    line:SetHeight(1)
+    line:SetPoint("BOTTOMLEFT", 0, 0)
+    line:SetPoint("BOTTOMRIGHT", 0, 0)
+    return h
+  end
+  list:SetPoint("TOPLEFT", choose, "BOTTOMLEFT", -16, -6)
+  local y = 0
+  local function Header(text)
+    y = y + 18
+    NewHeader(text):SetPoint("TOPLEFT", 16, -y)
+    y = y + 28 + 8
+  end
+  local OPT = {}
+  for _, o in ipairs(OPTIONS) do OPT[o[1]] = o end
   panel.checks = {}
-  local prev = choose
-  for i, o in ipairs(OPTIONS) do
-    local c = ns.W.Check(body, ns.T(o[2]))
-    c:SetSize(26, 26)
-    c.label:SetFontObject("GameFontHighlight")
-    c:SetPoint("TOPLEFT", prev, "BOTTOMLEFT", i == 1 and -2 or 0, i == 1 and -14 or -4)
+  local function Check(key)
+    local o = OPT[key]
+    local c = ns.W.Check(list, ns.T(o[2]))
+    c:SetSize(30, 30)
+    c.label:SetFontObject(LABEL_FONT)
+    c:SetPoint("TOPLEFT", 14, -y)
     c.opt = o[1]
     c:SetScript("OnClick", function(self)
       local v = self:GetChecked() and true or false
       if o[3] then o[3](v) else ns.settings[o[1]] = v end
       ns:RefreshAll()
     end)
-    panel.checks[i] = c
-    prev = c
+    panel.checks[#panel.checks + 1] = c
+    y = y + 32
+  end
+  -- ползунок: над ним место под подпись, под ним - под цифры краёв
+  local function Slider(name, lo, hi, step)
+    local ok, sl = pcall(CreateFrame, "Slider", name, list, "OptionsSliderTemplate")
+    if not ok or not sl then return nil end
+    sl:SetPoint("TOPLEFT", 22, -(y + 24))
+    sl:SetWidth(260)
+    sl:SetMinMaxValues(lo, hi)
+    sl:SetValueStep(step)
+    if sl.SetObeyStepOnDrag then sl:SetObeyStepOnDrag(true) end
+    y = y + 24 + 17 + 26
+    local n = sl:GetName()
+    local function part(key)
+      local p = sl[key] or (n and _G[n .. key])
+      return type(p) == "table" and p.SetText and p or nil
+    end
+    return sl, part("Text"), part("Low"), part("High")
+  end
+  local function Row(button)
+    button:SetPoint("TOPLEFT", list, "TOPLEFT", 16, -(y + 6))
+    y = y + 6 + 26 + 8
   end
 
+  ---------------------------------------------------------------- Общее
+  Header(ns.T("Общее"))
+  Check("minimap")
+  Check("miniGuide")
+  Check("hideDone")
+  Check("useAlts")
+  do
+    local sl, label, low, high = Slider("EasyCraftScaleSlider", 0.7, 1.3, 0.05)
+    if sl then
+      local function ShowValue(v)
+        if label then label:SetText(ns.T("Размер окна") .. ": " .. math.floor(v * 100 + 0.5) .. "%") end
+      end
+      ShowValue(ns.settings.scale or 1)
+      if low then low:SetText("70%") end
+      if high then high:SetText("130%") end
+      sl:SetScript("OnValueChanged", function(_, v)
+        v = math.floor(v * 20 + 0.5) / 20
+        ns.settings.scale = v
+        ShowValue(v)
+        if ns.UI and ns.UI.frame then ns.UI.frame:SetScale(v) end
+      end)
+      panel.scale = sl
+    end
+  end
+
+  ------------------------------------------------------------ Подсказки
+  Header(ns.T("Подсказки"))
+  Check("itemTips")
+  Check("trainerStars")
+  Check("askShare")
+  Check("hintsLocked")
   -- подсказки, которые перетаскивали, - на прежние места
-  local reset = ns.W.Button(body, ns.T("Вернуть подсказки на место"), 240, 22)
-  reset:SetPoint("TOPLEFT", prev, "BOTTOMLEFT", 2, -14)
+  local reset = ns.W.Button(list, ns.T("Вернуть подсказки на место"), 260, 26)
   reset:SetScript("OnClick", function()
     ns.db.hintPos = nil
     ns:RefreshAll()
     ns:Print(ns.T("подсказки вернутся на свои места, когда появятся снова."))
   end)
-  prev = reset
+  Row(reset)
 
+  ------------------------------------------------------ Карта и аукцион
+  Header(ns.T("Карта и аукцион"))
+  Check("mapMine")
+  Check("ahScan")
   -- свои точки сбора на карте мира: сколько их и очистка в два щелчка
-  local clear = ns.W.Button(body, "", 240, 22)
-  clear:SetPoint("LEFT", reset, "RIGHT", 10, 0)
+  local clear = ns.W.Button(list, "", 260, 26)
   local function points()
     local total = 0
-    for _, list in pairs(ns.db.nodes) do
-      if type(list) == "table" then total = total + #list end
+    for _, nodes in pairs(ns.db.nodes) do
+      if type(nodes) == "table" then total = total + #nodes end
     end
     return total
   end
@@ -195,76 +276,52 @@ function ns:BuildSettings()
   end)
   clear:SetScript("OnLeave", function() GameTooltip:Hide() end)
   label()
-
-  -- window scale
-  local ok, sl = pcall(CreateFrame, "Slider", "EasyCraftScaleSlider", body, "OptionsSliderTemplate")
-  if not ok then sl = nil end
-  if sl then
-    sl:SetPoint("TOPLEFT", prev, "BOTTOMLEFT", 4, -28)
-    sl:SetWidth(220)
-    sl:SetMinMaxValues(0.7, 1.3)
-    sl:SetValueStep(0.05)
-    if sl.SetObeyStepOnDrag then sl:SetObeyStepOnDrag(true) end
-    local label = sl.Text or _G[sl:GetName() .. "Text"]
-    local function ShowValue(v)
-      if label then label:SetText(ns.T("Размер окна") .. ": " .. math.floor(v * 100 + 0.5) .. "%") end
-    end
-    ShowValue(ns.settings.scale or 1)
-    local low, high = sl.Low or _G[sl:GetName() .. "Low"], sl.High or _G[sl:GetName() .. "High"]
-    if low then low:SetText("70%") end
-    if high then high:SetText("130%") end
-    sl:SetScript("OnValueChanged", function(_, v)
-      v = math.floor(v * 20 + 0.5) / 20
-      ns.settings.scale = v
-      ShowValue(v)
-      if ns.UI and ns.UI.frame then ns.UI.frame:SetScale(v) end
-    end)
-    panel.scale = sl
-  end
-
+  Row(clear)
   -- непрозрачность областей сбора на карте (щелчок по зоне в подсказке)
-  local ok2, al = pcall(CreateFrame, "Slider", "EasyCraftAreaAlphaSlider", body, "OptionsSliderTemplate")
-  if not ok2 then al = nil end
-  if al then
-    al:SetPoint("TOPLEFT", sl or prev, "BOTTOMLEFT", sl and 0 or 4, -34)
-    al:SetWidth(220)
-    al:SetMinMaxValues(0.1, 1)
-    al:SetValueStep(0.05)
-    if al.SetObeyStepOnDrag then al:SetObeyStepOnDrag(true) end
-    local label = al.Text or _G[al:GetName() .. "Text"]
-    local function ShowValue(v)
-      if label then label:SetText(ns.T("Области сбора на карте: непрозрачность") .. " " .. math.floor(v * 100 + 0.5) .. "%") end
-    end
-    ShowValue(ns.settings.mapAreaAlpha or 0.5)
-    local low, high = al.Low or _G[al:GetName() .. "Low"], al.High or _G[al:GetName() .. "High"]
-    if low then low:SetText("10%") end
-    if high then high:SetText("100%") end
-    al:SetScript("OnValueChanged", function(_, v)
-      v = math.floor(v * 20 + 0.5) / 20
-      ns.settings.mapAreaAlpha = v
-      ShowValue(v)
-      -- ползунок двигают плавно: перерисовать области раз в 0.05 с, а не на каждый шаг
-      if ns.MapOverlay and WorldMapFrame and WorldMapFrame:IsShown() and not al.pending then
-        al.pending = true
-        local function go() al.pending = nil; ns.MapOverlay:Refresh() end
-        C_Timer.After(0.05, go)
+  do
+    local al, alLabel, low, high = Slider("EasyCraftAreaAlphaSlider", 0.1, 1, 0.05)
+    if al then
+      local function ShowValue(v)
+        if alLabel then alLabel:SetText(ns.T("Области сбора на карте: непрозрачность") .. " " .. math.floor(v * 100 + 0.5) .. "%") end
       end
-    end)
-    panel.areaAlpha = al
+      ShowValue(ns.settings.mapAreaAlpha or 0.5)
+      if low then low:SetText("10%") end
+      if high then high:SetText("100%") end
+      al:SetScript("OnValueChanged", function(_, v)
+        v = math.floor(v * 20 + 0.5) / 20
+        ns.settings.mapAreaAlpha = v
+        ShowValue(v)
+        -- ползунок двигают плавно: перерисовать области раз в 0.05 с, а не на каждый шаг
+        if ns.MapOverlay and WorldMapFrame and WorldMapFrame:IsShown() and not al.pending then
+          al.pending = true
+          local function go() al.pending = nil; ns.MapOverlay:Refresh() end
+          C_Timer.After(0.05, go)
+        end
+      end)
+      panel.areaAlpha = al
+    end
   end
 
-  -- команды чата
-  local cmdHead = body:CreateFontString(nil, "ARTWORK", "GameFontNormal")
-  cmdHead:SetPoint("TOPLEFT", al or sl or prev, "BOTTOMLEFT", (al or sl) and -4 or 2, -30)
-  cmdHead:SetText(ns.T("Команды в чате"))
-  local cmds = body:CreateFontString(nil, "ARTWORK", "GameFontHighlight")
-  cmds:SetPoint("TOPLEFT", cmdHead, "BOTTOMLEFT", 0, -8)
+  -------------------------------------------------------- Команды в чате
+  Header(ns.T("Команды в чате"))
+  local cmds = list:CreateFontString(nil, "ARTWORK")
+  cmds:SetFontObject(LABEL_FONT)
+  cmds:SetPoint("TOPLEFT", 16, -y)
   cmds:SetWidth(560)
   cmds:SetJustifyH("LEFT")
-  if cmds.SetSpacing then cmds:SetSpacing(4) end
+  if cmds.SetSpacing then cmds:SetSpacing(5) end
   cmds:SetText(table.concat(ns:CommandLines(), "\n"))
+  local listTop = y
+  local function FitHeight()
+    local h = listTop + (cmds:GetStringHeight() or 200) + 20
+    list:SetHeight(h)
+    -- сверху над списком: название, язык, описание и два ряда кнопок
+    body:SetHeight(250 + h)
+  end
+  FitHeight()
 
   panel:SetScript("OnShow", function()
+    FitHeight()
     ns:RefreshOptions()
     if lang then lang.Refresh() end
   end)

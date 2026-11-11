@@ -1509,4 +1509,7 @@ ns.LOCALES.esES = function() return {
   ["Copy the link"] = "Copiar el enlace",
   ["link copied: paste it into your browser's address bar."] = "enlace copiado: pégalo en la barra de direcciones del navegador.",
   ["link selected: press Ctrl+C."] = "enlace seleccionado: pulsa Ctrl+C.",
+  ["General"] = "General",
+  ["Hints"] = "Ayudas",
+  ["Map and auction house"] = "Mapa y subasta",
 } end

@@ -1728,3 +1728,10 @@ for k, v in pairs({
   ["ссылка скопирована: вставь её в адресную строку браузера."] = "link copied: paste it into your browser's address bar.",
   ["ссылка выделена: нажми Ctrl+C."] = "link selected: press Ctrl+C.",
 }) do if ns.EN[k] == nil then ns.EN[k] = v end end
+
+-- 1.2: разделы настроек
+for k, v in pairs({
+  ["Общее"] = "General",
+  ["Подсказки"] = "Hints",
+  ["Карта и аукцион"] = "Map and auction house",
+}) do if ns.EN[k] == nil then ns.EN[k] = v end end

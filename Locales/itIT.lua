@@ -1509,4 +1509,7 @@ ns.LOCALES.itIT = function() return {
   ["Copy the link"] = "Copia il link",
   ["link copied: paste it into your browser's address bar."] = "link copiato: incollalo nella barra degli indirizzi del browser.",
   ["link selected: press Ctrl+C."] = "link selezionato: premi Ctrl+C.",
+  ["General"] = "Generale",
+  ["Hints"] = "Suggerimenti",
+  ["Map and auction house"] = "Mappa e asta",
 } end
