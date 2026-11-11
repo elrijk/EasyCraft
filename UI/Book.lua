@@ -272,6 +272,7 @@ function C:BuildBook(UI)
   self:BookFilter(UI)
   local mode, mine = UI.bookMode, UI.bookMine
   if not mode then
+    if self.ForMeCard then TJ:Safe(self.ForMeCard, self, UI) end
     self:QueueCard(UI)
     self:CooldownCard(UI)
   end

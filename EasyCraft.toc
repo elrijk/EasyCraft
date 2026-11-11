@@ -53,6 +53,8 @@ UI\Content.lua
 UI\Choose.lua
 UI\Share.lua
 UI\Book.lua
+UI\Xp.lua
+UI\ForMe.lua
 UI\Intro.lua
 UI\MainFrame.lua
 UI\MapOverlay.lua

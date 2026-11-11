@@ -1665,3 +1665,12 @@ for k, v in pairs({
   ["Свёрнутый ранец прямо под сумкой гонца. Награда - «Уютный спальник»."] = "A Hastily Rolled-Up Satchel right below the Messenger Bag. Rewards the Cozy Sleeping Bag.",
   ["Путь взят из гайдов; названия заданий в игре могут отличаться."] = "The route comes from guides; quest names in game may differ.",
 }) do if TJ.EN[k] == nil then TJ.EN[k] = v end end
+
+-- 1.2: что создать себе сейчас
+for k, v in pairs({
+  ["Что создать себе сейчас"] = "What to craft for yourself now",
+  ["Вещи лучше надетых и расходники под твой уровень. Щелчок добавит в очередь."] = "Gear better than what you wear and consumables for your level. Click adds to the queue.",
+  ["Уровень предмета выше надетого на %d"] = "Item level is %d above what you wear",
+  ["Ячейка пустая"] = "The slot is empty",
+  ["реагенты есть"] = "reagents on hand",
+}) do if TJ.EN[k] == nil then TJ.EN[k] = v end end
