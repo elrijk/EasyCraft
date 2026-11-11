@@ -936,6 +936,7 @@ local function GoldPlate(parent, edgeSize)
   end
   return f
 end
+local TILE_GREEN = { 0.1, 0.9, 0.1 } -- как галочка готовности
 local ARROW_TEX = { "Interface\\ChatFrame\\ChatFrameExpandArrow", "Interface\\Buttons\\UI-SpellbookIcon-NextPage-Up" }
 
 local function MakeTile(parent, mode, wide)
@@ -1042,11 +1043,15 @@ local function MakeTile(parent, mode, wide)
     -- следующие - приглушённые
     local st = cur and STYLE.current or (done and STYLE.done or STYLE.future)
     self:SetBackdropColor(st[1], st[2], st[3], st[4])
+    -- зелёный пройденного шага - тот же, что у галочки: рамка плитки,
+    -- рамка таблички и число
     if t.sel then self:SetBackdropBorderColor(1, 0.95, 0.75, 1)
+    elseif done then self:SetBackdropBorderColor(TILE_GREEN[1], TILE_GREEN[2], TILE_GREEN[3], 1)
     else self:SetBackdropBorderColor(st[5], st[6], st[7], 1) end
-    local edge = cur and { 1, 0.84, 0.1 } or (done and { 0.26, 0.62, 0.26 } or { 0.42, 0.34, 0.2 })
+    local edge = cur and { 1, 0.84, 0.1 } or (done and TILE_GREEN or { 0.42, 0.34, 0.2 })
     if self.badge.SetBackdropBorderColor then self.badge:SetBackdropBorderColor(edge[1], edge[2], edge[3], 1) end
-    local tc = cur and { 1, 1, 1 } or (done and { 0.55, 0.9, 0.55 } or { 0.88, 0.75, 0.42 })
+    -- число: пройденный - зелёное, текущий - жёлтое, следующие - серое
+    local tc = cur and { 1, 0.82, 0 } or (done and TILE_GREEN or { 0.6, 0.6, 0.6 })
     self.badgeText:SetTextColor(tc[1], tc[2], tc[3], 1)
     self.badge:SetShown(t.badge ~= nil)
     self.badgeText:SetText(t.badge or "")
