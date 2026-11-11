@@ -16,13 +16,11 @@ Russian names and map coordinates of items, zones, NPCs and gathering nodes.
 Trainer and vendor positions on WoW Forever were cross-checked by hand against
 publicly available game databases.
 
-The "XP: the most per hour" card and the Cozy Sleeping Bag quest chain
+The "XP: the most per hour" card
 (`UI/Xp.lua`) retell facts from public player guides in the addon's own words:
 
 - wowforeverleveling.com, WoW Forever XP Buffs
 - wow-professions.com, Camping Guide
-- mmoexp.com, Cozy Sleeping Bag Guide
-- warcrafttavern.com, Cozy Sleeping Bag Guide (WoW Forever)
 
 The disenchanting table in `Sale.lua` is the well-known classic one (item level
 to dust, essence and shard). It matches the WoW Forever disenchanting guide on

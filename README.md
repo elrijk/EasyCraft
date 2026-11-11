@@ -15,7 +15,7 @@ goes up. No guide in a second window, no counting materials by hand.
 - **One-click helpers**: buy missing reagents at a vendor, take the right stacks from the bank, search everything at the auction house.
 - **Trainers and recipes**: the nearest trainer or recipe vendor with a map pin; stars in the trainer window on recipes your route needs.
 - **Gathering on the map**: zones for your faction and level, highlighted areas where herbs and ore are dense, node colour in the tooltip.
-- **Camp**: the campfire items of your professions and where their blueprints drop; every XP bonus and how to get the Cozy Sleeping Bag.
+- **Camp**: the campfire items of your professions and where their blueprints drop; the XP bonuses professions give (Camp Tent, cooked food).
 - **Self-check**: if a recipe in the game differs from the route, the addon uses the game's data.
 
 ## Commands
@@ -68,6 +68,6 @@ Map and name data: pfQuest by Shagu (MIT). See `THIRD-PARTY.md`.
 - **Кнопки-помощники**: докупить у торговца, забрать из банка, найти всё на аукционе.
 - **Учителя и рецепты**: ближайший учитель или торговец с меткой на карте.
 - **Сбор на карте**: зоны для твоей фракции и уровня, области, где жил и трав больше всего, твои находки.
-- **Лагерь**: предметы твоих профессий для костра и где падают чертежи; все бонусы к опыту и как добыть «Уютный спальник».
+- **Лагерь**: предметы твоих профессий для костра и где падают чертежи; бонусы к опыту от профессий (палатка, еда).
 
 Команда: `/ec`. Лицензия MIT.

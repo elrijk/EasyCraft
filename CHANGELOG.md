@@ -29,8 +29,7 @@
 
 **Camp**
 
-- "XP: the most per hour": rested, Cozy Sleeping Bag, Camp Tent, food, dungeons, and the order to use them.
-- The six-quest chain for the Cozy Sleeping Bag, with coordinates. Numbers come from player guides; check the buff tooltip in game.
+- "XP: the most per hour": the XP bonuses professions give - the Camp Tent (leatherworking) and cooked food. Numbers come from player guides; check the buff tooltip in game.
 
 **Other**
 

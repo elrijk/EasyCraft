@@ -570,6 +570,16 @@ local function headButtons(UI, tab, data)
       { text = T("Выбор профессии"), icon = "INV_Misc_Book_09", onClick = function() ns:ShowChoose() end,
         tip = T("Что делает каждая профессия и какой сбор к ней нужен. Пригодится, если решишь сменить профессию.") },
     }
+  elseif tab == 3 then
+    -- лагерь: показать предметы всех профессий, а не только своих
+    return {
+      { text = T("Показать предметы всех профессий"), check = ns.settings.campAll and true or false,
+        tip = T("Не только твоих профессий: что дают предметы лагеря других и где взять рецепты."),
+        onClick = function()
+          ns.settings.campAll = not ns.settings.campAll
+          UI:Render(true)
+        end },
+    }
   elseif tab == 4 then
     local list = data and data.toAuction or {}
     local open = ns:IsAuctionOpen()
@@ -771,17 +781,15 @@ end
 -------------------------------------------------------------------------------
 function C:BuildCamp(UI)
   if self.XpCard then ns:Safe(self.XpCard, self, UI) end
-  -- как устроен лагерь - в «Как это работает» над этим; здесь - галочка и
-  -- предметы профессий блоками в ряд
-  local f = UI:Card("flat")
-  f:Check(T("Показать предметы всех профессий"), ns.settings.campAll, function(v) ns.settings.campAll = v; UI:Render(true) end,
-    T("Не только твоих профессий: что дают предметы лагеря других и где взять рецепты."))
+  -- «все профессии» - плиткой в шапке страницы (headButtons); здесь -
+  -- кнопка «поделиться находками», если есть чем, и предметы профессий
   local _, finds = ns:BlueprintReport()
   if finds > 0 then
+    local f = UI:Card("flat")
     f:Buttons({ { text = format(T("Поделиться находками (%d)"), finds), w = 240, onClick = function() ns:ShareBlueprints() end,
       tip = T("Чертежи, которые тебе выпадали, а где они падают, аддон ещё не знает. Отправь код автору - место появится у всех.") } })
+    UI:End(f, 6)
   end
-  UI:End(f, 6)
   local list = ns.settings.campAll and ns.ProfOrder or ns:LearnedList()
   for _, key in ipairs(list) do
     local p = ns.Profs[key]

@@ -1353,6 +1353,7 @@ local HEAD_TILE_H, HEAD_TILE_GAP, HEAD_TILE_MIN = 44, 8, 160
 local ceil = math.ceil
 -- Ряд плиток на карточке с её текущей строки (c.y). d.sel ~= nil -
 -- переключатель: выбранная плитка в яркой золотой рамке с галочкой.
+-- d.check ~= nil - плитка-галочка: вместо значка квадратик с отметкой.
 -- opts.equal - все плитки одной ширины на всю ширину карточки;
 -- opts.h - высота плитки.
 function Card:HeadTiles(buttons, opts)
@@ -1377,6 +1378,13 @@ function Card:HeadTiles(buttons, opts)
       b.ring:SetPoint("LEFT", 10, 0)
       b.title = W.Text(b, ringSize > 24 and "title" or "head", false)
       b.title:SetPoint("LEFT", b.ring, "RIGHT", 9, 0)
+      b.box = b:CreateTexture(nil, "ARTWORK")
+      b.box:SetSize(ringSize + 4, ringSize + 4)
+      b.box:SetPoint("CENTER", b.ring, "CENTER", 0, 0)
+      b.box:SetTexture("Interface\\Buttons\\UI-CheckBox-Up")
+      b.boxMark = b:CreateTexture(nil, "OVERLAY")
+      b.boxMark:SetAllPoints(b.box)
+      b.boxMark:SetTexture("Interface\\Buttons\\UI-CheckBox-Check")
       b.check = b:CreateTexture(nil, "OVERLAY")
       b.check:SetSize(20, 20)
       b.check:SetPoint("RIGHT", -10, 0)
@@ -1393,7 +1401,11 @@ function Card:HeadTiles(buttons, opts)
     end)
     local on = d.enabled ~= false
     t:SetHeight(H)
-    t.ring:SetIcon(ns.Icon(d.icon))
+    local isCheck = d.check ~= nil
+    t.ring:SetShown(not isCheck)
+    t.box:SetShown(isCheck)
+    t.boxMark:SetShown(isCheck and d.check and true or false)
+    if not isCheck then t.ring:SetIcon(ns.Icon(d.icon)) end
     t.title:SetText(d.text)
     t.tip = d.tip
     t:SetAlpha(on and 1 or 0.5)
