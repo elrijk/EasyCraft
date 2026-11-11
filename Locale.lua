@@ -1542,3 +1542,10 @@ for k, v in pairs({
   ["Пусто. Создай предмет с откатом - аддон его запомнит."] = "Empty. Craft an item with a cooldown and the addon remembers it.",
   ["Открой окно профессии - аддон прочитает рецепты."] = "Open the profession window and the addon reads your recipes.",
 }) do TJ.EN[k] = v end
+
+-- 1.2: подписи под значками первой страницы знакомства
+for k, v in pairs({
+  ["что делать сейчас"] = "what to do now",
+  ["что есть и что докупить"] = "what you have and what to buy",
+  ["одной кнопкой"] = "with one button",
+}) do TJ.EN[k] = v end

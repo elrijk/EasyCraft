@@ -1,23 +1,28 @@
 local _, TJ = ...
 local W, C, T = TJ.W, TJ.Content, TJ.T
-local format, floor, min = string.format, math.floor, math.min
+local floor, min, max = math.floor, math.min, math.max
 
 -------------------------------------------------------------------------------
---  Знакомство с аддоном: отдельное окно поверх главного. Показывается само
---  один раз, при первом открытии EasyCraft; дальше - по кнопке «?» в
---  заголовке окна и из настроек.
---  Первая страница - что делает аддон, картинкой: шаг -> реагенты -> создать.
---  Дальше по странице на вкладку: заголовок и три-четыре шага значками
---  (те же тексты, что раньше занимали верх каждой вкладки).
+--  Знакомство с аддоном: отдельное окно. Показывается при первом открытии
+--  EasyCraft раньше самого окна; дальше - по кнопке «?» в заголовке окна и
+--  из настроек.
+--  Вид - как у окон игры с одной главной мыслью: заголовок по центру, под
+--  ним золотая линия и одна строка пояснения; ниже шаги карточками в один
+--  ряд - номер, крупный значок, что сделать (золотом), строка пояснения.
+--  Высота окна - по содержимому, внизу точки-страницы и кнопки.
+--  Первая страница - что делает аддон: шаг -> реагенты -> создать.
 -------------------------------------------------------------------------------
 local S = W.S
-local WIDTH, HEIGHT = 600, 400
+local WIDTH = 720
+local SIDE = 28 -- поля окна слева и справа
+local GAP = 12 -- между карточками шагов
 local ARROW = { "Interface\\ChatFrame\\ChatFrameExpandArrow", "Interface\\Buttons\\UI-SpellbookIcon-NextPage-Up" }
 local FLOW = {
-  { "INV_Misc_Book_11", "Шаг" },
-  { "INV_Misc_Bag_08", "Реагенты" },
-  { "Trade_BlackSmithing", "Создать" },
+  { "INV_Misc_Book_11", "Шаг", "что делать сейчас" },
+  { "INV_Misc_Bag_08", "Реагенты", "что есть и что докупить" },
+  { "Trade_BlackSmithing", "Создать", "одной кнопкой" },
 }
+local MAX_TILES, MAX_DOTS = 4, 8
 
 local win
 
@@ -30,9 +35,14 @@ local function pages()
   return list
 end
 
+local function centered(fs, width)
+  fs:SetJustifyH("CENTER")
+  fs:SetWidth(width)
+end
+
 local function build()
   local f = CreateFrame("Frame", "EasyCraftIntroFrame", UIParent, BackdropTemplateMixin and "BackdropTemplate" or nil)
-  f:SetSize(WIDTH, HEIGHT)
+  f:SetSize(WIDTH, 400)
   f:SetFrameStrata("DIALOG")
   f:SetToplevel(true)
   f:SetClampedToScreen(true)
@@ -41,126 +51,165 @@ local function build()
   f:RegisterForDrag("LeftButton")
   f:SetScript("OnDragStart", f.StartMoving)
   f:SetScript("OnDragStop", f.StopMovingOrSizing)
-  -- та же подложка, что у карточек окна: тёмная, в бурой рамке
-  W.Backdrop(f, "Interface\\Buttons\\WHITE8X8", nil, 16, 0.05, 0.045, 0.04, 0.97, 0.6, 0.48, 0.25, 1)
+  W.Backdrop(f, "Interface\\Buttons\\WHITE8X8", nil, 16, 0.04, 0.03, 0.02, 1, 0.75, 0.6, 0.3, 1)
   tinsert(UISpecialFrames, "EasyCraftIntroFrame")
+  -- фон не плоский: сверху тёплый коричневый, книзу уходит в чёрный
+  local bg = f:CreateTexture(nil, "BORDER")
+  bg:SetPoint("TOPLEFT", 4, -4)
+  bg:SetPoint("BOTTOMRIGHT", -4, 4)
+  bg:SetColorTexture(1, 1, 1, 1)
+  local ok = CreateColor and pcall(bg.SetGradient, bg, "VERTICAL", CreateColor(0.03, 0.025, 0.02, 1), CreateColor(0.2, 0.14, 0.08, 1))
+  if not ok then bg:SetColorTexture(0.1, 0.075, 0.05, 1) end
   local close = CreateFrame("Button", nil, f, "UIPanelCloseButton")
   close:SetPoint("TOPRIGHT", 0, 0)
 
+  -- шапка: заголовок по центру, золотая линия, строка пояснения
   f.title = W.Text(f, "huge")
-  f.title:SetPoint("TOPLEFT", S.s5, -S.s5)
-  f.title:SetWidth(WIDTH - S.s5 * 2 - 20)
+  centered(f.title, WIDTH - SIDE * 2 - 40)
+  f.title:SetPoint("TOP", 0, -26)
+  local file, _, flags = f.title:GetFont()
+  if file then f.title:SetFont(file, 24, flags) end
+  f.rule = f:CreateTexture(nil, "ARTWORK")
+  f.rule:SetSize(320, 1)
+  f.rule:SetColorTexture(0.85, 0.68, 0.3, 0.8)
+  f.rule:SetPoint("TOP", f.title, "BOTTOM", 0, -10)
   f.text = W.Text(f, "body")
-  f.text:SetWidth(WIDTH - S.s5 * 2)
+  centered(f.text, WIDTH - SIDE * 2 - 60)
+  f.text:SetTextColor(0.9, 0.87, 0.8)
+  f.text:SetPoint("TOP", f.rule, "BOTTOM", 0, -10)
 
-  -- картинка «шаг -> реагенты -> создать»
+  -- первая страница: три крупных значка со стрелками
   f.flow, f.arrows = {}, {}
   for i = 1, 3 do
     local c = CreateFrame("Frame", nil, f)
-    c:SetSize(120, 100)
-    c.icon = W.RingIcon(c, 56)
+    c:SetSize(190, 150)
+    c.icon = W.RingIcon(c, 72)
     c.icon:SetPoint("TOP", 0, 0)
     c.label = W.Text(c, "title", false)
-    c.label:SetPoint("TOP", c.icon, "BOTTOM", 0, -S.s3)
-    c.label:SetJustifyH("CENTER")
+    centered(c.label, 190)
+    c.label:SetPoint("TOP", c.icon, "BOTTOM", 0, -12)
+    c.sub = W.Text(c, "body")
+    centered(c.sub, 180)
+    c.sub:SetTextColor(0.8, 0.77, 0.7)
+    c.sub:SetPoint("TOP", c.label, "BOTTOM", 0, -4)
     f.flow[i] = c
     if i > 1 then
       local a = f:CreateTexture(nil, "ARTWORK")
-      a:SetSize(24, 24)
+      a:SetSize(32, 32)
       W.SetTex(a, ARROW, 1, 0.82, 0, 1)
       f.arrows[i - 1] = a
     end
   end
 
-  -- шаги вкладки: значок, что сделать (золотом), строка пояснения
+  -- шаги вкладки: карточки в один ряд
   f.tiles = {}
-  for i = 1, 4 do
-    local c = CreateFrame("Frame", nil, f)
-    c.bg = c:CreateTexture(nil, "BACKGROUND")
-    c.bg:SetAllPoints()
-    c.bg:SetColorTexture(0, 0, 0, 0.3)
-    c.icon = W.RingIcon(c, 32)
-    c.icon:SetPoint("TOPLEFT", S.s2, -S.s2)
+  for i = 1, MAX_TILES do
+    local c = CreateFrame("Frame", nil, f, BackdropTemplateMixin and "BackdropTemplate" or nil)
+    W.Backdrop(c, "Interface\\Buttons\\WHITE8X8", nil, 12, 0, 0, 0, 0.45, 0.6, 0.48, 0.25, 0.9)
+    c.num = W.Text(c, "head", false)
+    c.num:SetPoint("TOPLEFT", 10, -8)
+    c.num:SetTextColor(0.75, 0.6, 0.3)
+    c.icon = W.RingIcon(c, 48)
+    c.icon:SetPoint("TOP", 0, -18)
     c.head = W.Text(c, "head")
-    c.head:SetPoint("TOPLEFT", c.icon, "TOPRIGHT", S.s2, -2)
+    c.head:SetJustifyH("CENTER")
+    c.head:SetPoint("TOP", c.icon, "BOTTOM", 0, -12)
     c.text = W.Text(c, "small")
-    c.text:SetTextColor(W.LIGHT[1], W.LIGHT[2], W.LIGHT[3])
+    c.text:SetJustifyH("CENTER")
+    c.text:SetTextColor(0.9, 0.87, 0.8)
+    c.text:SetPoint("TOP", c.head, "BOTTOM", 0, -8)
     f.tiles[i] = c
   end
 
-  f.count = W.Text(f, "small", false)
-  f.count:SetPoint("BOTTOMLEFT", S.s5, S.s4 + 5)
-  f.next = W.Button(f, "", 130, S.btnBig)
-  f.next:SetPoint("BOTTOMRIGHT", -S.s5, S.s4)
+  -- низ: точки-страницы по центру, кнопки справа
+  f.dots = {}
+  for i = 1, MAX_DOTS do
+    local d = f:CreateTexture(nil, "ARTWORK")
+    d:SetSize(8, 8)
+    f.dots[i] = d
+  end
+  f.next = W.Button(f, "", 140, S.btnBig)
+  f.next:SetPoint("BOTTOMRIGHT", -SIDE, 20)
   f.back = W.Button(f, "", 110, S.btn)
-  f.back:SetPoint("RIGHT", f.next, "LEFT", -S.s2, 0)
+  f.back:SetPoint("BOTTOMLEFT", SIDE, 22)
   f:Hide()
   return f
 end
 
 local function show(f, n)
   local list = pages()
-  n = math.max(1, min(n, #list))
+  n = max(1, min(n, #list))
   f.page = n
   local p = list[n]
   f.title:SetText(T(p.title))
   f.text:SetText(T(p.text))
-  f.text:ClearAllPoints()
-  f.text:SetPoint("TOPLEFT", f.title, "BOTTOMLEFT", 0, -S.s2)
-  local top = S.s5 + f.title:GetStringHeight() + S.s2 + f.text:GetStringHeight() + S.s5
+  -- где кончается шапка
+  local top = 26 + f.title:GetStringHeight() + 10 + 1 + 10 + f.text:GetStringHeight() + 26
+  local bottom = top
 
-  for i, c in ipairs(f.flow) do c:SetShown(p.flow and true or false) end
+  for _, c in ipairs(f.flow) do c:SetShown(p.flow and true or false) end
   for _, a in ipairs(f.arrows) do a:SetShown(p.flow and true or false) end
   if p.flow then
-    local step = 170
-    local x0 = floor((WIDTH - step * 2 - 120) / 2)
+    local step = 220
+    local x0 = floor((WIDTH - step * 2 - 190) / 2)
+    local h = 0
     for i, c in ipairs(f.flow) do
       c:ClearAllPoints()
-      c:SetPoint("TOPLEFT", x0 + (i - 1) * step, -(top + S.s4))
+      c:SetPoint("TOPLEFT", x0 + (i - 1) * step, -top)
       c.icon:SetIcon(TJ.Icon(FLOW[i][1]))
       c.label:SetText(T(FLOW[i][2]))
+      c.sub:SetText(T(FLOW[i][3]))
+      h = max(h, 72 + 12 + c.label:GetStringHeight() + 4 + c.sub:GetStringHeight())
       if i > 1 then
         f.arrows[i - 1]:ClearAllPoints()
-        f.arrows[i - 1]:SetPoint("CENTER", f, "TOPLEFT", x0 + (i - 1) * step - 25, -(top + S.s4 + 28))
+        f.arrows[i - 1]:SetPoint("CENTER", f, "TOPLEFT", x0 + (i - 1) * step - 15, -(top + 36))
       end
     end
+    bottom = top + h
   end
 
   local rows = p.rows or {}
-  local cols = (#rows == 4) and 2 or math.max(1, min(#rows, 3))
-  local colW = floor((WIDTH - S.s5 * 2 - S.s3 * (cols - 1)) / cols)
-  local rowTop, rowH = top, 0
+  local cols = max(1, min(#rows, MAX_TILES))
+  local colW = floor((WIDTH - SIDE * 2 - GAP * (cols - 1)) / cols)
+  local rowH = 0
   for i, c in ipairs(f.tiles) do
     local r = rows[i]
     c:SetShown(r ~= nil)
     if r then
-      local col = (i - 1) % cols
-      if col == 0 and i > 1 then rowTop, rowH = rowTop + rowH + S.s3, 0 end
+      c.num:SetText(tostring(i))
       c.icon:SetIcon(TJ.Icon(r[1]))
-      c.head:SetWidth(colW - S.s2 * 3 - 32)
+      c.head:SetWidth(colW - 20)
       c.head:SetText(T(r[2]))
-      c.text:SetWidth(colW - S.s2 * 2)
+      c.text:SetWidth(colW - 24)
       c.text:SetText(T(r[3]))
-      c.text:ClearAllPoints()
-      c.text:SetPoint("TOPLEFT", S.s2, -(S.s2 + math.max(32, c.head:GetStringHeight()) + S.s2))
-      local h = S.s2 + math.max(32, c.head:GetStringHeight()) + S.s2 + c.text:GetStringHeight() + S.s2
-      rowH = math.max(rowH, h)
+      rowH = max(rowH, 18 + 48 + 12 + c.head:GetStringHeight() + 8 + c.text:GetStringHeight() + 16)
       c:ClearAllPoints()
-      c:SetPoint("TOPLEFT", S.s5 + col * (colW + S.s3), -rowTop)
-      c:SetSize(colW, h)
+      c:SetPoint("TOPLEFT", SIDE + (i - 1) * (colW + GAP), -top)
+      c:SetWidth(colW)
     end
   end
-  -- подложки одного ряда - одной высоты
-  for i, c in ipairs(f.tiles) do
-    if rows[i] then
-      local first = i - ((i - 1) % cols)
-      local h = 0
-      for k = first, min(first + cols - 1, #rows) do h = math.max(h, f.tiles[k]:GetHeight()) end
-      c:SetHeight(h)
+  if #rows > 0 then
+    for i, c in ipairs(f.tiles) do
+      if rows[i] then c:SetHeight(rowH) end
+    end
+    bottom = top + rowH
+  end
+
+  -- высота окна - по содержимому: без пустой половины
+  f:SetHeight(bottom + 26 + S.btnBig + 20)
+
+  local total = min(#list, MAX_DOTS)
+  local dotStep = 16
+  local dx = floor((WIDTH - (total - 1) * dotStep - 8) / 2)
+  for i, d in ipairs(f.dots) do
+    d:SetShown(i <= total)
+    if i <= total then
+      d:ClearAllPoints()
+      d:SetPoint("BOTTOMLEFT", dx + (i - 1) * dotStep, 29)
+      if i == n then d:SetColorTexture(1, 0.82, 0, 1) else d:SetColorTexture(0.45, 0.38, 0.26, 1) end
     end
   end
 
-  f.count:SetText(format("%d / %d", n, #list))
   local last = n == #list
   f.next:SetText(last and T("Понятно") or T("Дальше"))
   f.next:SetScript("OnClick", function()
@@ -198,13 +247,13 @@ function TJ:ShowIntro(after)
   win:Raise()
 end
 
--- Первое открытие аддона: сначала знакомство; когда его закроют - выбор
--- профессии (если профессий ещё нет), и только потом само окно EasyCraft.
--- Возвращает true, если знакомство показано и окно открывать пока не надо.
 -- ВРЕМЕННО, ДЛЯ ПРОВЕРКИ: знакомство и выбор профессии показываются при
 -- каждом открытии аддона. Перед релизом поставить false.
 local TEST_ALWAYS = true
 
+-- Первое открытие аддона: сначала знакомство; когда его закроют - выбор
+-- профессии (если профессий ещё нет), и только потом само окно EasyCraft.
+-- Возвращает true, если знакомство показано и окно открывать пока не надо.
 function TJ:IntroFirst()
   if not self.db then return false end
   if self.skipIntro then self.skipIntro = nil; return false end -- открываем окно после знакомства
