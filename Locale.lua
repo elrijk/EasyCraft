@@ -1552,3 +1552,26 @@ for k, v in pairs({
 
 -- 1.2: окно выбора профессии - пометка у названия
 TJ.EN["Основная"] = "Primary"
+
+-- 1.2: знакомство одним экраном
+for k, v in pairs({
+  ["EasyCraft: профессия до 300 без гайдов"] = "EasyCraft: your profession to 300, no guides",
+  ["Шаг за шагом"] = "Step by step",
+  ["Что создать и сколько"] = "What to craft and how many",
+  ["Считает за тебя"] = "Counts for you",
+  ["Сумки, банк, почта, альты"] = "Bags, bank, mail, alts",
+  ["Одна кнопка"] = "One button",
+  ["Создаёт прямо у окна профессии"] = "Crafts right at the profession window",
+  ["И ещё"] = "And more",
+  ["Карта сбора"] = "Gathering map",
+  ["Руда и травы, что дают навык, - на карте мира."] = "Ore and herbs that give skill, on the world map.",
+  ["Покупки"] = "Shopping",
+  ["Список до учителя с ценами аукциона."] = "A list up to the trainer, with auction prices.",
+  ["Что выгодно создавать, очередь и откаты."] = "What is worth crafting, a queue and cooldowns.",
+  ["Лагерь"] = "Camp",
+  ["Бонусы у костра и где падают чертежи."] = "Campfire bonuses and where blueprints drop.",
+  ["Что даёт каждая и кому её брать."] = "What each one gives and who should take it.",
+  ["Учителя"] = "Trainers",
+  ["Напомнит о новом ранге и поставит метку."] = "Reminds you of the next rank and sets a waypoint.",
+  ["Поехали"] = "Let's go",
+}) do if TJ.EN[k] == nil then TJ.EN[k] = v end end
