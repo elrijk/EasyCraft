@@ -234,16 +234,24 @@ local function queue(self)
   return q
 end
 
+-- Очередь изменилась: обновить подсказку у окна профессии (мини-окно).
+local function queueChanged()
+  if TJ.Tracker and TJ.Tracker.Update then TJ:Safe(TJ.Tracker.Update, TJ.Tracker) end
+end
+
 function TJ:QueueAdd(key, spell, n)
   if not (key and spell) then return end
   local q = queue(self)
+  local found
   for _, it in ipairs(q) do
     if it.k == key and it.s == spell then
       it.n = it.n + (n or 1)
-      return
+      found = true
+      break
     end
   end
-  q[#q + 1] = { k = key, s = spell, n = n or 1 }
+  if not found then q[#q + 1] = { k = key, s = spell, n = n or 1 } end
+  queueChanged()
 end
 
 function TJ:QueueRemove(spell)
@@ -251,9 +259,13 @@ function TJ:QueueRemove(spell)
   for i = #q, 1, -1 do
     if q[i].s == spell then tremove(q, i) end
   end
+  queueChanged()
 end
 
-function TJ:QueueClear() self.char.queue = {} end
+function TJ:QueueClear()
+  self.char.queue = {}
+  queueChanged()
+end
 
 -- Очередь записями рецептов (n - сколько создать), по выгоде.
 function TJ:QueueList()
@@ -333,6 +345,7 @@ ev:SetScript("OnEvent", function(_, _, _, _, spellID)
     if it.s == spellID then
       it.n = it.n - 1
       if it.n <= 0 then tremove(q, i) end
+      queueChanged()
       -- сумки изменятся и окно перерисуется само; откат - проверить позже
       if C_Timer and C_Timer.After then
         local key = it.k

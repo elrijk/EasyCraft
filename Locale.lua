@@ -1450,3 +1450,12 @@ for k, v in pairs({
   ["Среди рецептов твоих профессий такого нет."] = "None of your professions' recipes match.",
   ["У твоих профессий нет рецептов создания."] = "Your professions have no crafting recipes.",
 }) do TJ.EN[k] = v end
+
+-- 1.2: очередь крафта в подсказке у окна профессии
+for k, v in pairs({
+  ["Добавить в очередь"] = "Add to the queue",
+  ["Откроет вкладку «Рецепты»: щёлкни по рецепту, и он появится здесь."] = "Opens the \"Recipes\" tab: click a recipe and it shows up here.",
+  ["Щелчок - создать. Крестик справа уберёт из очереди."] = "Click to craft. The cross on the right removes it from the queue.",
+  ["Все рецепты и очередь"] = "All recipes and the queue",
+  ["Откроет вкладку «Рецепты»: там вся очередь, что докупить и новые рецепты в неё."] = "Opens the \"Recipes\" tab: the whole queue, what to buy, and more recipes to add.",
+}) do TJ.EN[k] = v end

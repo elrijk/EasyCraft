@@ -2082,6 +2082,7 @@ local function SetRow(f, _, y, d)
   end
   r:SetScript("OnClick", d.onClick)
   tipOn(r, d.tipTitle or "", d.tip)
+  if r.del then r.del:Hide() end
   r:Show()
   return y + 37
 end
@@ -2094,6 +2095,8 @@ function Mini:Reset(f)
   for _, d in ipairs(f.dots or {}) do d:Hide() end
   for _, r in ipairs(f.rows) do r:Hide() end
   f.nextRow = 0
+  if f.queueHead then f.queueHead:Hide() end
+  if f.queueBtn then f.queueBtn:Hide() end
   for _, fl in pairs(f.flows) do fl:Hide() end
   for _, fl in pairs(f.flow2s or {}) do fl:Hide() end
   f.flowBox:Hide()
@@ -2213,11 +2216,13 @@ function Mini:Update()
   end
   local rank, maxRank = TJ:GetSkill(key)
   local i, s = TJ:CurrentStep(key, rank, maxRank)
-  if not s then f:Hide(); return end -- маршрут пройден
+  -- маршрут пройден: окно остаётся ради очереди крафта (если рецепты прочитаны)
+  local finished = not s
+  if finished and not (TJ.char.book and TJ.char.book[key]) then f:Hide(); return end
   -- Горное дело у плавильни: шаг - сбор, а здесь полезно другое - что плавить.
-  local smelt = key == "mining" and s.k == "gather" and TJ:SmeltNow(rank)
+  local smelt = not finished and key == "mining" and s.k == "gather" and TJ:SmeltNow(rank)
   if smelt and not smelt.real then smelt = nil end
-  local state = TJ:StepState(key, i, rank, maxRank)
+  local state = not finished and TJ:StepState(key, i, rank, maxRank)
 
   -- справа от окна, без прозрачного края классических окон; не за экраном
   local _, insetR = 0, 0
@@ -2233,7 +2238,8 @@ function Mini:Update()
   self:Reset(f)
   local T = TJ.T
   -- 1. Шапка
-  local pos, count, order = TJ.Content:StepPos(TJ.Profs[key], i)
+  local pos, count, order
+  if not finished then pos, count, order = TJ.Content:StepPos(TJ.Profs[key], i) end
   f.stepBig:SetText(pos and format(T("Шаг %d"), pos) or TJ:N(TJ.Profs[key]))
   f.stepOf:SetText(pos and format(T("из %d"), count) or "")
   -- значок учителя ярко, только когда учитель нужен сейчас
@@ -2242,6 +2248,12 @@ function Mini:Update()
   f.findTrainer.glyph:SetDesaturated(not need)
   f.findTrainer:SetAlpha(need and 1 or 0.65)
   local y = HEAD_H
+  if finished then
+    y = self:Queue(f, key, y + GAP_SECTION / 2)
+    f:SetHeight(y + 4)
+    f:Show()
+    return
+  end
   if smelt then return self:ShowSmelt(f, key, smelt, y) end
 
   local isCraft = s.k == "craft" and state ~= "done"
@@ -2348,8 +2360,69 @@ function Mini:Update()
       y = y + 22 + GAP_SECTION
     end
   end
+  y = self:Queue(f, key, y)
   f:SetHeight(y + 4)
   f:Show()
+end
+
+-- Очередь крафта этой профессии (Book.lua): строки по выгоде, щелчок -
+-- создать, крестик справа - убрать из очереди. Очереди нет - кнопка, которая
+-- открывает вкладку «Рецепты», где её собирают. Только у профессий, чьи
+-- рецепты аддон уже прочитал.
+function Mini:Queue(f, key, y)
+  if not (TJ.QueueList and TJ.char.book and TJ.char.book[key]) then return y end
+  local T = TJ.T
+  local list = {}
+  for _, e in ipairs(TJ:QueueList()) do
+    if e.key == key then list[#list + 1] = e end
+  end
+  y = sep(f, 3, y - GAP_SECTION / 2)
+  if not f.queueHead then f.queueHead = W.Text(f, "head") end
+  f.queueHead:SetText(T("Очередь крафта"))
+  y = place(f.queueHead, f, y) + 3
+  if not f.queueBtn then f.queueBtn = W.Button(f, "", MINI_W - MINI_PAD * 2, 22) end
+  local btn = f.queueBtn
+  local function openBook()
+    UI.tab.home = 5
+    UI:Open("home")
+  end
+  if #list == 0 then
+    btn:SetText(T("Добавить в очередь"))
+    btn:SetScript("OnClick", openBook)
+    tipOn(btn, T("Очередь крафта"), T("Откроет вкладку «Рецепты»: щёлкни по рецепту, и он появится здесь."))
+  else
+    local hot = TJ:QueueNext(list)
+    for k, e in ipairs(list) do
+      local right = not e.known and ("|cffff5555" .. T("рецепт не выучен") .. "|r")
+        or (e.can > 0 and format(T("хватит на %d"), e.can) or ("|cff9d9d9d" .. T("нет реагентов") .. "|r"))
+      y = SetRow(f, k, y, { icon = (e.out and TJ:ItemIcon(e.out)) or e.icon or TJ.Icon(nil), hot = e == hot, star = e == hot,
+        text = format("%d × %s", e.n, e.name or "?"), right = right,
+        tipTitle = e.name or "?", tip = T("Щелчок - создать. Крестик справа уберёт из очереди."),
+        onClick = function() TJ:QueueCraft(e) end })
+      -- крестик у правого края строки, текст справа - левее него
+      local r = f.rows[f.nextRow]
+      if not r.del then
+        r.del = CreateFrame("Button", nil, r, "UIPanelCloseButton")
+        r.del:SetSize(22, 22)
+        r.del:SetPoint("RIGHT", -1, 0)
+      end
+      r.del:SetScript("OnClick", function()
+        TJ:QueueRemove(e.spell)
+        TJ:RefreshAll()
+      end)
+      r.del:Show()
+      r.right:ClearAllPoints()
+      r.right:SetPoint("RIGHT", -24, -1)
+    end
+    y = y + GAP_SECTION - 3
+    btn:SetText(T("Все рецепты и очередь"))
+    btn:SetScript("OnClick", openBook)
+    tipOn(btn, T("Очередь крафта"), T("Откроет вкладку «Рецепты»: там вся очередь, что докупить и новые рецепты в неё."))
+  end
+  btn:ClearAllPoints()
+  btn:SetPoint("TOPLEFT", f, "TOPLEFT", MINI_PAD, -y)
+  btn:Show()
+  return y + 22 + GAP_SECTION
 end
 
 -- Кнопка «Создать N» на всю ширину.
