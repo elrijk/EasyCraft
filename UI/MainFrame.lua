@@ -1434,8 +1434,8 @@ end
 
 -- Переключатель с текущей строки карточки (c.y): одна тёмная полоса в
 -- рамке во всю ширину, внутри сегменты через тонкие разделители. Выбранный
--- сегмент залит золотом с тёмной надписью (как табличка «Текущий шаг»),
--- остальные - золотая надпись на тёмном.
+-- сегмент чуть светлее фона, с золотой надписью и тонкой золотой чертой
+-- снизу; остальные - приглушённая надпись на тёмном.
 -- list = { { text =, icon =, tip =, sel =, onClick = } }.
 local SEG_H = 42
 function Card:Segments(list)
@@ -1458,6 +1458,11 @@ function Card:Segments(list)
       t = CreateFrame("Button", nil, bar)
       t.fill = t:CreateTexture(nil, "BACKGROUND")
       t.fill:SetAllPoints()
+      t.mark = t:CreateTexture(nil, "BORDER")
+      t.mark:SetColorTexture(1, 0.82, 0, 0.9)
+      t.mark:SetHeight(2)
+      t.mark:SetPoint("BOTTOMLEFT", 6, 1)
+      t.mark:SetPoint("BOTTOMRIGHT", -6, 1)
       local hl = t:CreateTexture(nil, "HIGHLIGHT")
       hl:SetAllPoints()
       hl:SetColorTexture(1, 0.82, 0, 0.12)
@@ -1497,16 +1502,17 @@ function Card:Segments(list)
         -- разделитель - только между двумя невыбранными соседями
         local nextSel = list[i + 1] and list[i + 1].sel
         t.div:SetShown(i < n and not d.sel and not nextSel)
+        t.mark:SetShown(d.sel and true or false)
         if d.sel then
-          t.fill:SetColorTexture(CUR_FILL[1], CUR_FILL[2], CUR_FILL[3], 1)
-          t.title:SetTextColor(CUR_INK[1], CUR_INK[2], CUR_INK[3], 1)
+          t.fill:SetColorTexture(0.3, 0.21, 0.09, 1)
+          t.title:SetTextColor(1, 0.82, 0, 1)
           t.icon:SetDesaturated(false)
           t.icon:SetAlpha(1)
         else
           t.fill:SetColorTexture(0, 0, 0, 0)
-          t.title:SetTextColor(0.9, 0.74, 0.3, 1)
+          t.title:SetTextColor(0.62, 0.55, 0.42, 1)
           t.icon:SetDesaturated(true)
-          t.icon:SetAlpha(0.8)
+          t.icon:SetAlpha(0.6)
         end
         local fn = d.onClick
         t:SetScript("OnClick", function(s2)
