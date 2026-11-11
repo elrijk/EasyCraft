@@ -993,19 +993,6 @@ local function MakeTile(parent, mode, wide)
   else
     b.badge:SetPoint("CENTER", b, "TOP", 0, 0)
     b.slot:SetPoint("TOP", 0, -m.iconY)
-    -- текущий шаг: стрелка в золотой рамке в углу значка (у пройденного
-    -- там галочка)
-    local ms = max(14, floor(m.icon * 0.42 + 0.5))
-    b.curMark = GoldPlate(b, 8)
-    b.curMark:SetSize(ms, ms)
-    b.curMark:SetPoint("CENTER", b.slot, "TOPRIGHT", -1, -1)
-    b.curMark:SetFrameLevel(b.slot:GetFrameLevel() + 3)
-    local a = b.curMark:CreateTexture(nil, "OVERLAY")
-    a:SetSize(ms - 2, ms - 2)
-    a:SetPoint("CENTER", 1, 0)
-    W.SetTex(a, ARROW_TEX, 1, 0.82, 0, 1)
-    a:SetVertexColor(1, 0.82, 0, 1)
-    b.curMark:Hide()
   end
   if m.name then
     b.text = b:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
@@ -1047,11 +1034,10 @@ local function MakeTile(parent, mode, wide)
   function b:Set(t)
     local done, cur = t.state == "done", t.cur
     self.item, self.tip, self.onClick = t.item, t.tip, t.onClick
-    -- текущий шаг - рамкой плитки и значком (стрелка / табличка), без
-    -- свечения поверх значка
+    -- текущий шаг - яркой рамкой плитки (у широкой ещё табличка), без
+    -- свечения и значков поверх значка
     self.slot:Set(t.tex or (t.item and ns:ItemIcon(t.item)) or ns.Icon(nil), not done and t.count or nil,
       done and "ok" or nil, not (done or cur), false)
-    if self.curMark then self.curMark:SetShown(cur and true or false) end
     -- цвета карточек аддона (STYLE): текущая - ярко, пройденная - зелёная,
     -- следующие - приглушённые
     local st = cur and STYLE.current or (done and STYLE.done or STYLE.future)
