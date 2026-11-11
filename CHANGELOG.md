@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.1.0
+
+- Reagents on alts are read from Syndicator (Baganator) when it is installed; BagBrother still works.
+- A character with no professions sees a short guide on which profession to pick.
+- Shopping tab shows the cost of the whole remaining route to 300 for each profession.
+- Camp tab: "Share finds" gives a code with blueprint drop spots you discovered, to send to the author.
+
 ## 1.0.0
 
 First public release.

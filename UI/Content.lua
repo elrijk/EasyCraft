@@ -710,11 +710,7 @@ end
 function C:BuildProfList(UI)
   local learned = TJ:LearnedList()
   if #learned == 0 then
-    local c = UI:Card()
-    c:Head({ ring = "Interface\\Icons\\INV_Misc_Book_11" }, T("Профессии пока не изучены"),
-      { { T("Учителя профессий есть в каждой столице и в крупных деревнях."), "body" } })
-    c:Text(T("Как только выучишь профессию, здесь появится её маршрут прокачки: что делать сейчас, сколько и из чего."), "small")
-    UI:End(c)
+    self:BuildChoose(UI) -- UI/Choose.lua
     return
   end
   local pool = {} -- общий запас реагентов на все профессии
@@ -768,6 +764,11 @@ function C:BuildCamp(UI)
   local f = UI:Card("flat")
   f:Check(T("Показать предметы всех профессий"), TJ.settings.campAll, function(v) TJ.settings.campAll = v; UI:Render(true) end,
     T("Не только твоих профессий: что дают предметы лагеря других и где взять рецепты."))
+  local _, finds = TJ:BlueprintReport()
+  if finds > 0 then
+    f:Buttons({ { text = format(T("Поделиться находками (%d)"), finds), w = 240, onClick = function() TJ:ShareBlueprints() end,
+      tip = T("Чертежи, которые тебе выпадали, а где они падают, аддон ещё не знает. Отправь код автору - место появится у всех.") } })
+  end
   UI:End(f, 6)
   local list = TJ.settings.campAll and TJ.ProfOrder or TJ:LearnedList()
   for _, key in ipairs(list) do
@@ -1034,6 +1035,11 @@ function C:BuildShopping(UI, d)
           end,
         })
       end
+    end
+    local route, routeNoPrice = TJ:RouteCost(card.key)
+    if route > 0 then
+      pc:Text(format(T("Весь путь до 300: около %s"), W.Money(route))
+        .. (routeNoPrice > 0 and ("  |cff9d9d9d" .. format(T("(и ещё %d без цены)"), routeNoPrice) .. "|r") or ""), "small")
     end
     UI:End(pc)
   end
