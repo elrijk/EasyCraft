@@ -608,6 +608,8 @@ end
 local INK_T, INK_B = { 0.16, 0.08, 0 }, { 0.24, 0.14, 0.04 }
 W.INK_T, W.INK_B = INK_T, INK_B
 W.HINT_PAD, W.HINT_ROW = 12, 34
+W.HINT_MAX = 380 -- выше этого список в подсказке прокручивается
+W.HINT_BTN = 30 -- высота кнопок подсказки
 
 function W.HintPanel(name, width, title, key)
   local f = CreateFrame("Frame", name, UIParent, BackdropTemplateMixin and "BackdropTemplate" or nil)
@@ -635,7 +637,55 @@ function W.HintPanel(name, width, title, key)
   f.note = W.Text(f, "small")
   f.note:SetTextColor(INK_B[1], INK_B[2], INK_B[3])
   f.note:SetWidth(width - W.HINT_PAD * 2)
-  f.btn = W.Button(f, "", width - W.HINT_PAD * 2, 22)
+  f.btn = W.Button(f, "", width - W.HINT_PAD * 2, W.HINT_BTN)
+  -- Список (заголовки частей и строки) лежит в прокручиваемой области под
+  -- заголовком; всё, что ставят после f:EndList (итог, кнопки), - на самой
+  -- подсказке, под списком.
+  f.scroll = CreateFrame("ScrollFrame", nil, f)
+  f.scroll:SetPoint("TOPLEFT", f, "TOPLEFT", 0, -f.top)
+  f.scroll:SetSize(width, 10)
+  f.body = CreateFrame("Frame", nil, f.scroll)
+  f.body:SetSize(width, 10)
+  f.scroll:SetScrollChild(f.body)
+  f.thumb = f:CreateTexture(nil, "OVERLAY")
+  f.thumb:SetColorTexture(0.45, 0.32, 0.12, 0.9)
+  f.thumb:SetWidth(3)
+  f.thumb:Hide()
+  local function clampScroll()
+    local view, all = f.scroll:GetHeight(), f.body:GetHeight()
+    local range = math.max(0, all - view)
+    local pos = math.min(range, math.max(0, f.scroll:GetVerticalScroll()))
+    f.scroll:SetVerticalScroll(pos)
+    f.thumb:SetShown(range > 0)
+    if range > 0 then
+      local th = math.max(24, view * view / all)
+      f.thumb:SetHeight(th)
+      f.thumb:ClearAllPoints()
+      f.thumb:SetPoint("TOPRIGHT", f, "TOPRIGHT", -4, -(f.top + (view - th) * pos / range))
+    end
+  end
+  f.scroll:SetScript("OnMouseWheel", function(s, d)
+    s:SetVerticalScroll(s:GetVerticalScroll() - d * (W.HINT_ROW + 3) * 2)
+    clampScroll()
+  end)
+  -- куда ставить часть списка: в прокрутку, после EndList - на подсказку
+  local function place(w, x, y)
+    local p = f.footer and f or f.body
+    w:SetParent(p)
+    w:ClearAllPoints()
+    w:SetPoint("TOPLEFT", p, "TOPLEFT", x, -(f.footer and y or (y - f.top)))
+  end
+  -- список закончен в точке y: высота прокрутки и где начинается низ
+  function f:EndList(y)
+    local all = math.max(1, y - self.top)
+    local view = math.min(all, W.HINT_MAX)
+    self.body:SetHeight(all)
+    self.scroll:SetHeight(view)
+    self.scroll:EnableMouseWheel(all > view)
+    clampScroll()
+    self.footer = true
+    return self.top + view + (all > view and 6 or 0)
+  end
   if key then W.Movable(f, key, "TOPRIGHT") end
   function f:Reset()
     for _, h in ipairs(self.heads) do h:Hide() end
@@ -644,6 +694,7 @@ function W.HintPanel(name, width, title, key)
     self.note:Hide()
     if self.btn2 then self.btn2:Hide() end
     self.nh, self.nr, self.nc = 0, 0, 0
+    self.footer = false
   end
   -- заголовок части чернилами в точке y; вернёт новый y
   function f:Head(text, y)
@@ -656,8 +707,7 @@ function W.HintPanel(name, width, title, key)
       self.heads[self.nh] = h
     end
     h:SetText(text)
-    h:ClearAllPoints()
-    h:SetPoint("TOPLEFT", self, "TOPLEFT", W.HINT_PAD, -y)
+    place(h, W.HINT_PAD, y)
     h:Show()
     return y + h:GetStringHeight() + 4
   end
@@ -677,8 +727,7 @@ function W.HintPanel(name, width, title, key)
       c.right:SetPoint("RIGHT", c, "RIGHT", 0, -1)
       self.checks[self.nc] = c
     end
-    c:ClearAllPoints()
-    c:SetPoint("TOPLEFT", self, "TOPLEFT", W.HINT_PAD, -y)
+    place(c, W.HINT_PAD, y)
     c:SetWidth(self.w - W.HINT_PAD * 2)
     local col = on and INK_T or { 0.45, 0.4, 0.33 }
     c.text:SetTextColor(col[1], col[2], col[3])
@@ -731,8 +780,7 @@ function W.HintPanel(name, width, title, key)
       r:SetScript("OnLeave", function() GameTooltip:Hide() end)
       self.rows[self.nr] = r
     end
-    r:ClearAllPoints()
-    r:SetPoint("TOPLEFT", self, "TOPLEFT", W.HINT_PAD - 4, -y)
+    place(r, W.HINT_PAD - 4, y)
     r:SetSize(self.w - W.HINT_PAD * 2 + 8, W.HINT_ROW)
     r.icon:SetTexture(d.id and ns:ItemIcon(d.id) or d.tex or ns.Icon(nil))
     r.icon:SetDesaturated(d.dim and true or false)
@@ -761,8 +809,7 @@ function W.HintPanel(name, width, title, key)
   -- текст под строками (чернилами)
   function f:Note(text, y)
     self.note:SetText(text)
-    self.note:ClearAllPoints()
-    self.note:SetPoint("TOPLEFT", self, "TOPLEFT", W.HINT_PAD, -y)
+    place(self.note, W.HINT_PAD, y)
     self.note:Show()
     return y + self.note:GetStringHeight() + 6
   end
@@ -771,7 +818,7 @@ function W.HintPanel(name, width, title, key)
   function f:Button(text, enabled, onClick, tip, y, second)
     local b = self.btn
     if second then
-      self.btn2 = self.btn2 or W.Button(self, "", width - W.HINT_PAD * 2, 22)
+      self.btn2 = self.btn2 or W.Button(self, "", width - W.HINT_PAD * 2, W.HINT_BTN)
       b = self.btn2
     end
     b:ClearAllPoints()
@@ -789,7 +836,7 @@ function W.HintPanel(name, width, title, key)
     end)
     b:SetScript("OnLeave", function() GameTooltip:Hide() end)
     b:Show()
-    return y + 2 + 22 + 12
+    return y + 2 + W.HINT_BTN + 12
   end
   f:Reset()
   f:Hide()

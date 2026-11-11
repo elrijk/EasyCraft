@@ -1362,6 +1362,7 @@ function ns:UpdateBankButton()
         end }, y)
     end
   end
+  y = f:EndList(y)
   local h = y
   f.btn:SetShown(#profs > 0)
   if #profs > 0 then
@@ -1407,7 +1408,7 @@ end)
 --  строкой со своей кнопкой поиска; внизу итог и «Найти всё» (Auctionator).
 --  Для текущих шагов всё есть - что купить дальше, до учителя.
 -------------------------------------------------------------------------------
-local AH_W, AH_PAD, AH_ROW, AH_MAX = 340, 12, 34, 10
+local AH_W, AH_PAD, AH_ROW, AH_MAX = 340, 12, 34, 60 -- список прокручивается
 local SEARCH_ICON = "Interface\\Common\\UI-Searchbox-Icon"
 local ahPanel
 
@@ -1511,6 +1512,7 @@ function ns:UpdateAuctionPanel()
   end
   if shown == 0 then f:Hide(); return end -- покупать нечего
   if hidden > 0 then y = f:Head("|cff9d9d9d" .. format(T("и ещё %d"), hidden) .. "|r", y) end
+  y = f:EndList(y)
   -- 3. Итог и «Найти всё»
   local sum
   if not self:PriceSource() then sum = "|cffa03000" .. T("Цен нет: открой аукцион - EasyCraft прочитает их сам") .. "|r"
