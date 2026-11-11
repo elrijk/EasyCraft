@@ -14,7 +14,7 @@ goes up. No guide in a second window, no counting materials by hand.
 - **Choosing a profession**: what each one makes, who should take it, the cost of the path to 300 and the whole route before you learn it.
 - **One-click helpers**: buy missing reagents at a vendor, take the right stacks from the bank, search everything at the auction house.
 - **Trainers and recipes**: the nearest trainer or recipe vendor with a map pin; stars in the trainer window on recipes your route needs.
-- **Gathering on the map**: zones for your faction and level, highlighted areas where herbs and ore are dense, your own finds, node colour in the tooltip.
+- **Gathering on the map**: zones for your faction and level, highlighted areas where herbs and ore are dense, node colour in the tooltip.
 - **Camp**: the campfire items of your professions and where their blueprints drop; every XP bonus and how to get the Cozy Sleeping Bag.
 - **Self-check**: if a recipe in the game differs from the route, the addon uses the game's data.
 
