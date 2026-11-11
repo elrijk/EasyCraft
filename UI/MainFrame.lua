@@ -9,7 +9,7 @@ local format, floor, max, min = string.format, math.floor, math.max, math.min
 --  справа вкладки (главная и изученные профессии), сверху вкладки разделов,
 --  на пергаменте - тёмные карточки.
 -------------------------------------------------------------------------------
-local WIDTH, HEIGHT = 680, 640
+local WIDTH, HEIGHT = 680, 670 -- как окно MacroCoach
 local PAGE_W = WIDTH - 16
 local ATTIC = 64
 local CHILD_W = PAGE_W - 30
@@ -787,7 +787,13 @@ function Card:Row(r)
     row.bg:SetAllPoints()
     row.hl = row:CreateTexture(nil, "HIGHLIGHT")
     row.hl:SetAllPoints()
-    row.hl:SetColorTexture(1, 1, 1, 0.07)
+    row.hl:SetColorTexture(1, 0.82, 0, 0.08)
+    -- тонкая черта под строкой: список читается по строкам
+    row.sep = row:CreateTexture(nil, "BORDER")
+    row.sep:SetPoint("BOTTOMLEFT", 4, 0)
+    row.sep:SetPoint("BOTTOMRIGHT", -4, 0)
+    row.sep:SetHeight(1)
+    row.sep:SetColorTexture(1, 1, 1, 0.06)
     row.icon = W.ItemIcon(row, 22)
     row.icon:SetPoint("LEFT", 6 + W.IconPad(22), 0)
     row.icon:EnableMouse(false)
@@ -858,21 +864,25 @@ end
 -- серым - диапазон (sub), справа - счёт.
 function Card:Section(text, right, done, collapsed, onClick, sub)
   local b = self:Take("section", function()
-    local s = CreateFrame("Button", nil, self)
+    -- плашка, как заголовки разделов в окнах игры (навыки, репутация):
+    -- тёмная, в тонкой рамке, название золотом слева, «+/-» справа
+    local s = CreateFrame("Button", nil, self, BackdropTemplateMixin and "BackdropTemplate" or nil)
     s:SetHeight(26)
+    W.Backdrop(s, "Interface\\Buttons\\WHITE8X8", nil, 10, 0.1, 0.075, 0.05, 0.95, 0.5, 0.4, 0.22, 0.9)
     s.hl = s:CreateTexture(nil, "HIGHLIGHT")
-    s.hl:SetAllPoints()
-    s.hl:SetColorTexture(1, 1, 1, 0.05)
+    s.hl:SetPoint("TOPLEFT", 2, -2)
+    s.hl:SetPoint("BOTTOMRIGHT", -2, 2)
+    s.hl:SetColorTexture(1, 0.82, 0, 0.08)
     s.arrow = s:CreateTexture(nil, "OVERLAY")
     s.arrow:SetSize(16, 16)
-    s.arrow:SetPoint("LEFT", 0, 0)
+    s.arrow:SetPoint("RIGHT", -6, 0)
     s.text = W.Text(s, "head", false)
-    s.text:SetPoint("LEFT", s.arrow, "RIGHT", 6, 0)
+    s.text:SetPoint("LEFT", 10, 0)
     s.sub = W.Text(s, "small", false)
     s.sub:SetPoint("BOTTOMLEFT", s.text, "BOTTOMRIGHT", 8, 1)
     s.right = W.Text(s, "head", false)
     s.right:SetJustifyH("RIGHT")
-    s.right:SetPoint("RIGHT", -2, 0)
+    s.right:SetPoint("RIGHT", s.arrow, "LEFT", -8, 0)
     return s
   end)
   b.sub:SetText(sub or "")
@@ -883,7 +893,7 @@ function Card:Section(text, right, done, collapsed, onClick, sub)
   if done then
     W.SetTex(b.arrow, "Interface\\RaidFrame\\ReadyCheck-Ready", 0.2, 0.9, 0.2, 1)
   else
-    W.SetTex(b.arrow, collapsed and "Interface\\Buttons\\UI-PlusButton-Up" or "Interface\\Buttons\\UI-MinusButton-Up", 0.8, 0.8, 0.8, 1)
+    W.SetTex(b.arrow, collapsed and "Interface\\Buttons\\UI-PlusButton-Up" or "Interface\\Buttons\\UI-MinusButton-Up", 1, 0.82, 0, 1)
   end
   local c = done and W.GREEN or W.GOLD
   b.text:SetTextColor(c[1], c[2], c[3], 1)
