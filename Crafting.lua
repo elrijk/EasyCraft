@@ -78,7 +78,7 @@ function ns:RecipeSource(key, s)
     local price, extra = info:match("^цена:%s*([^,]+),?%s*(.*)$")
     if not price then price, extra = info:match("^price:%s*([^,]+),?%s*(.*)$") end
     local all = s.npcs and self:NpcsFor(s.npcs) or {}
-    return { kind = "vendor", npc = all[1], count = #all, item = s.recipe,
+    return { kind = "vendor", npc = all[1], all = all, item = s.recipe,
       price = price, copper = self:ParseMoney(price), extra = extra ~= "" and extra or nil, info = s.info }
   end
   if s.src and s.src ~= "trainer" and s.src ~= "rank" then return { kind = "other", info = s.info } end
@@ -88,7 +88,7 @@ function ns:RecipeSource(key, s)
     if st.k == "train" and st.npcs and st.max and st.max > req and (not pick or st.max < pick.max) then pick = st end
   end
   local all = pick and self:NpcsFor(pick.npcs) or {}
-  return { kind = "trainer", npc = all[1], count = #all }
+  return { kind = "trainer", npc = all[1], all = all }
 end
 
 -- «1з 20с», «42м» (или «1g 20s», «42c» в английском виде) -> медь; nil - не цена.
@@ -110,7 +110,7 @@ function ns:RankAction(key)
   local rank = self:GetSkill(key)
   local s = nr.s
   local all = s.npcs and self:NpcsFor(s.npcs) or {}
-  return { s = s, kind = s.k, id = all[1], count = #all, item = s.k == "book" and s.id or nil,
+  return { s = s, kind = s.k, id = all[1], all = all, item = s.k == "book" and s.id or nil,
     name = self:RankName(nr.max), max = nr.max, learn = nr.learn or 0, can = self:CanLearnRank(s, rank), lvl = s.lvl }
 end
 
@@ -930,13 +930,21 @@ function ns:MerchantNeeds()
   return out
 end
 
-function ns:BuyFromMerchant()
+-- only: the merchant slot of the one item to buy; nil - everything needed
+function ns:BuyFromMerchant(only)
   if not MerchantOpen() then return end
   if InCombatLockdown and InCombatLockdown() then
     self:Print(ns.T("в бою покупать нельзя."))
     return
   end
   local list = self:MerchantNeeds()
+  if only then
+    local one = {}
+    for _, e in ipairs(list) do
+      if e.index == only then one[#one + 1] = e end
+    end
+    list = one
+  end
   local money = GetMoney and GetMoney() or 0
   local bought, spent, short = 0, 0, false
   for _, e in ipairs(list) do
@@ -966,36 +974,44 @@ function ns:BuyFromMerchant()
   self.needCache = nil
 end
 
-local merchantButton
+-- The hint beside the merchant window, in the same form as the ones at the
+-- bank and the auction house: a row per item with its own "Buy" button, the
+-- total, and "Buy all" at the bottom.
+local MERCHANT_W = 400
+local merchantPanel
 function ns:UpdateMerchantButton()
-  if not MerchantOpen() then
-    if merchantButton then merchantButton:Hide() end
+  local list = MerchantOpen() and self:MerchantNeeds() or {}
+  if #list == 0 then
+    if merchantPanel then merchantPanel:Hide() end
     return
   end
-  if not merchantButton then
-    local b = ns.W.Button(MerchantFrame, "", 280, 24)
-    b:SetPoint("TOP", MerchantFrame, "BOTTOM", 0, -4)
-    b:SetScript("OnClick", function() ns:BuyFromMerchant() end)
-    b:SetScript("OnEnter", function(self)
-      GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
-      GameTooltip:SetText("|cff33ff99Easy|rCraft")
-      GameTooltip:AddLine(ns.T("Докупит только то, чего не хватает до следующего учителя:"), 1, 1, 1, true)
-      for _, e in ipairs(self.list or {}) do
-        GameTooltip:AddDoubleLine(format("%d × %s", e.bundles * e.stack, ns:ItemName(e.id)), ns.W.Money(e.cost), 0.9, 0.9, 0.9, 1, 1, 1)
-      end
-      GameTooltip:Show()
-    end)
-    b:SetScript("OnLeave", function() GameTooltip:Hide() end)
-    merchantButton = b
+  local W, T = ns.W, ns.T
+  if not merchantPanel then
+    merchantPanel = W.HintPanel("EasyCraftMerchantPanel", MERCHANT_W, T("Купить нужные реагенты"), "merchant")
   end
-  local list = self:MerchantNeeds()
-  merchantButton.list = list
-  if #list == 0 then merchantButton:Hide() return end
+  local f = merchantPanel
+  f:Reset()
+  local y = f.top
   local total, count = 0, 0
-  for _, e in ipairs(list) do total = total + e.cost; count = count + e.bundles * e.stack end
-  merchantButton:SetText(format(ns.T("EasyCraft: купить для шагов (%d) - %s"), count, ns.W.Money(total)))
-  merchantButton:SetWidth(math.max(280, (merchantButton:GetFontString() and merchantButton:GetFontString():GetStringWidth() or 240) + 30))
-  merchantButton:Show()
+  for _, e in ipairs(list) do
+    local n = e.bundles * e.stack
+    local index = e.index
+    total, count = total + e.cost, count + n
+    y = f:Row({ id = e.id, count = n, btn = T("Купить"), right = W.Money(e.cost),
+      tip = format(T("Купить %d"), n) .. ": " .. W.Money(e.cost),
+      onClick = function() ns:BuyFromMerchant(index) end }, y)
+  end
+  y = f:EndList(y)
+  y = f:Head(T("Всего: ") .. W.Money(total), y + 3) + 2
+  f.btn:Show()
+  local h = f:Button(format(T("Купить всё (%d)"), count), true, function() ns:BuyFromMerchant() end,
+    T("Докупит только то, чего не хватает до следующего учителя."), y + 2)
+  f:SetHeight(h)
+  if not W.PlaceSaved(f, "merchant") then
+    f:ClearAllPoints()
+    f:SetPoint("TOPLEFT", MerchantFrame, "TOPRIGHT", 4, 0)
+  end
+  f:Show()
 end
 
 -------------------------------------------------------------------------------

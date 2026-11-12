@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.2.2
+
+- Routes never lead through a green recipe, in any mode. Where a recipe of the route turns green, the route switches to another recipe of the same route that is still orange or yellow. Where the route has nothing else, the step is marked: the window says the recipe is green and offers a learned recipe that gives skill now instead of a craft button.
+- Nothing is counted or bought for a green step.
+- Merchant hint: a panel beside the merchant window, like the ones at the bank and the auction house. A row per item with its own "Buy" button, the total, and "Buy all".
+- Trainers and recipe vendors: all of them are listed, the nearest first, instead of only the nearest one.
+
 ## 1.2.1
 
 - Fully standalone: EasyCraft no longer reads anything from other addons. Reagents on your other characters come from its own records (a character is counted after it has logged in once with EasyCraft), and trainers get the game's own map pin.

@@ -2568,7 +2568,13 @@ function Mini:Update()
       y = place(f.note, f, y) + GAP_SECTION - 4
     end
   end
-  if not (isCraft and st and st.known == false and not st.unknown) and n > 0 then
+  -- (offers are found above, the green note needs them)
+  if isCraft and ns:StepIsGreen(key, s, rank) then
+    -- a green recipe is not offered for crafting: say what to do instead
+    f.note:SetText("|cffa03000" .. T("Рецепт шага уже зелёный: навык с него почти не растёт.") .. "|r "
+      .. (#offers > 0 and T("Качай на рецепте ниже.") or T("Выучи у учителя рецепт, который сейчас оранжевый или жёлтый.")))
+    y = place(f.note, f, y) + GAP_SECTION - 4
+  elseif not (isCraft and st and st.known == false and not st.unknown) and n > 0 then
     self:CreateBtn(f, key, s.spell, n, y, T("Сделает столько, сколько нужно до конца шага (и сколько хватит реагентов)."))
     y = y + 22 + GAP_SECTION
   end
@@ -2691,7 +2697,7 @@ function Mini:LearnBox(f, key, s, y)
     or ns:RecipeSourceHead(src)
   local money = src.kind == "vendor" and (src.copper and W.Money(src.copper) or src.price) or nil
   return self:NpcBox(f, head, src.npc, src.kind == "vendor" and src.item or nil,
-    src.extra, (src.kind == "vendor" and T("Ближайший торговец этим рецептом.") or T("Ближайший учитель.")), y, src.count, money)
+    src.extra, (src.kind == "vendor" and T("Ближайший торговец этим рецептом.") or T("Ближайший учитель.")), y, src.all, money)
 end
 
 -- Можно взять следующий ранг: у учителя, купить книгу, взять задание.
@@ -2710,27 +2716,33 @@ function Mini:RankBox(f, ra, y)
     or (ra.kind == "quest" and T("Кто ближе всех даёт задание.") or T("Ближайший учитель.")))
     .. "\n" .. format(T("Предел навыка станет %d."), ra.max)
   local money = price and ((approx and "~" or "") .. W.Money(price)) or nil
-  return self:NpcBox(f, head, ra.id, ra.item, nil, who, y, ra.count, money)
+  return self:NpcBox(f, head, ra.id, ra.item, nil, who, y, ra.all, money)
 end
 
 -- «Что сделать у NPC»: жёлтый заголовок и строка-кнопка, как кнопки зон:
 -- слева значок (книга/рецепт или свиток учителя), имя и зона, справа -
 -- значок карты; в золотой рамке - это главное действие. Щелчок - метка и карта.
-function Mini:NpcBox(f, head, id, item, extra, who, y, count, money)
+-- all: every NPC that fits, the nearest first. All of them are listed (the
+-- player picks); the nearest stands in the gold frame.
+local NPC_ROWS = 8
+function Mini:NpcBox(f, head, id, item, extra, who, y, all, money)
   local T = ns.T
   f.npcHead:SetText(head)
   y = place(f.npcHead, f, y) + 3
   if not id then return y + GAP_SECTION - 4 end
-  local which = count == 1 and T("Единственный.") or (count and count > 1 and format(T("Ближайший из %d."), count)) or nil
-  local tip = (who or "") .. (which and ("\n" .. which) or "") .. (extra and ("\n" .. extra) or "")
-    .. "\n" .. T("Щелчок поставит метку и откроет карту.")
-  -- как кнопки зон: слева значок карты (щелчок - карта), справа - что там
-  -- взять (книга, рецепт или свиток учителя)
-  y = SetRow(f, nil, y, { icon = "Interface\\Icons\\INV_Misc_Map_01", hot = true,
-    text = ns:NpcName(id) .. "  |cff9d9d9d" .. ns:NpcZone(id) .. "|r",
-    right = money, nodeIcons = { item and ns:ItemIcon(item) or "Interface\\Icons\\INV_Scroll_03" },
-    tipTitle = ns:NpcName(id), tip = tip,
-    onClick = function() ns:Waypoint(id, true) end })
+  local list = (all and #all > 0) and all or { id }
+  for k, npc in ipairs(list) do
+    if k > NPC_ROWS then break end
+    local tip = (k == 1 and who and (who .. "\n") or "") .. (extra and (extra .. "\n") or "")
+      .. T("Щелчок поставит метку и откроет карту.")
+    -- как кнопки зон: слева значок карты (щелчок - карта), справа - что там
+    -- взять (книга, рецепт или свиток учителя)
+    y = SetRow(f, nil, y, { icon = "Interface\\Icons\\INV_Misc_Map_01", hot = k == 1,
+      text = ns:NpcName(npc) .. "  |cff9d9d9d" .. ns:NpcZone(npc) .. "|r",
+      right = money, nodeIcons = { item and ns:ItemIcon(item) or "Interface\\Icons\\INV_Scroll_03" },
+      tipTitle = ns:NpcName(npc), tip = tip,
+      onClick = function() ns:Waypoint(npc, true) end })
+  end
   return y + GAP_SECTION - 3
 end
 

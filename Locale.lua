@@ -504,8 +504,6 @@ for k, v in pairs({
   ["в бою покупать нельзя."] = "you can't buy in combat.",
   ["куплено у торговца: %d шт. за %s."] = "bought from the vendor: %d for %s.",
   ["не хватило денег на всё: купил, сколько смог."] = "not enough money for everything: bought what I could.",
-  ["Докупит только то, чего не хватает до следующего учителя:"] = "Buys only what is missing until the next trainer:",
-  ["EasyCraft: купить для шагов (%d) - %s"] = "EasyCraft: buy for steps (%d) - %s",
   ["%s: есть %s%d|r из %d до %d"] = "%s: have %s%d|r of %d up to %d",
   [", у альтов %d"] = ", alts %d",
   ["рецепта нет в игре"] = "the recipe is not in the game",
@@ -647,8 +645,6 @@ for k, v in pairs({
   ["Где ловить"] = "Where to fish",
   ["Можно качать и на них"] = "You can level with these too",
   ["Выгоднее сейчас"] = "Better right now",
-  ["Единственный."] = "The only one.",
-  ["Ближайший из %d."] = "Nearest of %d.",
   ["Купи книгу «%s»"] = "Buy the \"%s\" book",
   ["Задание на ранг «%s»"] = "Quest for the \"%s\" rank",
   ["Выучи ранг «%s»"] = "Learn the \"%s\" rank",
@@ -1086,4 +1082,14 @@ for k, v in pairs({
 -- 1.2.1: "Find" button in the auction hint
 for k, v in pairs({
     ["Найти"] = "Find",
+}) do if ns.EN[k] == nil then ns.EN[k] = v end end
+
+-- 1.2.2: no green recipes in routes, merchant hint, all trainers
+for k, v in pairs({
+    ["Купить"] = "Buy",
+    ["Купить всё (%d)"] = "Buy all (%d)",
+    ["Докупит только то, чего не хватает до следующего учителя."] = "Buys only what you are short of until the next trainer.",
+    ["Рецепт шага уже зелёный: навык с него почти не растёт."] = "The step's recipe is already green: skill hardly grows from it.",
+    ["Качай на рецепте ниже."] = "Use the recipe below.",
+    ["Выучи у учителя рецепт, который сейчас оранжевый или жёлтый."] = "Learn a recipe from the trainer that is orange or yellow now.",
 }) do if ns.EN[k] == nil then ns.EN[k] = v end end

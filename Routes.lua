@@ -24,7 +24,9 @@ ns.ROUTE_MODE_TIP = {
   fast = "Меньше созданий: всегда рецепт, который даёт навык почти наверняка.",
 }
 
-local MIN_CHANCE = { cheap = 0.25, fast = 0.5 }
+-- A green recipe is never part of a route, in any mode: skill comes from it
+-- too rarely. Where the stored route has nothing else, the step stays and is
+-- marked (step.green) - the window then says so instead of offering to craft.
 local KEEP = 1.05 -- текущий рецепт не меняем, пока новый не лучше на 5%
 
 function ns:RouteMode()
@@ -59,7 +61,7 @@ end
 local function compute(self, key, mode)
   local p = self.Profs[key]
   local base = baseSteps(p)
-  local pool, seen = {}, {}
+  local pool, seen, byKey = {}, {}, {}
   -- разовые шаги (жезл, философский камень: одно создание на один пункт)
   -- остаются на своём месте и в выбор не идут
   local pinAt = {}
@@ -76,7 +78,8 @@ local function compute(self, key, mode)
         if id then seen[id] = true end
       elseif sk and s.rc and id and not seen[id] and sk[2] and sk[4] then
         seen[id] = true
-        pool[#pool + 1] = { s = s, learn = sk[1] or 0, yellow = sk[2], grey = sk[4] }
+        pool[#pool + 1] = { s = s, learn = sk[1] or 0, yellow = sk[2], green = sk[3], grey = sk[4] }
+        byKey[id] = pool[#pool]
       end
     elseif s.at then
       caps[s.at] = true
@@ -97,24 +100,23 @@ local function compute(self, key, mode)
     local hard = c.s.src == "recipe" and not (book and c.s.spell and book[c.s.spell])
     c.feas = hard and (mode == "fast" and 1.15 or 1.4) or 1
   end
-  if mode ~= "fast" and priced < #pool / 2 then return nil end
+  if mode == "cheap" and priced < #pool / 2 then return nil end
 
+  local function greenAt(c) return c.green or (c.yellow + c.grey) / 2 end
   local function score(c, skill)
+    if skill >= greenAt(c) then return nil end
     local ch = chance(c, skill)
-    if ch < MIN_CHANCE[mode] then return nil end
     local cost = c.cost or 1e9
     if mode == "fast" then return (1 / ch) * c.feas + cost * 1e-12 end
-    if mode == "cheap" then return cost / ch * c.feas end
-    return cost / (ch * ch) * c.feas
+    return cost / ch * c.feas
   end
-
   -- шаг обычного маршрута на этом навыке: запасной вариант, если по порогам
   -- ничего не подходит
   local function fallback(skill)
     for _, s in ipairs(base) do
       if s.k == "craft" and s.f and s.t and skill >= s.f and skill < s.t then
         local sk = s.sk
-        return { s = s, learn = 0, yellow = sk and sk[2] or s.t, grey = sk and sk[4] or (s.t + 1), plain = true }
+        return { s = s, learn = 0, yellow = sk and sk[2] or s.t, green = sk and sk[3] or (s.t + 1), grey = sk and sk[4] or (s.t + 1), plain = true }
       end
     end
   end
@@ -126,10 +128,21 @@ local function compute(self, key, mode)
       runs[#runs + 1] = { fixed = pinAt[skill], f = skill, t = skill + 1 }
       cur = nil
     else
-      for _, c in ipairs(pool) do
-        if skill >= c.learn then
-          local sc = score(c, skill)
-          if sc and (not bestScore or sc < bestScore) then best, bestScore = c, sc end
+      -- the stored route: its own recipe for this skill, while it is not green
+      local own
+      if mode == "guide" then
+        local b = fallback(skill)
+        local c = b and byKey[recipeKey(b.s)]
+        if c and skill < greenAt(c) then own = c elseif b and not c then own = b end
+      end
+      if own then
+        best = own
+      else
+        for _, c in ipairs(pool) do
+          if skill >= c.learn then
+            local sc = score(c, skill)
+            if sc and (not bestScore or sc < bestScore) then best, bestScore = c, sc end
+          end
         end
       end
       if cur and cur.c ~= best and not cur.c.plain and not caps[skill] then
@@ -139,7 +152,10 @@ local function compute(self, key, mode)
       if not best then best = fallback(skill) end
       if not best then return nil end
       local same = cur and (cur.c == best or (best.plain and cur.c.plain and cur.c.s == best.s))
-      if not same or caps[skill] then
+      -- the green part of a stored step is a run of its own, so that it can be marked
+      if same and best.plain and skill == best.green then same = false end
+      -- the stored route is not cut where a new rank is needed: it never was
+      if not same or (caps[skill] and mode ~= "guide") then
         cur = { c = best, f = skill, t = skill, crafts = 0 }
         runs[#runs + 1] = cur
       end
@@ -173,21 +189,30 @@ local function compute(self, key, mode)
       out[#out + 1] = r.fixed
     else
       local src = r.c.s
-      local step = {}
-      for k, v in pairs(src) do step[k] = v end
-      local n = ceil(r.crafts - 1e-6)
-      if n < 1 then n = 1 end
-      step.f, step.t, step.n = r.f, r.t, n
-      if src.rc then
-        local m = {}
-        for i = 1, #src.rc - 1, 2 do
-          m[i] = src.rc[i]
-          m[i + 1] = (src.rc[i + 1] or 1) * n
+      -- the stored route untouched where nothing changed: its own numbers stay
+      local green = r.c.plain and src.sk and r.f >= greenAt(r.c)
+      if mode == "guide" and src.f == r.f and src.t == r.t and not green then
+        out[#out + 1] = src
+      else
+        local step = {}
+        for k, v in pairs(src) do step[k] = v end
+        local n = ceil(r.crafts - 1e-6)
+        if n < 1 then n = 1 end
+        step.f, step.t, step.n = r.f, r.t, n
+        if src.rc then
+          local m = {}
+          for i = 1, #src.rc - 1, 2 do
+            m[i] = src.rc[i]
+            m[i + 1] = (src.rc[i + 1] or 1) * n
+          end
+          step.m = m
         end
-        step.m = m
+        step.gen = mode
+        -- nothing in the route replaces it here: the green part of the stored step
+        -- a green step is not crafted, so nothing is counted or bought for it
+        if green then step.green, step.n, step.m = true, nil, nil end
+        out[#out + 1] = step
       end
-      step.gen = mode
-      out[#out + 1] = step
     end
   end
   while others[oi] do
@@ -214,9 +239,14 @@ function ns:ApplyRoutes()
     if type(p) == "table" and p.steps then
       p.baseSteps = p.baseSteps or p.steps
       local steps
-      if mode ~= "guide" and self:HasRouteModes(key) then
+      if self:HasRouteModes(key) then
         local ok, res = pcall(compute, self, key, mode)
         if ok and type(res) == "table" and #res > 0 then steps = res end
+        -- the mode cannot be built (no prices yet): still the stored route without green recipes
+        if not steps and mode ~= "guide" then
+          ok, res = pcall(compute, self, key, "guide")
+          if ok and type(res) == "table" and #res > 0 then steps, mode = res, "guide" end
+        end
       end
       p.routeMode = steps and mode or "guide"
       steps = steps or p.baseSteps

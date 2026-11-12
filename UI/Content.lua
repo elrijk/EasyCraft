@@ -1297,6 +1297,11 @@ function C:CurrentWarnings(UI, c, key, s, st, rank, maxRank)
       c:Text(RED .. T("Рецепт уже серый, навык не растёт: переходи дальше.") .. "|r", "small", { gap = 6 })
     end
   end
+  local green = ns:StepIsGreen(key, s, rank)
+  if green then
+    c:Text(YELLOW .. T("Рецепт шага уже зелёный: навык с него почти не растёт.") .. "|r "
+      .. T("Выучи у учителя рецепт, который сейчас оранжевый или жёлтый."), "small", { gap = 6 })
+  end
   local check = ns:StepCheck(key, s)
   if check and check.missing then
     c:Text(ORANGE .. T("Этого рецепта в игре нет: пропусти шаг кнопкой «Пропустить шаг».") .. "|r", "small", { gap = 6 })
@@ -1363,7 +1368,7 @@ function C:RankBody(UI, c, s, isCur)
     if price then money = (approx and "~" or "") .. W.Money(price) end
   end
   local what = s.k == "book" and s.id and ns:ItemIcon(s.id) or (s.k == "quest" and QUEST_ICON or nil)
-  local items = npcItems(s.npcs, isCur and 4 or 2, what, money)
+  local items = npcItems(s.npcs, isCur and 12 or 2, what, money)
   if #items > 0 then c:Items(items, 2, 22) end
 end
 
@@ -1448,7 +1453,7 @@ function C:CurrentActions(UI, c, key, i, s, st, train, rank, maxRank, left)
         UI:Render(true)
       end }, c.indent or UI.PAD, y)
   end
-  if craft then
+  if craft and not green then
     if self:CraftButtons(UI, c, key, s, left, y) then placed = true end
   end
   -- строку под кнопки - только если они есть: иначе пустое место снизу
@@ -1482,12 +1487,17 @@ function C:TrainerBlock(UI, c, key, s)
   local vendor = src.kind == "vendor"
   c:Text(vendor and T("Купи рецепт") or T("Выучи рецепт у учителя"), "head", { gap = 6 })
   local money = vendor and (src.copper and W.Money(src.copper) or src.price) or nil
-  local which = src.count == 1 and T("Единственный.") or (src.count and src.count > 1 and format(T("Ближайший из %d."), src.count)) or nil
-  c:Items({ { tex = MAP_ICON, text = ns:NpcName(id), sub = ns:NpcZone(id) .. (src.extra and (", " .. src.extra) or ""),
-    right = money, icons = { vendor and src.item and ns:ItemIcon(src.item) or SCROLL_ICON }, hot = true,
-    tip = { title = ns:NpcName(id), lines = { vendor and T("Ближайший торговец этим рецептом.") or T("Ближайший учитель."), which },
-      hint = T("Щелчок поставит метку и откроет карту.") },
-    onClick = function() ns:Waypoint(id, true) end } }, 1, 26)
+  -- every trainer or vendor, the nearest first and in the gold frame
+  local items = {}
+  for n, npc in ipairs((src.all and #src.all > 0) and src.all or { id }) do
+    if n > 8 then break end
+    tinsert(items, { tex = MAP_ICON, text = ns:NpcName(npc), sub = ns:NpcZone(npc) .. (src.extra and (", " .. src.extra) or ""),
+      right = money, icons = { vendor and src.item and ns:ItemIcon(src.item) or SCROLL_ICON }, hot = n == 1,
+      tip = { title = ns:NpcName(npc), lines = { n == 1 and (vendor and T("Ближайший торговец этим рецептом.") or T("Ближайший учитель.")) or nil },
+        hint = T("Щелчок поставит метку и откроет карту.") },
+      onClick = function() ns:Waypoint(npc, true) end })
+  end
+  c:Items(items, #items > 1 and 2 or 1, 26)
 end
 
 -- Другие рецепты, как в подсказке у окна профессии: «Можно качать и на

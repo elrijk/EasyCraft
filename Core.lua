@@ -793,6 +793,13 @@ function ns:RecipeColor(s, rank)
   return "orange"
 end
 
+-- The step's recipe is green or grey at this skill: the route does not lead
+-- through it. The colour the game showed last wins over the stored thresholds.
+function ns:StepIsGreen(key, s, rank)
+  if not (s and s.k == "craft" and rank and rank >= (s.f or 0)) then return false end
+  local col = (s.spell and self.RealColor and self:RealColor(key, s.spell, rank)) or (s.sk and self:RecipeColor(s, rank))
+  return col == "green" or col == "gray"
+end
 function ns:RecipeColorText(s)
   local sk = s.sk
   if not sk then return nil end
