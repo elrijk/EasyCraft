@@ -973,13 +973,6 @@ for k, v in pairs({
 
 -- 1.2: режимы маршрута и настройка альтов
 for k, v in pairs({
-  ["Обычный"] = "Standard",
-  ["Дешевле"] = "Cheaper",
-  ["Быстрее"] = "Faster",
-  ["Проверенный маршрут из гайда."] = "The proven guide route.",
-  ["Меньше золота: дольше держимся за дешёвый рецепт, даже когда он желтеет."] = "Less gold: stay on a cheap recipe longer, even after it turns yellow.",
-  ["Меньше созданий: всегда рецепт, который даёт навык почти наверняка."] = "Fewer crafts: always a recipe that gives skill almost every time.",
-  ["Для этого режима нужны цены: открой аукцион. Пока показан обычный маршрут."] = "This mode needs prices: open the auction house. The standard route is shown for now.",
   ["Считать реагенты у других моих персонажей"] = "Count reagents on my other characters",
 }) do if ns.EN[k] == nil then ns.EN[k] = v end end
 
@@ -1064,11 +1057,6 @@ for k, v in pairs({
   ["Общее"] = "General",
   ["Подсказки"] = "Hints",
   ["Карта и аукцион"] = "Map and auction house",
-}) do if ns.EN[k] == nil then ns.EN[k] = v end end
-
--- 1.2: «Путь прокачки» на главной
-for k, v in pairs({
-  ["Путь прокачки"] = "Leveling route",
 }) do if ns.EN[k] == nil then ns.EN[k] = v end end
 
 -- 1.2: цены только свои, напоминание сходить на аукцион

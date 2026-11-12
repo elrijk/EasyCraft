@@ -457,49 +457,9 @@ function C:HomeTabs()
   }
 end
 
--- У страницы профессии вкладок нет: режим маршрута выбирают на главной
--- (RouteModeCard).
+-- The profession page has no tabs.
 function C:ProfTabs(key)
   return {}
-end
-
--- «Путь прокачки»: крупный переключатель режима маршрута на главной. Один
--- на все профессии; показывается, если хоть у одной изученной есть выбор.
-local MODE_ICON = { guide = "INV_Misc_Book_09", cheap = "INV_Misc_Coin_02", fast = "Ability_Rogue_Sprint" }
-function C:RouteModeCard(UI)
-  if not ns.HasRouteModes then return end
-  local any, waiting = false, false
-  local mode = ns:RouteMode()
-  for _, key in ipairs(ns:LearnedList()) do
-    if ns:HasRouteModes(key) then
-      any = true
-      -- режиму не хватило цен: у профессии пока обычный маршрут
-      if mode ~= "guide" and ns.Profs[key].routeMode ~= mode then waiting = true end
-    end
-  end
-  if not any then return end
-  -- прямо на пергаменте, без тёмной карточки: это переключатель, а не ещё
-  -- одна карточка профессии
-  local c = UI:Card("flat")
-  -- заголовок - как заголовок страницы («Профессия до 300 - шаг за шагом»);
-  -- под ним одна короткая подпись: что значит выбранный режим
-  c:Text(T("Путь прокачки"), "huge", { x = UI.PAD, gap = 8 })
-  c:Text(T(ns.ROUTE_MODE_TIP[mode]), "body", { x = UI.PAD, gap = 4 })
-  c:Space(6)
-  local tiles = {}
-  for _, md in ipairs(ns.ROUTE_MODES) do
-    tiles[#tiles + 1] = { text = T(ns.ROUTE_MODE_NAME[md]), icon = MODE_ICON[md], tip = T(ns.ROUTE_MODE_TIP[md]), sel = md == mode,
-      onClick = function()
-        if md == ns:RouteMode() then return end
-        ns:SetRouteMode(md)
-        UI:Render(true)
-      end }
-  end
-  c:Segments(tiles)
-  if waiting then
-    c:Text("|cffa03000" .. T("Для этого режима нужны цены: открой аукцион. Пока показан обычный маршрут.") .. "|r", "small", { x = UI.PAD, gap = 4 })
-  end
-  UI:End(c, 12)
 end
 
 -- Гайды вкладок снова (кнопка «?», настройки, /ec помощь): показать на
@@ -656,7 +616,6 @@ function C:BuildHome(UI, tab)
   elseif tab == 5 then
     self:BuildBook(UI)
   else
-    self:RouteModeCard(UI)
     self:BuildProfList(UI)
   end
 end
@@ -1145,17 +1104,6 @@ function C:BuildRoute(UI, key)
     inRank[bk] = (inRank[bk] or 0) + 1
     if st == "done" then
       doneInRank[bk] = (doneInRank[bk] or 0) + 1
-    end
-  end
-
-  -- режим маршрута выбирают вкладками окна; здесь - только если режиму
-  -- не хватает цен
-  if ns.HasRouteModes and ns:HasRouteModes(key) then
-    local mode = ns:RouteMode()
-    if mode ~= "guide" and p.routeMode ~= mode then
-      local mc = UI:Card("flat")
-      mc:Text(T("Для этого режима нужны цены: открой аукцион. Пока показан обычный маршрут."), "small")
-      UI:End(mc, 6)
     end
   end
 

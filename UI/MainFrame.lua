@@ -1677,8 +1677,7 @@ function UI:Create()
     b:SetScript("OnClick", function()
       if b.selected then return end
       W.Sound("IG_CHARACTER_INFO_TAB")
-      -- у профессии вкладки - режимы маршрута, на главной - разделы
-      if b.mode then ns:SetRouteMode(b.mode) else UI.tab[UI.view] = b.page or i end
+      UI.tab[UI.view] = b.page or i
       UI:Render()
     end)
     b:Hide()
@@ -1805,8 +1804,7 @@ function UI:Render(keepScroll)
     head:Show()
     SetPortrait(f, ns.ICON) -- в портрете всегда значок аддона, профессия - в шапке
     local tabs = C:ProfTabs(key)
-    local sel, mode = 1, ns:RouteMode()
-    for i, t in ipairs(tabs) do if t[4] == mode then sel = i end end
+    local sel = 1
     self:SetTopTabs(tabs, sel)
     -- полоса навыка - от последней вкладки до кнопки «Ссылка в чат»
     head.bar:ClearAllPoints()

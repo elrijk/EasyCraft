@@ -1,43 +1,30 @@
 local _, ns = ...
 
 -------------------------------------------------------------------------------
---  Режимы маршрута. Игрок выбирает сам:
---    guide    - обычный: маршрут, записанный в данных (как раньше);
---    cheap    - дешевле: на каждом пункте навыка рецепт с наименьшей ожидаемой
---               ценой пункта (цена создания / шанс прокачки);
---    fast     - быстрее: рецепт с наибольшим шансом, меньше всего созданий;
---  Рецепты берутся из самого маршрута: у каждого есть пороги цвета
---  sk = { с какого навыка, жёлтый, зелёный, серый }. Шанс прокачки:
---  до жёлтого 100%, дальше (серый - навык) / (серый - жёлтый).
---  Целесообразность: рецепт, который надо покупать или искать (src="recipe"),
---  считается дороже, пока персонаж его не выучил.
---  Без цен режим «дешевле» посчитать нельзя - тогда
---  остаётся обычный маршрут.
+--  The leveling route. There is one route per profession: the stored one
+--  (Data/Professions.lua), rebuilt so that it never leads through a green
+--  recipe. Every recipe has colour thresholds
+--  sk = { learnable from, yellow, green, grey }; the chance of a skill point
+--  is 100% until yellow, then (grey - skill) / (grey - yellow).
+--  For each skill point the route keeps its own recipe while that is orange
+--  or yellow. Where it has turned green, another recipe takes over: the one
+--  with the lowest expected cost of a point (craft cost / chance) when
+--  prices are known, otherwise the one with the best chance. A recipe that
+--  has to be bought or found first counts as dearer until it is learned.
 -------------------------------------------------------------------------------
 local ceil, huge = math.ceil, math.huge
 
-ns.ROUTE_MODES = { "guide", "cheap", "fast" }
-ns.ROUTE_MODE_NAME = { guide = "Обычный", cheap = "Дешевле", fast = "Быстрее" }
-ns.ROUTE_MODE_TIP = {
-  guide = "Проверенный маршрут из гайда.",
-  cheap = "Меньше золота: дольше держимся за дешёвый рецепт, даже когда он желтеет.",
-  fast = "Меньше созданий: всегда рецепт, который даёт навык почти наверняка.",
-}
 
--- A green recipe is never part of a route, in any mode: skill comes from it
+-- A green recipe is never part of the route: skill comes from it
 -- too rarely. Where the stored route has nothing else, the step stays and is
 -- marked (step.green) - the window then says so instead of offering to craft.
 local KEEP = 1.05 -- текущий рецепт не меняем, пока новый не лучше на 5%
 
-function ns:RouteMode()
-  local m = self.settings and self.settings.routeMode
-  return self.ROUTE_MODE_NAME[m] and m or "guide"
-end
 
 local function baseSteps(p) return p.baseSteps or p.steps end
 
--- У профессии есть из чего выбирать (ремесло с порогами цветов).
-function ns:HasRouteModes(key)
+-- The profession has recipes to choose from (crafts with colour thresholds).
+local function hasChoice(self, key)
   local p = self.Profs[key]
   if not p or not p.steps then return false end
   local n = 0
@@ -90,8 +77,8 @@ local EXTRA = {
       src = "recipe", npcs = { N = { 11557 } }, info = "цена: 4з, нужна репутация с Древобрюхами", sk = { 290, 305, 319, 334 } },
   },
 }
--- Маршрут для режима или nil (считать не из чего - остаётся обычный).
-local function compute(self, key, mode)
+-- The route, or nil when there is nothing to build it from (the stored one stays).
+local function compute(self, key)
   local p = self.Profs[key]
   local base = baseSteps(p)
   local pool, seen, byKey = {}, {}, {}
@@ -132,23 +119,19 @@ local function compute(self, key, mode)
   if #pool < 2 or last <= first then return nil end
 
   local book = self.char and self.char.book and self.char.book[key]
-  local priced = 0
   for _, c in ipairs(pool) do
     c.cost = self:RecipeCost(c.s.rc)
-    if c.cost then priced = priced + 1 end
-    -- рецепт надо купить или найти, а персонаж его ещё не знает
+    -- the recipe has to be bought or found, and the character does not know it yet
     local hard = c.s.src and c.s.src ~= "trainer" and c.s.src ~= "rank" and c.s.src ~= "seen" and not (book and c.s.spell and book[c.s.spell])
-    c.feas = hard and (mode == "fast" and 1.15 or 1.4) or 1
+    c.feas = hard and 1.4 or 1
   end
-  if mode == "cheap" and priced < #pool / 2 then return nil end
 
   local function greenAt(c) return c.green or (c.yellow + c.grey) / 2 end
   local function score(c, skill)
     if skill >= greenAt(c) then return nil end
     local ch = chance(c, skill)
-    local cost = c.cost or 1e9
-    if mode == "fast" then return (1 / ch) * c.feas + cost * 1e-12 end
-    return cost / ch * c.feas
+    -- no price: all such recipes cost the same, so the best chance wins
+    return (c.cost or 1e9) / ch * c.feas
   end
   -- шаг обычного маршрута на этом навыке: запасной вариант, если по порогам
   -- ничего не подходит
@@ -170,7 +153,7 @@ local function compute(self, key, mode)
     else
       -- the stored route: its own recipe for this skill, while it is not green
       local own
-      if mode == "guide" then
+      do
         local b = fallback(skill)
         local c = b and byKey[recipeKey(b.s)]
         if c and skill < greenAt(c) then own = c elseif b and not c then own = b end
@@ -189,7 +172,7 @@ local function compute(self, key, mode)
           if best then break end
         end
       end
-      if cur and cur.c ~= best and not cur.c.plain and not caps[skill] then
+      if cur and cur.c ~= best and not cur.c.plain then
         local mine = score(cur.c, skill)
         if mine and bestScore and mine <= bestScore * KEEP then best = cur.c end
       end
@@ -198,8 +181,7 @@ local function compute(self, key, mode)
       local same = cur and (cur.c == best or (best.plain and cur.c.plain and cur.c.s == best.s))
       -- the green part of a stored step is a run of its own, so that it can be marked
       if same and best.plain and skill == best.green then same = false end
-      -- the stored route is not cut where a new rank is needed: it never was
-      if not same or (caps[skill] and mode ~= "guide") then
+      if not same then
         cur = { c = best, f = skill, t = skill, crafts = 0 }
         runs[#runs + 1] = cur
       end
@@ -235,7 +217,7 @@ local function compute(self, key, mode)
       local src = r.c.s
       -- the stored route untouched where nothing changed: its own numbers stay
       local green = r.c.plain and src.sk and r.f >= greenAt(r.c)
-      if mode == "guide" and src.f == r.f and src.t == r.t and not green then
+      if src.f == r.f and src.t == r.t and not green then
         out[#out + 1] = src
       else
         local step = {}
@@ -251,7 +233,7 @@ local function compute(self, key, mode)
           end
           step.m = m
         end
-        step.gen = mode
+        step.gen = true -- rebuilt, not the stored step itself
         -- nothing in the route replaces it here: the green part of the stored step
         -- a green step is not crafted, so nothing is counted or bought for it
         if green then step.green, step.n, step.m = true, nil, nil end
@@ -274,25 +256,18 @@ local function signature(steps)
   return table.concat(t, "|")
 end
 
--- Пересчитать маршруты под выбранный режим. Возвращает, изменилось ли что-то.
+-- Rebuild the routes (prices or learned recipes changed). Returns whether anything changed.
 function ns:ApplyRoutes()
-  local mode = self:RouteMode()
   local changed = false
   self.char.routeSig = self.char.routeSig or {}
   for key, p in pairs(self.Profs) do
     if type(p) == "table" and p.steps then
       p.baseSteps = p.baseSteps or p.steps
       local steps
-      if self:HasRouteModes(key) then
-        local ok, res = pcall(compute, self, key, mode)
+      if hasChoice(self, key) then
+        local ok, res = pcall(compute, self, key)
         if ok and type(res) == "table" and #res > 0 then steps = res end
-        -- the mode cannot be built (no prices yet): still the stored route without green recipes
-        if not steps and mode ~= "guide" then
-          ok, res = pcall(compute, self, key, "guide")
-          if ok and type(res) == "table" and #res > 0 then steps, mode = res, "guide" end
-        end
       end
-      p.routeMode = steps and mode or "guide"
       steps = steps or p.baseSteps
       local sig = signature(steps)
       local old = self.char.routeSig[key]
@@ -312,12 +287,6 @@ function ns:ApplyRoutes()
   return changed
 end
 
-function ns:SetRouteMode(mode)
-  if not self.ROUTE_MODE_NAME[mode] then return end
-  self.settings.routeMode = mode
-  self:ApplyRoutes()
-  self:RefreshAll()
-end
 
 -- При входе: цены из прошлых заходов уже загружены.
 local ev = CreateFrame("Frame")
