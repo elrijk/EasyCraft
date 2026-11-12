@@ -533,7 +533,6 @@ for k, v in pairs({
   ["покажу, что качать в профессиях. Открыть - книга у миникарты или /ec."] = "I'll show what to level in your professions. Open: the book at the minimap or /ec.",
   ["Вернуть шаг"] = "Undo step",
   ["~%s за создание"] = "~%s per craft",
-  ["Того же цвета, что рецепт шага, но на него есть реагенты."] = "Same colour as the step's recipe, but you have its reagents.",
   ["Даст навык вернее, чем рецепт шага."] = "Gives skill more surely than the step's recipe.",
   ["Навык растёт не всегда: %s за создание."] = "Skill doesn't always go up: %s per craft.",
   ["Щелчок откроет его в окне профессии."] = "Click to open it in the profession window.",
@@ -643,8 +642,6 @@ for k, v in pairs({
   ["Предел навыка %d."] = "Skill cap %d.",
   ["Где собирать"] = "Where to gather",
   ["Где ловить"] = "Where to fish",
-  ["Можно качать и на них"] = "You can level with these too",
-  ["Выгоднее сейчас"] = "Better right now",
   ["Купи книгу «%s»"] = "Buy the \"%s\" book",
   ["Задание на ранг «%s»"] = "Quest for the \"%s\" rank",
   ["Выучи ранг «%s»"] = "Learn the \"%s\" rank",
@@ -1087,4 +1084,9 @@ for k, v in pairs({
     ["Чертёж: награда за задание «Imperial Plate Belt»."] = "Plans: a reward for the quest \"Imperial Plate Belt\".",
     ["Выкройка у торговца Qia в Круговзоре (Зимние Ключи), 1з 60с, запас ограничен."] = "Pattern from the vendor Qia in Everlook (Winterspring), 1g 60s, limited supply.",
     ["цена: 4з, нужна репутация с Древобрюхами"] = "price: 4g, Timbermaw Hold reputation needed",
+}) do if ns.EN[k] == nil then ns.EN[k] = v end end
+
+-- 1.2.2: several recipes to choose from on a step
+for k, v in pairs({
+    ["Варианты на выбор"] = "Options to choose from",
 }) do if ns.EN[k] == nil then ns.EN[k] = v end end

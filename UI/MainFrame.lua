@@ -2566,7 +2566,8 @@ function Mini:Update()
       y = place(f.note, f, y) + GAP_SECTION - 4
     end
   end
-  -- (offers are found above, the green note needs them)
+  -- other recipes to level on: found here, the green note needs them too
+  local offers = isCraft and ns:BestRecipes(key, s, rank, 4) or {}
   if isCraft and ns:StepIsGreen(key, s, rank) then
     -- a green recipe is not offered for crafting: say what to do instead
     f.note:SetText("|cffa03000" .. T("Рецепт шага уже зелёный: навык с него почти не растёт.") .. "|r "
@@ -2577,21 +2578,20 @@ function Mini:Update()
     y = y + 22 + GAP_SECTION
   end
 
-  -- 4. Другие рецепты: лучший в рамке
-  local offers = isCraft and ns:BestRecipes(key, s, rank, 3) or {}
+  -- 4. Other recipes to choose from: the best one in the frame
   if #offers > 0 then
     y = sep(f, 1, y - GAP_SECTION / 2)
     local best = offers[1]
     local instead = best.instead and n <= 0
     -- заголовок жёлтым, без описания (почему - в подсказке строки)
-    f.secHead:SetText(instead and T("Можно качать и на них") or T("Выгоднее сейчас"))
+    f.secHead:SetText(T("Варианты на выбор"))
     y = place(f.secHead, f, y) + 3
     for k, o in ipairs(offers) do
       local right = o.a > 0 and format(T("хватит на %d"), o.a) or "|cff9d9d9d" .. T("нет реагентов") .. "|r"
       if o.cost then right = W.Money(o.cost) .. "  " .. right end
-      local why = (k == 1 and (instead and T("Навык растёт и от него, а реагенты на шаг пока соберёшь.")
-        or (o.sameColor and T("Того же цвета, что рецепт шага, но на него есть реагенты.") or T("Даст навык вернее, чем рецепт шага.")))
-        or T("Ещё вариант.")) .. (o.cost and ("\n" .. format(T("~%s за создание"), W.Money(o.cost))) or "")
+      local why = ((o.instead and T("Навык растёт и от него, а реагенты на шаг пока соберёшь."))
+        or (o.better and T("Даст навык вернее, чем рецепт шага.")) or T("Ещё вариант."))
+        .. (o.cost and ("\n" .. format(T("~%s за создание"), W.Money(o.cost))) or "")
       if o.chance then why = why .. "\n" .. format(T("Навык растёт не всегда: %s за создание."), o.chance) end
       local id = o.id
       y = SetRow(f, k, y, { icon = o.icon or ns.Icon(nil), star = k == 1, hot = k == 1,

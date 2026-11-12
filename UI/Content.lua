@@ -1371,7 +1371,7 @@ end
 -- пропускали вручную.
 function C:CurrentActions(UI, c, key, i, s, st, train, rank, maxRank, left)
   if s.k == "craft" then
-    local offers = ns:BestRecipes(key, s, rank, 3)
+    local offers = ns:BestRecipes(key, s, rank, 4)
     if #offers > 0 then self:BestBlock(UI, c, key, offers) end
     local rs = s.spell and ns:RecipeState(key, s.spell)
     if rs and rs.enchant then c:Text(T("Чары накладываются из окна профессии: выбери там вещь."), "small", { gap = 6 }) end
@@ -1455,12 +1455,11 @@ end
 function C:BestBlock(UI, c, key, offers)
   local best = offers[1]
   c:Space(2)
-  c:Text(best.instead and T("Можно качать и на них") or T("Выгоднее сейчас"), "head", { gap = 6 })
+  c:Text(T("Варианты на выбор"), "head", { gap = 6 })
   local rows = {}
   for k, o in ipairs(offers) do
-    local why = k == 1 and (best.instead and T("Навык растёт и от него, а реагенты на шаг пока соберёшь.")
-      or (o.sameColor and T("Того же цвета, что рецепт шага, но на него есть реагенты.") or T("Даст навык вернее, чем рецепт шага.")))
-      or T("Ещё вариант.")
+    local why = (o.instead and T("Навык растёт и от него, а реагенты на шаг пока соберёшь."))
+      or (o.better and T("Даст навык вернее, чем рецепт шага.")) or T("Ещё вариант.")
     local lines = { why }
     if o.cost then tinsert(lines, { T("За создание"), "~" .. W.Money(o.cost) }) end
     if o.chance then tinsert(lines, format(T("Навык растёт не всегда: %s за создание."), o.chance)) end

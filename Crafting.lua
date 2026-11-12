@@ -690,7 +690,7 @@ function ns:BestRecipes(key, s, rank, limit)
     for _, r in ipairs(sc.list) do
       if r.id == s.spell then
         stepA = r.a or stepA
-      elseif r.id and r.d and r.d <= 2 then
+      elseif r.id and r.d and r.d <= 1 then -- orange or yellow only: green is never an option
         add(r, r.rc or (self:SpellStep(key, r.id) or {}).rc)
       end
     end
@@ -706,7 +706,7 @@ function ns:BestRecipes(key, s, rank, limit)
       if rs.k == "craft" and sp and sp ~= s.spell and rs.sk and rs.rc and learned[sp] and not seen[sp] then
         seen[sp] = true
         local d = D_BY_COLOR[self:RecipeColor(rs, rank)]
-        if d and d <= 2 then
+        if d and d <= 1 then
           add({ id = sp, n = self:StepName(rs), i = self:StepIcon(rs, p), d = d }, rs.rc)
         end
       end
@@ -729,17 +729,8 @@ function ns:BestRecipes(key, s, rank, limit)
   local list = {}
   for i, r in ipairs(cands) do
     local a = avail[r]
-    local ok
-    if known == false then
-      ok = a > 0 -- рецепт шага ещё учить: советуем только то, что можно сделать сейчас
-    elseif stepD == nil then
-      ok = true -- цвет рецепта шага неизвестен
-    elseif r.d < stepD then
-      ok = a > 0 or stepD >= 2 -- лучше по цвету; к недоступному не толкаем, пока шаг жёлтый
-    else
-      ok = stuck and a > 0 -- тот же цвет или хуже, но на шаг реагентов нет, а на этот есть
-    end
-    if ok then tinsert(list, i) end
+    -- every orange or yellow recipe is an option: the player chooses
+    tinsert(list, i)
     if #list >= (limit or 1) then break end
   end
   local out = {}
@@ -753,7 +744,7 @@ function ns:RecipeOffer(key, s, rank, cands, bi, avail, cost, stepD, known, stuc
   local a = avail[best]
   local left = self:RemainingCrafts(s, rank)
   local out = { id = best.id, name = best.n, icon = best.i, color = COLOR_BY_D[best.d], a = a, cost = cost[best],
-    sameColor = stepD ~= nil and best.d == stepD, worse = stepD ~= nil and best.d > stepD,
+    sameColor = stepD ~= nil and best.d == stepD, worse = stepD ~= nil and best.d > stepD, better = stepD ~= nil and best.d < stepD,
     unknownStep = known == false,
     instead = (stuck or known == false) and a > 0,
     -- сколько делать: не больше, чем осталось до конца шага
