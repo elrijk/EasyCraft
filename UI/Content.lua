@@ -1371,7 +1371,7 @@ end
 -- пропускали вручную.
 function C:CurrentActions(UI, c, key, i, s, st, train, rank, maxRank, left)
   if s.k == "craft" then
-    local offers = ns:BestRecipes(key, s, rank, 4)
+    local offers = ns:BestRecipes(key, s, rank, 3)
     if #offers > 0 then self:BestBlock(UI, c, key, offers) end
     local rs = s.spell and ns:RecipeState(key, s.spell)
     if rs and rs.enchant then c:Text(T("Чары накладываются из окна профессии: выбери там вещь."), "small", { gap = 6 }) end

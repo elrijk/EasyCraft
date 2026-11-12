@@ -2567,7 +2567,7 @@ function Mini:Update()
     end
   end
   -- other recipes to level on: found here, the green note needs them too
-  local offers = isCraft and ns:BestRecipes(key, s, rank, 4) or {}
+  local offers = isCraft and ns:BestRecipes(key, s, rank, 2) or {} -- the mini window stays small: two options
   if isCraft and ns:StepIsGreen(key, s, rank) then
     -- a green recipe is not offered for crafting: say what to do instead
     f.note:SetText("|cffa03000" .. T("Рецепт шага уже зелёный: навык с него почти не растёт.") .. "|r "
