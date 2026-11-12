@@ -57,6 +57,23 @@ local function chance(c, skill)
   return (c.grey - skill) / span
 end
 
+-- Recipes outside the stored routes for the stretches where every recipe of
+-- the route is green. Trainer recipes only: nothing to hunt for. They are
+-- used only where the route itself has nothing that is not green.
+-- Ids and reagents: the WoW Forever database on Wowhead. Colour thresholds:
+-- the WoW Forever profession tables on timesaver.gg (see THIRD-PARTY.md).
+local EXTRA = {
+  cooking = {
+    { k = "craft", en = "Goblin Deviled Clams", spell = 6500, id = 5527, rc = { 5504, 1, 2692, 1 }, src = "trainer",
+      sk = { 125, 165, 185, 205 } },
+  },
+  engineering = {
+    { k = "craft", en = "Iron Grenade", spell = 3962, id = 4390, rc = { 3575, 1, 4377, 1, 4306, 1 }, src = "trainer",
+      sk = { 175, 175, 195, 215 } },
+    { k = "craft", en = "Mithril Gyro-Shot", spell = 12621, id = 10513, rc = { 3860, 2, 10505, 2 }, src = "trainer",
+      sk = { 245, 245, 265, 285 } },
+  },
+}
 -- Маршрут для режима или nil (считать не из чего - остаётся обычный).
 local function compute(self, key, mode)
   local p = self.Profs[key]
@@ -83,6 +100,13 @@ local function compute(self, key, mode)
       end
     elseif s.at then
       caps[s.at] = true
+    end
+  end
+  for _, s in ipairs(EXTRA[key] or {}) do
+    local id = recipeKey(s)
+    if not seen[id] then
+      seen[id] = true
+      pool[#pool + 1] = { s = s, learn = s.sk[1], yellow = s.sk[2], green = s.sk[3], grey = s.sk[4], extra = true }
     end
   end
   -- выученные рецепты не из маршрута: пороги - по своим наблюдениям цветов
@@ -138,11 +162,15 @@ local function compute(self, key, mode)
       if own then
         best = own
       else
-        for _, c in ipairs(pool) do
-          if skill >= c.learn then
-            local sc = score(c, skill)
-            if sc and (not bestScore or sc < bestScore) then best, bestScore = c, sc end
+        -- the route's own recipes first; the extra ones only if none of them fits
+        for pass = 1, 2 do
+          for _, c in ipairs(pool) do
+            if skill >= c.learn and (pass == 2) == (c.extra == true) then
+              local sc = score(c, skill)
+              if sc and (not bestScore or sc < bestScore) then best, bestScore = c, sc end
+            end
           end
+          if best then break end
         end
       end
       if cur and cur.c ~= best and not cur.c.plain and not caps[skill] then

@@ -26,6 +26,13 @@ The disenchanting table in `Sale.lua` is the well-known classic one (item level
 to dust, essence and shard). It matches the WoW Forever disenchanting guide on
 wow-professions.com (November 2026); it has not been measured in the game.
 
+Three trainer recipes outside the stored routes (`Routes.lua`, `EXTRA`: Goblin
+Deviled Clams, Iron Grenade, Mithril Gyro-Shot) fill stretches where every
+recipe of a route is green. Their spell, item and reagent ids were read from
+the WoW Forever database on wowhead.com; their colour thresholds from the WoW
+Forever profession tables on timesaver.gg (November 2026). They have not been
+measured in the game.
+
 No code or data was taken from other profession addons. Recipe lists, reagents
 and recipe colours come from the game client at run time.
 
