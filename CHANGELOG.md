@@ -4,7 +4,7 @@
 
 - Routes never lead through a green recipe, in any mode. Where a recipe of the route turns green, the route switches to another recipe of the same route that is still orange or yellow. Where the route has nothing else, the step is marked: the window says the recipe is green and offers a learned recipe that gives skill now instead of a craft button.
 - Nothing is counted or bought for a green step.
-- Three trainer recipes fill stretches where a route had only green recipes: Goblin Deviled Clams (cooking 160-175), Iron Grenade (engineering 187-194) and Mithril Gyro-Shot (engineering 255-260).
+- Seven recipes fill the stretches where a route had only green recipes, so no route has a green stretch now. From the trainer: Goblin Deviled Clams (cooking 160-175), Iron Grenade (engineering 187-194), Mithril Gyro-Shot (engineering 255-260), Truesilver Breastplate (blacksmithing 242-250). From a quest or a vendor, with a note on where to get the recipe: Imperial Plate Belt (blacksmithing 267-270), Frostsaber Boots (leatherworking 265-270), Mantle of the Timbermaw (tailoring 297-300).
 - Merchant hint: a panel beside the merchant window, like the ones at the bank and the auction house. A row per item with its own "Buy" button, the total, and "Buy all".
 - Trainers and recipe vendors: all of them are listed, the nearest first, instead of only the nearest one.
 

@@ -1093,3 +1093,10 @@ for k, v in pairs({
     ["Качай на рецепте ниже."] = "Use the recipe below.",
     ["Выучи у учителя рецепт, который сейчас оранжевый или жёлтый."] = "Learn a recipe from the trainer that is orange or yellow now.",
 }) do if ns.EN[k] == nil then ns.EN[k] = v end end
+
+-- 1.2.2: where the extra route recipes come from
+for k, v in pairs({
+    ["Чертёж: награда за задание «Imperial Plate Belt»."] = "Plans: a reward for the quest \"Imperial Plate Belt\".",
+    ["Выкройка у торговца Qia в Круговзоре (Зимние Ключи), 1з 60с, запас ограничен."] = "Pattern from the vendor Qia in Everlook (Winterspring), 1g 60s, limited supply.",
+    ["цена: 4з, нужна репутация с Древобрюхами"] = "price: 4g, Timbermaw Hold reputation needed",
+}) do if ns.EN[k] == nil then ns.EN[k] = v end end

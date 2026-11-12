@@ -897,4 +897,7 @@ ns.LOCALES.koKR = function() return {
   ["The step's recipe is already green: skill hardly grows from it."] = "이 단계의 제조법이 이미 녹색입니다: 숙련도가 거의 오르지 않습니다.",
   ["Use the recipe below."] = "아래 제조법으로 올리세요.",
   ["Learn a recipe from the trainer that is orange or yellow now."] = "지금 주황색이나 노란색인 제조법을 상급자에게 배우세요.",
+  ["Plans: a reward for the quest \"Imperial Plate Belt\"."] = "도면: 퀘스트 'Imperial Plate Belt' 보상.",
+  ["Pattern from the vendor Qia in Everlook (Winterspring), 1g 60s, limited supply."] = "눈망루 마을(여명의 설원)의 상인 Qia에게서 도안 구매, 1골 60실, 수량 제한.",
+  ["price: 4g, Timbermaw Hold reputation needed"] = "가격: 4골, 나무구렁 요새 평판 필요",
 } end

@@ -885,4 +885,7 @@ ns.LOCALES.frFR = function() return {
   ["The step's recipe is already green: skill hardly grows from it."] = "La recette de l'étape est déjà verte : la compétence ne monte presque plus avec.",
   ["Use the recipe below."] = "Utilise la recette ci-dessous.",
   ["Learn a recipe from the trainer that is orange or yellow now."] = "Apprends chez le maître une recette qui est orange ou jaune maintenant.",
+  ["Plans: a reward for the quest \"Imperial Plate Belt\"."] = "Plans : récompense de la quête « Imperial Plate Belt ».",
+  ["Pattern from the vendor Qia in Everlook (Winterspring), 1g 60s, limited supply."] = "Patron chez la marchande Qia à Long-Guet (Berceau-de-l'Hiver), 1po 60pa, stock limité.",
+  ["price: 4g, Timbermaw Hold reputation needed"] = "prix : 4po, réputation auprès des Grumegueules requise",
 } end

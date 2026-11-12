@@ -892,4 +892,7 @@ ns.LOCALES.itIT = function() return {
   ["The step's recipe is already green: skill hardly grows from it."] = "La ricetta del passo è già verde: l'abilità non sale quasi più.",
   ["Use the recipe below."] = "Usa la ricetta qui sotto.",
   ["Learn a recipe from the trainer that is orange or yellow now."] = "Impara dall'istruttore una ricetta che ora è arancione o gialla.",
+  ["Plans: a reward for the quest \"Imperial Plate Belt\"."] = "Progetto: ricompensa della missione «Imperial Plate Belt».",
+  ["Pattern from the vendor Qia in Everlook (Winterspring), 1g 60s, limited supply."] = "Modello dalla mercante Qia a Lungavista (Fontefredda), 1o 60a, scorte limitate.",
+  ["price: 4g, Timbermaw Hold reputation needed"] = "prezzo: 4o, serve reputazione con la Rocca dei Mordilegno",
 } end

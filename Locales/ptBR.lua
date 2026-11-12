@@ -887,4 +887,7 @@ ns.LOCALES.ptBR = function() return {
   ["The step's recipe is already green: skill hardly grows from it."] = "A receita do passo já está verde: a perícia quase não sobe com ela.",
   ["Use the recipe below."] = "Use a receita abaixo.",
   ["Learn a recipe from the trainer that is orange or yellow now."] = "Aprenda com o instrutor uma receita que agora esteja laranja ou amarela.",
+  ["Plans: a reward for the quest \"Imperial Plate Belt\"."] = "Instruções: recompensa da missão \"Imperial Plate Belt\".",
+  ["Pattern from the vendor Qia in Everlook (Winterspring), 1g 60s, limited supply."] = "Molde com a vendedora Qia em Visteterna (Hibérnia), 1o 60p, estoque limitado.",
+  ["price: 4g, Timbermaw Hold reputation needed"] = "preço: 4o, requer reputação com o Domínio Presamatos",
 } end

@@ -59,7 +59,9 @@ end
 
 -- Recipes outside the stored routes for the stretches where every recipe of
 -- the route is green. Trainer recipes only: nothing to hunt for. They are
--- used only where the route itself has nothing that is not green.
+-- used only where the route itself has nothing that is not green. Where no trainer teaches
+-- anything that fits, the recipe comes from a vendor or a quest, and info
+-- says where (sk[1] is then the skill the recipe item asks for).
 -- Ids and reagents: the WoW Forever database on Wowhead. Colour thresholds:
 -- the WoW Forever profession tables on timesaver.gg (see THIRD-PARTY.md).
 local EXTRA = {
@@ -72,6 +74,20 @@ local EXTRA = {
       sk = { 175, 175, 195, 215 } },
     { k = "craft", en = "Mithril Gyro-Shot", spell = 12621, id = 10513, rc = { 3860, 2, 10505, 2 }, src = "trainer",
       sk = { 245, 245, 265, 285 } },
+  },
+  blacksmithing = {
+    { k = "craft", en = "Truesilver Breastplate", spell = 9974, id = 7939, rc = { 3860, 12, 6037, 24, 7910, 4, 7971, 4, 7966, 2 },
+      src = "trainer", sk = { 220, 240, 250, 260 } },
+    { k = "craft", en = "Imperial Plate Belt", spell = 16647, id = 12424, rc = { 12359, 22, 8170, 6, 7909, 1 }, src = "quest",
+      info = "Чертёж: награда за задание «Imperial Plate Belt».", sk = { 265, 260, 270, 280 } },
+  },
+  leatherworking = {
+    { k = "craft", en = "Frostsaber Boots", spell = 19066, id = 15071, rc = { 8170, 4, 15422, 6, 14341, 1 }, src = "vendor",
+      info = "Выкройка у торговца Qia в Круговзоре (Зимние Ключи), 1з 60с, запас ограничен.", sk = { 250, 270, 280, 290 } },
+  },
+  tailoring = {
+    { k = "craft", en = "Mantle of the Timbermaw", spell = 23663, id = 19050, rc = { 14342, 5, 7076, 5, 12803, 5, 14227, 2 },
+      src = "recipe", npcs = { N = { 11557 } }, info = "цена: 4з, нужна репутация с Древобрюхами", sk = { 290, 305, 319, 334 } },
   },
 }
 -- Маршрут для режима или nil (считать не из чего - остаётся обычный).
@@ -121,7 +137,7 @@ local function compute(self, key, mode)
     c.cost = self:RecipeCost(c.s.rc)
     if c.cost then priced = priced + 1 end
     -- рецепт надо купить или найти, а персонаж его ещё не знает
-    local hard = c.s.src == "recipe" and not (book and c.s.spell and book[c.s.spell])
+    local hard = c.s.src and c.s.src ~= "trainer" and c.s.src ~= "rank" and c.s.src ~= "seen" and not (book and c.s.spell and book[c.s.spell])
     c.feas = hard and (mode == "fast" and 1.15 or 1.4) or 1
   end
   if mode == "cheap" and priced < #pool / 2 then return nil end

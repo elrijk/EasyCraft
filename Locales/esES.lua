@@ -893,4 +893,7 @@ ns.LOCALES.esES = function() return {
   ["The step's recipe is already green: skill hardly grows from it."] = "La receta del paso ya es verde: la habilidad casi no sube con ella.",
   ["Use the recipe below."] = "Usa la receta de abajo.",
   ["Learn a recipe from the trainer that is orange or yellow now."] = "Aprende del instructor una receta que ahora sea naranja o amarilla.",
+  ["Plans: a reward for the quest \"Imperial Plate Belt\"."] = "Diseño: recompensa de la misión «Imperial Plate Belt».",
+  ["Pattern from the vendor Qia in Everlook (Winterspring), 1g 60s, limited supply."] = "Patrón de la vendedora Qia en Vista Eterna (Cuna del Invierno), 1o 60p, existencias limitadas.",
+  ["price: 4g, Timbermaw Hold reputation needed"] = "precio: 4o, hace falta reputación con el Bastión Fauces de Madera",
 } end

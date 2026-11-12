@@ -898,4 +898,7 @@ ns.LOCALES.zhCN = function() return {
   ["The step's recipe is already green: skill hardly grows from it."] = "这一步的配方已经变绿：技能几乎不再提升。",
   ["Use the recipe below."] = "用下面的配方来练。",
   ["Learn a recipe from the trainer that is orange or yellow now."] = "去训练师那里学一个现在是橙色或黄色的配方。",
+  ["Plans: a reward for the quest \"Imperial Plate Belt\"."] = "图纸：任务“Imperial Plate Belt”的奖励。",
+  ["Pattern from the vendor Qia in Everlook (Winterspring), 1g 60s, limited supply."] = "图样由永望镇（冬泉谷）的商人 Qia 出售，1金60银，限量。",
+  ["price: 4g, Timbermaw Hold reputation needed"] = "价格：4金，需要木喉要塞声望",
 } end

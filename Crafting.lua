@@ -81,7 +81,7 @@ function ns:RecipeSource(key, s)
     return { kind = "vendor", npc = all[1], all = all, item = s.recipe,
       price = price, copper = self:ParseMoney(price), extra = extra ~= "" and extra or nil, info = s.info }
   end
-  if s.src and s.src ~= "trainer" and s.src ~= "rank" then return { kind = "other", info = s.info } end
+  if s.src and s.src ~= "trainer" and s.src ~= "rank" then return { kind = "other", info = s.info and ns.T(s.info) or nil } end
   local req = (s.sk and s.sk[1] and s.sk[1] > 0 and s.sk[1]) or s.f or 0
   local pick
   for _, st in ipairs(self.Profs[key].steps) do
