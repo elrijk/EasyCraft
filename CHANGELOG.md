@@ -4,6 +4,7 @@
 
 - Fully standalone: EasyCraft no longer reads anything from other addons. Reagents on your other characters come from its own records (a character is counted after it has logged in once with EasyCraft), and trainers get the game's own map pin.
 - Buttons widen to fit their label in every language.
+- Auction hint: every row has a "Find" button that searches the auction house for the item; the panel is wider.
 - Clearer names: the "Leveling route" switch and the "XP bonuses from professions" card.
 - The "auction prices read" chat line counts items, not auction rows.
 - Fixed the Home tab tooltip and the `/ec help` description, which named things that no longer exist.
