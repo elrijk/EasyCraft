@@ -1082,3 +1082,8 @@ for k, v in pairs({
   ["цены аукциона старше %d дней: загляни на аукцион - EasyCraft обновит их сам."] = "auction prices are older than %d days: visit the auction house - EasyCraft will update them itself.",
   ["У окна аукциона появится подсказка со списком: лупа у предмета найдёт его."] = "A hint with the list appears beside the auction window: the magnifier on an item searches for it.",
 }) do if ns.EN[k] == nil then ns.EN[k] = v end end
+
+-- 1.2.1: "Find" button in the auction hint
+for k, v in pairs({
+    ["Найти"] = "Find",
+}) do if ns.EN[k] == nil then ns.EN[k] = v end end

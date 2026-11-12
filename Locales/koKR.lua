@@ -894,4 +894,5 @@ ns.LOCALES.koKR = function() return {
   ["no auction prices yet: visit the auction house - EasyCraft will read them itself, and shopping and profit will show prices."] = "아직 경매장 가격이 없습니다. 경매장에 들르면 EasyCraft가 직접 읽어 오고, 구매 목록과 수익에 가격이 표시됩니다.",
   ["auction prices are older than %d days: visit the auction house - EasyCraft will update them itself."] = "경매장 가격이 %d일보다 오래되었습니다. 경매장에 들르면 EasyCraft가 직접 갱신합니다.",
   ["A hint with the list appears beside the auction window: the magnifier on an item searches for it."] = "경매장 창 옆에 목록이 있는 도움말이 나타납니다. 아이템의 돋보기를 누르면 검색합니다.",
+  ["Find"] = "찾기",
 } end

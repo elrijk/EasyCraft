@@ -741,7 +741,8 @@ function W.HintPanel(name, width, title, key)
   end
   -- строка предмета: значок, название (цвет редкости), справа текст и значок
   -- (лупа - найти, галочка - брать); d = { id, text, right, mark, dim, tip, onClick,
-  -- count - число на значке, как у стопки в сумке }
+  -- count - число на значке, как у стопки в сумке;
+  -- btn - a labelled button at the right edge that does the same as a click on the row }
   function f:Row(d, y)
     self.nr = self.nr + 1
     local r = self.rows[self.nr]
@@ -803,10 +804,24 @@ function W.HintPanel(name, width, title, key)
     r.mark:ClearAllPoints()
     r.mark:SetPoint("RIGHT", -8, d.markY or 0)
     r.right:ClearAllPoints()
-    r.right:SetPoint("RIGHT", r, "RIGHT", d.mark and -30 or -8, -1)
+    local edge = d.mark and -30 or -8
+    if d.btn then
+      if not r.btn then
+        r.btn = W.Button(r, "", 60, 22)
+        r.btn:SetPoint("RIGHT", -6, 0)
+      end
+      r.btn:SetText(d.btn)
+      -- never narrower than its label: other languages are longer
+      r.btn:SetWidth(math.max(60, math.ceil(r.btn:GetFontString():GetStringWidth() or 0) + 24))
+      edge = -(r.btn:GetWidth() + 14)
+    end
+    if r.btn then r.btn:SetShown(d.btn ~= nil) end
+    r.right:SetPoint("RIGHT", r, "RIGHT", edge, -1)
     r.itemID, r.tip = d.id, d.tip
     local fn = d.onClick
-    r:SetScript("OnClick", fn and function() W.Sound("IG_MAINMENU_OPTION_CHECKBOX_ON"); fn() end or nil)
+    local click = fn and function() W.Sound("IG_MAINMENU_OPTION_CHECKBOX_ON"); fn() end or nil
+    r:SetScript("OnClick", click)
+    if r.btn then r.btn:SetScript("OnClick", click) end
     r:Show()
     return y + W.HINT_ROW + 3
   end

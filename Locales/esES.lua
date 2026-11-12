@@ -890,4 +890,5 @@ ns.LOCALES.esES = function() return {
   ["no auction prices yet: visit the auction house - EasyCraft will read them itself, and shopping and profit will show prices."] = "aún no hay precios de subasta: pasa por la casa de subastas y EasyCraft los leerá solo; así las compras y el beneficio tendrán precios.",
   ["auction prices are older than %d days: visit the auction house - EasyCraft will update them itself."] = "los precios de subasta tienen más de %d días: pasa por la casa de subastas y EasyCraft los actualizará solo.",
   ["A hint with the list appears beside the auction window: the magnifier on an item searches for it."] = "Junto a la ventana de subastas aparece una ayuda con la lista: la lupa de un objeto lo busca.",
+  ["Find"] = "Buscar",
 } end

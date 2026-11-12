@@ -895,4 +895,5 @@ ns.LOCALES.zhCN = function() return {
   ["no auction prices yet: visit the auction house - EasyCraft will read them itself, and shopping and profit will show prices."] = "还没有拍卖行价格：去一趟拍卖行，EasyCraft 会自行读取，购物清单和利润才会有价格。",
   ["auction prices are older than %d days: visit the auction house - EasyCraft will update them itself."] = "拍卖行价格已超过 %d 天：去一趟拍卖行，EasyCraft 会自行更新。",
   ["A hint with the list appears beside the auction window: the magnifier on an item searches for it."] = "拍卖行窗口旁会出现带清单的提示：点物品旁的放大镜即可搜索。",
+  ["Find"] = "查找",
 } end

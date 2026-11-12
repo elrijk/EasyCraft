@@ -884,4 +884,5 @@ ns.LOCALES.ptBR = function() return {
   ["no auction prices yet: visit the auction house - EasyCraft will read them itself, and shopping and profit will show prices."] = "ainda não há preços de leilão: passe na casa de leilões e o EasyCraft os lê sozinho; assim compras e lucro terão preços.",
   ["auction prices are older than %d days: visit the auction house - EasyCraft will update them itself."] = "os preços de leilão têm mais de %d dias: passe na casa de leilões e o EasyCraft os atualiza sozinho.",
   ["A hint with the list appears beside the auction window: the magnifier on an item searches for it."] = "Ao lado da janela de leilões aparece uma dica com a lista: a lupa de um item o procura.",
+  ["Find"] = "Buscar",
 } end

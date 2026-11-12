@@ -882,4 +882,5 @@ ns.LOCALES.frFR = function() return {
   ["no auction prices yet: visit the auction house - EasyCraft will read them itself, and shopping and profit will show prices."] = "pas encore de prix de l'hôtel des ventes : passez-y, EasyCraft les lira lui-même et les achats comme le profit afficheront des prix.",
   ["auction prices are older than %d days: visit the auction house - EasyCraft will update them itself."] = "les prix de l'hôtel des ventes ont plus de %d jours : passez-y, EasyCraft les mettra à jour lui-même.",
   ["A hint with the list appears beside the auction window: the magnifier on an item searches for it."] = "Une aide avec la liste apparaît à côté de la fenêtre de l'hôtel des ventes : la loupe d'un objet le recherche.",
+  ["Find"] = "Chercher",
 } end

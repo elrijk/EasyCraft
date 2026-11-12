@@ -1312,8 +1312,7 @@ end)
 --  строкой со своей кнопкой поиска; внизу итог.
 --  Для текущих шагов всё есть - что купить дальше, до учителя.
 -------------------------------------------------------------------------------
-local AH_W, AH_PAD, AH_ROW, AH_MAX = 340, 12, 34, 60 -- список прокручивается
-local SEARCH_ICON = "Interface\\Common\\UI-Searchbox-Icon"
+local AH_W, AH_PAD, AH_ROW, AH_MAX = 400, 12, 34, 60 -- список прокручивается
 local ahPanel
 
 -- Find one item at the auction house with the game's own search.
@@ -1372,9 +1371,9 @@ function ns:UpdateAuctionPanel()
     if cost then total = total + cost else noPrice = noPrice + 1 end
     if shown >= AH_MAX then hidden = hidden + 1; return end
     shown = shown + 1
-    -- каждый предмет - своя строка со своей лупой: щелчок ищет его
+    -- every item has its own row with a "Find" button: the button and a click on the row both search for it
     -- сколько купить - числом на значке, справа только цена
-    y = f:Row({ id = id, count = buy, mark = SEARCH_ICON, markY = -2,
+    y = f:Row({ id = id, count = buy, btn = T("Найти"),
       right = cost and W.Money(cost) or ("|cff9d9d9d" .. T("нет цены") .. "|r"),
       tip = format(T("Купить %d"), buy) .. (cost and (": " .. W.Money(cost)) or "") .. "\n" .. T("Щелчок - найти на аукционе."),
       onClick = function() ns:SearchAuction(id, buy) end }, y)
