@@ -7,10 +7,8 @@ local format, min = string.format, math.min
 --  рецептов каждой профессии. Всё из тех же карточек, что и остальное окно:
 --  шапка Card:Head, строки-кнопки Card:Items, строки списка Card:Row.
 --  Порядок в книге и в очереди - по выгоде на аукционе (ns.ByProfit).
---  Фильтр сверху: всё или лучшее для подземелий, рейдов, PvP (Data\Best.lua),
---  по желанию - только для своего класса.
 -------------------------------------------------------------------------------
-local GREEN, RED, GREY, GOLD = "|cff33dd33", "|cffff5555", "|cff9d9d9d", "|cffffd100"
+local GREEN, RED, GREY = "|cff33dd33", "|cffff5555", "|cff9d9d9d"
 local MAP_ICON, SCROLL_ICON = "Interface\\Icons\\INV_Misc_Map_01", "Interface\\Icons\\INV_Scroll_03"
 local SHOWN = 10 -- строк в списке, пока не нажали «Показать все»
 local SHOWN_MAX = 100 -- и не больше стольких после: в базе сотни рецептов
@@ -19,29 +17,6 @@ local function profitText(p)
   if not p then return GREY .. T("нет цены") .. "|r" end
   if p >= 0 then return GREEN .. "+" .. W.Money(p) .. "|r" end
   return RED .. "-" .. W.Money(-p) .. "|r"
-end
-
--- «подземелья, рейды» по меткам записи.
-local MODES = { { "d", "Подземелья" }, { "r", "Рейды" }, { "p", "PvP" } }
-local function bestWhere(e)
-  local parts = {}
-  for _, m in ipairs(MODES) do
-    if e.best:find(m[1], 1, true) then parts[#parts + 1] = T(m[2]) end
-  end
-  return table.concat(parts, ", ")
-end
-
--- «Воин, Паладин» или «всем классам».
-local function bestWho(e)
-  if not e.classes then return T("всем классам") end
-  local names = LOCALIZED_CLASS_NAMES_MALE or {}
-  local parts = {}
-  for _, c in ipairs(e.classes) do parts[#parts + 1] = names[c] or c end
-  return table.concat(parts, ", ")
-end
-
-local function bestLine(e)
-  return GOLD .. T("Лучшее: ") .. bestWhere(e) .. "|r " .. GREY .. "(" .. bestWho(e) .. ")|r"
 end
 
 local function nameText(e)
@@ -67,40 +42,12 @@ local function priceLines(e)
   else
     lines[#lines + 1] = ns:PriceSource() and T("Цены на аукционе пока нет") or T("Цен нет: открой аукцион - EasyCraft прочитает их сам")
   end
-  if e.best then
-    lines[#lines + 1] = { T("Лучшее: ") .. bestWhere(e), color = W.GOLD }
-    lines[#lines + 1] = T("Кому: ") .. bestWho(e)
-  end
   return lines
 end
 
 local function chatLink(id)
   local _, link = C_Item.GetItemInfo(id)
   W.InsertLink(link)
-end
-
--------------------------------------------------------------------------------
---  Фильтр
--------------------------------------------------------------------------------
-function C:BookFilter(UI)
-  local c = UI:Card("flat")
-  local function pick(mode) return function() UI.bookMode = mode; UI:Render(true) end end
-  -- переключатель полосой, как «Путь прокачки» на главной: выбранный
-  -- сегмент залит золотом
-  local ICONS = { d = "INV_Misc_Key_03", r = "INV_Misc_Head_Dragon_01", p = "INV_Sword_27" }
-  local list = { { text = T("Все рецепты"), icon = "INV_Scroll_03", sel = UI.bookMode == nil, onClick = pick(nil),
-    tip = T("Все рецепты твоих профессий по выгоде на аукционе.") } }
-  for _, m in ipairs(MODES) do
-    list[#list + 1] = { text = T(m[2]), icon = ICONS[m[1]], sel = UI.bookMode == m[1], onClick = pick(m[1]),
-      tip = T("Только то, что считается лучшим для этого занятия.") }
-  end
-  c.y = c.y + 2
-  c:Segments(list)
-  if UI.bookMode then
-    c:Check(T("Только для моего класса"), UI.bookMine, function(v) UI.bookMine = v; UI:Render(true) end,
-      T("Скрыть то, что нужно другим классам. Сделать на продажу можно и это - сними галочку."))
-  end
-  UI:End(c, 6)
 end
 
 -------------------------------------------------------------------------------
@@ -189,7 +136,6 @@ local function knownRow(UI, key, e, first)
   elseif e.cost then sub = format(T("Реагенты %s"), W.Money(e.cost))
   else sub = GREY .. T("Цены на аукционе пока нет") .. "|r" end
   if e.can > 0 then sub = sub .. ", " .. GREEN .. format(T("хватит на %d"), e.can) .. "|r" end
-  if e.best then sub = bestLine(e) end
   local hot = first and e.profit ~= nil and e.profit > 0
   return { id = e.out, tex = e.icon, text = nameText(e), sub = sub, right = profitText(e.profit), star = hot, hot = hot,
     tip = { title = e.name or "?", lines = priceLines(e),
@@ -228,7 +174,6 @@ local function unknownRow(key, e)
   local lines = priceLines(e)
   return { id = e.out, tex = e.icon, text = e.name or "?", sub = sub,
     right = (right and (right .. "  ") or "") .. (e.profit and profitText(e.profit) or ""), icons = icons,
-    star = e.best ~= nil,
     tip = { title = e.name or "?", lines = lines, hint = npc and T("Щелчок поставит метку и откроет карту.") or nil },
     onClick = function()
       if npc then
@@ -276,22 +221,12 @@ function C:BookCard(UI, key, known, unknown, scanned)
 end
 
 function C:BuildBook(UI)
-  self:BookFilter(UI)
-  local mode, mine = UI.bookMode, UI.bookMine
-  if not mode then
-    if self.ForMeCard then ns:Safe(self.ForMeCard, self, UI) end
-    self:QueueCard(UI)
-    self:CooldownCard(UI)
-  end
+  if self.ForMeCard then ns:Safe(self.ForMeCard, self, UI) end
+  self:QueueCard(UI)
+  self:CooldownCard(UI)
   local shown = 0
   for _, key in ipairs(ns:LearnedList()) do
     local known, unknown, scanned = ns:BookList(key)
-    if mode then
-      local k2, u2 = {}, {}
-      for _, e in ipairs(known) do if ns:IsBest(e, mode, mine) then k2[#k2 + 1] = e end end
-      for _, e in ipairs(unknown) do if ns:IsBest(e, mode, mine) then u2[#u2 + 1] = e end end
-      known, unknown = k2, u2
-    end
     if #known + #unknown > 0 then
       shown = shown + 1
       self:BookCard(UI, key, known, unknown, scanned)
@@ -299,7 +234,7 @@ function C:BuildBook(UI)
   end
   if shown == 0 then
     local c = UI:Card()
-    c:Text(mode and T("Среди рецептов твоих профессий такого нет.") or T("У твоих профессий нет рецептов создания."), "body")
+    c:Text(T("У твоих профессий нет рецептов создания."), "body")
     UI:End(c)
   end
 end

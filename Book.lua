@@ -7,11 +7,11 @@ local TS = C_TradeSkillUI
 --  Книга рецептов, выгода, очередь крафта и откаты.
 --  Всё работает на одной записи рецепта (BookEntry):
 --  { key, spell, name, icon, out = предмет, q = сколько выходит, rc = реагенты,
---    known, d = цвет (0-3), step = шаг маршрута, best = "drp",
+--    known, d = цвет (0-3), step = шаг маршрута,
 --    cost = реагенты, sale = продажа, profit = выгода за одно создание,
 --    can = сколько можно создать из сумок }.
 --  Выученные рецепты - из окна профессии (ns.char.book), невыученные - из
---  маршрута и списка лучшего (Data\Best.lua).
+--  маршрута.
 --  Порядок везде один: сверху то, что выгоднее по ценам аукциона.
 -------------------------------------------------------------------------------
 local function charKey()
@@ -134,9 +134,6 @@ function ns:PriceEntry(e)
   end
   e.profit = (e.cost and e.sale) and (e.sale - e.cost) or nil
   e.can = e.rc and (self:CanMake({ rc = e.rc }) or 0) or 0
-  local b = e.out and self.Best and self.Best[e.out]
-  e.best = b and b.t or nil
-  e.classes = b and b.c or nil -- nil при e.best - всем классам
   return e
 end
 
@@ -165,21 +162,6 @@ function ns:BookEntry(key, spell)
   return self:PriceEntry(e)
 end
 
--- Лучшее ли это для режима mode ("d", "r", "p"; nil - для любого) и, если
--- mine, для класса игрока.
-function ns:IsBest(e, mode, mine)
-  if not e.best then return false end
-  if mode and not e.best:find(mode, 1, true) then return false end
-  if mine and e.classes then
-    local _, class = UnitClass("player")
-    for _, c in ipairs(e.classes) do
-      if c == class then return true end
-    end
-    return false
-  end
-  return true
-end
-
 -- Порядок по ценам аукциона: выгоднее - выше; без цены - в конце по названию.
 local function byProfit(a, b)
   local pa, pb = a.profit, b.profit
@@ -198,12 +180,11 @@ function ns:BookList(key)
   local book = self.char.book and self.char.book[key]
   local sc = self.char.scan[key]
   local colors = sc and sc.colors
-  local known, unknown, seen, outs = {}, {}, {}, {}
+  local known, unknown, seen = {}, {}, {}
   if book then
     for id, b in pairs(book) do
       seen[id] = true
       local e = self:PriceEntry(fromBook(key, id, b, colors))
-      if e.out then outs[e.out] = true end
       known[#known + 1] = e
     end
   end
@@ -213,15 +194,7 @@ function ns:BookList(key)
       -- окно ещё не читали: что выучено, знаем только по игре
       local k = not book and self:RecipeKnown(key, s.spell) == true
       local e = self:PriceEntry(fromStep(self, key, s, k))
-      if e.out then outs[e.out] = true end
       if k then known[#known + 1] = e else unknown[#unknown + 1] = e end
-    end
-  end
-  -- лучшее для подземелий, рейдов и PvP, чего ещё нет в списке
-  for id, b in pairs(self.Best or {}) do
-    if b.p == key and not outs[id] then
-      unknown[#unknown + 1] = self:PriceEntry({ key = key, name = self:ItemName(id), icon = self:ItemIcon(id),
-        out = id, q = 1, known = false })
     end
   end
   table.sort(known, byProfit)

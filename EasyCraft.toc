@@ -48,7 +48,6 @@ Prices.lua
 Routes.lua
 Seen.lua
 Sale.lua
-Data\Best.lua
 Book.lua
 Recipes.lua
 UI\Widgets.lua

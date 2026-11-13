@@ -800,7 +800,7 @@ for k, v in pairs({
 for k, v in pairs({
   ["Рецепты"] = "Recipes",
   ["Рецепты: что выгодно создавать"] = "Recipes: what is worth crafting",
-  ["Все твои рецепты по выгоде на аукционе, очередь крафта, откаты персонажей и лучшее для подземелий, рейдов и PvP."] = "All your recipes by auction profit, a craft queue, your characters' cooldowns and the best items for dungeons, raids and PvP.",
+  ["Все твои рецепты по выгоде на аукционе, очередь крафта и откаты персонажей."] = "All your recipes by auction profit, a craft queue and your characters' cooldowns.",
   ["Открой окно профессии"] = "Open the profession window",
   ["Аддон прочитает все выученные рецепты, что из них выходит и какие на откате."] = "The addon reads every learned recipe, what it makes and which ones are on cooldown.",
   ["Смотри выгоду"] = "Check the profit",
@@ -810,19 +810,9 @@ for k, v in pairs({
   ["%d д %d ч"] = "%d d %d h",
   ["%d ч %d мин"] = "%d h %d min",
   ["%d мин"] = "%d min",
-  ["Подземелья"] = "Dungeons",
-  ["Рейды"] = "Raids",
-  ["всем классам"] = "all classes",
-  ["Лучшее: "] = "Best for: ",
-  ["Кому: "] = "For: ",
   ["Продажа"] = "Sale",
   ["Выгода за создание"] = "Profit per craft",
   ["Без комиссии аукциона."] = "Auction house cut not included.",
-  ["Все рецепты"] = "All recipes",
-  ["Все рецепты твоих профессий по выгоде на аукционе."] = "All recipes of your professions by auction profit.",
-  ["Только то, что считается лучшим для этого занятия."] = "Only what counts as the best for this activity.",
-  ["Только для моего класса"] = "Only for my class",
-  ["Скрыть то, что нужно другим классам. Сделать на продажу можно и это - сними галочку."] = "Hide what other classes need. You can still craft those to sell - untick the box.",
   ["Очередь крафта"] = "Craft queue",
   ["Сверху - самое выгодное по ценам аукциона."] = "The most profitable at auction prices is on top.",
   ["Выгода всей очереди: "] = "Profit of the whole queue: ",
@@ -843,7 +833,6 @@ for k, v in pairs({
   ["Ещё не выучены"] = "Not learned yet",
   ["Свернуть"] = "Collapse",
   ["Показать все (%d)"] = "Show all (%d)",
-  ["Среди рецептов твоих профессий такого нет."] = "None of your professions' recipes match.",
   ["У твоих профессий нет рецептов создания."] = "Your professions have no crafting recipes.",
 }) do ns.EN[k] = v end
 
@@ -985,7 +974,6 @@ for k, v in pairs({
   ["около +5%"] = "about +5%",
   ["Съешь перед боем: «Сытость» с бонусом к опыту."] = "Eat before fighting: Well Fed with an XP bonus.",
   ["По гайдам - +5% за убийства примерно на 15 минут, пропадает при смерти. Точную цифру Blizzard не называла: смотри подсказку бафа."] = "Guides say +5% kill XP for about 15 minutes, lost on death. Blizzard has not published the number: check the buff tooltip.",
-  ["Подземелья"] = "Dungeons",
 }) do if ns.EN[k] == nil then ns.EN[k] = v end end
 
 -- 1.2: что создать себе сейчас
