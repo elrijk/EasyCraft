@@ -42,6 +42,10 @@ price, the level of the creatures a world drop comes from). The facts were read 
 WoW Forever profession tables on timesaver.gg (November 2026) with
 `tools/fetch-recipe-skills.js`. None of it was measured in the game.
 
+`Data/Vendors.lua` holds the recipe vendors named in those tables: their English
+and Russian names and map positions come from pfQuest (see above). The positions
+are the classic ones and were not checked on WoW Forever.
+
 No code or data was taken from other profession addons. Recipe lists, reagents
 and recipe colours come from the game client at run time.
 

@@ -36,6 +36,7 @@ Data\Items.lua
 Data\Nodes.lua
 Data\Spawns.lua
 Data\NPCs.lua
+Data\Vendors.lua
 Data\Professions.lua
 Data\Skills.lua
 LocaleData.lua
