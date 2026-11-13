@@ -2384,6 +2384,11 @@ function Mini:PlaceFlow(f, inputs, out, y, lines)
   box:ClearAllPoints()
   box:SetPoint("TOPLEFT", f, "TOPLEFT", MINI_PAD - 4, -y)
   box:SetFrameLevel(f:GetFrameLevel() + 1)
+  -- its own dark fill and border (the opened recipe of a crafting profession takes them off)
+  if box.SetBackdropColor then
+    box:SetBackdropColor(0.05, 0.045, 0.04, 0.9)
+    box:SetBackdropBorderColor(0.6, 0.48, 0.25, 1)
+  end
   fl:ClearAllPoints()
   fl:SetPoint("TOPLEFT", f, "TOPLEFT", x, -(y + 6))
   fl:SetFrameLevel(box:GetFrameLevel() + 2)
@@ -2694,7 +2699,12 @@ function Mini:ShowChoice(f, key, rank, maxRank, y)
     local lines = b.allHave and {} or ns:StepBuyLines(b)
     if #b.items > #inputs then tinsert(lines, 1, "|cff9d9d9d" .. format(X.more, #b.items - #inputs) .. "|r") end
     y = self:PlaceFlow(f, inputs, out, y, lines)
-    f.flowBox:Hide() -- the inset panel is the backing here: no second dark box inside it
+    -- the inset panel is the backing here: the reagent box keeps its text lines but loses its own fill and border
+    if f.flowBox.SetBackdropColor then
+      f.flowBox:SetBackdropColor(0, 0, 0, 0)
+      f.flowBox:SetBackdropBorderColor(0, 0, 0, 0)
+    end
+    f.flowBox:SetFrameLevel(f:GetFrameLevel() + 2)
 
     -- reagents the character is short of but can make: a row each
     for _, it in ipairs(b.makes) do
