@@ -766,25 +766,60 @@ end
 -- (orange or yellow at this skill) and can already be learned, each with
 -- where to get it. Two sources: the recipes of the route, and the rest of
 -- the game's own recipe list (read when the profession window opens) with
--- the thresholds from Data\Skills.lua.
+-- the thresholds and the sources from Data\Skills.lua.
 -- The first one is the recommendation. Order: what a trainer or a vendor
 -- gives before quests and drops; then what the reagents in the bags are
 -- already enough for; then the larger share of reagents on hand; orange
 -- before yellow; a trainer before a vendor; the cheaper craft.
 -- The recipe of step s is left out: the step shows it itself.
 local SRC_BY_KIND = { t = "trainer" }
+
+-- Where to get a recipe of Data\Skills.lua, in the shape ns:RecipeSource
+-- gives: a vendor the addon knows gets a map pin, any other source a line of
+-- text (zones of the vendors on the player's side, the level of the
+-- creatures, the zones of a drop). nil: nothing to tell, the recipe cannot be
+-- recommended (a vendor of the other side only, an unknown source).
+local function skillSource(self, key, rs, t)
+  local T, kind, x = ns.T, t[5], t[6] or {}
+  if kind == "t" then return self:RecipeSource(key, rs) end
+  local function names(list)
+    local out = {}
+    for _, a in ipairs(list or {}) do out[#out + 1] = self:ZoneName(a) end
+    return table.concat(out, ", ")
+  end
+  if kind == "v" then
+    local me = self:PlayerFaction()
+    local zs = {}
+    for _, f in ipairs({ me or "A", "N", me and "" or "H" }) do
+      for _, a in ipairs(x.z and x.z[f] or {}) do zs[#zs + 1] = a end
+    end
+    local all = x.n and self:NpcsFor(x.n) or {}
+    if #all == 0 and #zs == 0 then return nil end
+    return { kind = "vendor", npc = all[1], all = all, copper = x.c, info = T("Торговец: ") .. names(zs) }
+  elseif kind == "q" then
+    return { kind = "other", info = T("Награда за задание") }
+  elseif x.lv then
+    return { kind = "other", info = format(T("Падает с монстров %d-%d ур."), x.lv[1], x.lv[2]) }
+  elseif x.dz and #x.dz > 0 then
+    return { kind = "other", info = T("Добыча с существ") .. ": " .. names(x.dz) }
+  end
+  return nil
+end
+
 function ns:LearnableRecipes(key, s, rank, limit)
   local p = self.Profs[key]
   local out, seen = {}, {}
   if not p then return out end
   local ORDER = { trainer = 0, vendor = 1, other = 2 }
-  local function consider(rs)
+  local function consider(rs, t)
     local sp = rs.spell
     if seen[sp] or (s and s.spell == sp) then return end
     seen[sp] = true
     local col = self:RecipeColor(rs, rank)
     if rank < (rs.sk[1] or 0) or not (col == "orange" or col == "yellow") or self:RecipeKnown(key, sp) ~= false then return end
-    local src = self:RecipeSource(key, rs)
+    local src
+    if t then src = skillSource(self, key, rs, t) else src = self:RecipeSource(key, rs) end
+    if not src then return end
     -- reagents in the bags: for how many crafts, and how many of the reagents are there at all
     local rc, got, total = rs.rc, 0, 0
     for i = 1, rc and #rc - 1 or 0, 2 do
@@ -802,9 +837,8 @@ function ns:LearnableRecipes(key, s, rank, limit)
   local base = self.db and self.db.recipes and self.db.recipes[key]
   for sp, r in pairs(skill and base or {}) do
     local t = skill[sp]
-    -- a recipe with no known source and no source text from the game cannot be recommended
-    if t and (t[5] ~= "o" or r.src) then
-      consider({ k = "craft", spell = sp, sk = t, rc = r.rc, src = SRC_BY_KIND[t[5]] or "other", info = r.src, name = r.n, tex = r.i })
+    if t then
+      consider({ k = "craft", spell = sp, sk = t, rc = r.rc, src = SRC_BY_KIND[t[5]] or "other", name = r.n, tex = r.i }, t)
     end
   end
   table.sort(out, function(x, y)
@@ -836,7 +870,7 @@ function ns:LearnRows(key, s, rank, limit)
     local name = rs.name or self:StepName(rs)
     local where = npc and (self:NpcName(npc) .. ", " .. self:NpcZone(npc)) or (src.info and T(src.info)) or ""
     local price = vendor and (src.copper and self.W.Money(src.copper) or src.price) or nil
-    if npc and price then where = where .. ", " .. price end
+    if price and where ~= "" then where = where .. ", " .. price end
     if npc and src.extra then where = where .. ", " .. src.extra end
     local right = (e.a > 0 and format(enough, e.a)) or (e.got > 0 and format(part, e.got, e.total)) or nil
     rows[k] = { icon = rs.tex or self:StepIcon(rs, self.Profs[key]), name = name, text = self:Hex(e.color) .. name .. "|r", where = where,

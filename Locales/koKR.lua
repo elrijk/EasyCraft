@@ -880,4 +880,6 @@ ns.LOCALES.koKR = function() return {
   ["Not learned yet, and it would give skill now."] = "아직 배우지 않았고, 지금 숙련도가 오릅니다.",
   ["reagents: %d of %d"] = "재료: %d/%d",
   ["Auction house: remind in chat on login when prices are old"] = "경매장: 접속 시 가격이 오래되면 대화창에 알림",
+  ["Quest reward"] = "퀘스트 보상",
+  ["Drops from creatures of level %d-%d."] = "%d-%d 레벨 몬스터에게서 나옵니다.",
 } end

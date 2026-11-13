@@ -875,4 +875,6 @@ ns.LOCALES.itIT = function() return {
   ["Not learned yet, and it would give skill now."] = "Non ancora imparata, e ora darebbe abilità.",
   ["reagents: %d of %d"] = "reagenti: %d su %d",
   ["Auction house: remind in chat on login when prices are old"] = "Casa d'aste: ricorda in chat all'accesso se i prezzi sono vecchi",
+  ["Quest reward"] = "Ricompensa di missione",
+  ["Drops from creatures of level %d-%d."] = "Lasciata da creature di livello %d-%d.",
 } end

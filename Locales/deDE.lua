@@ -876,4 +876,6 @@ ns.LOCALES.deDE = function() return {
   ["Not learned yet, and it would give skill now."] = "Noch nicht gelernt, würde jetzt aber Fertigkeit geben.",
   ["reagents: %d of %d"] = "Reagenzien: %d von %d",
   ["Auction house: remind in chat on login when prices are old"] = "Auktionshaus: beim Einloggen im Chat an alte Preise erinnern",
+  ["Quest reward"] = "Questbelohnung",
+  ["Drops from creatures of level %d-%d."] = "Droppt von Kreaturen der Stufe %d-%d.",
 } end

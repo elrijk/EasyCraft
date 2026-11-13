@@ -36,8 +36,9 @@ timesaver.gg; the skill a recipe item asks for from the WoW Forever recipe
 lists on warcraft.wiki.gg (November 2026). None of it was measured in the game.
 
 `Data/Skills.lua` lists, for every recipe, the skill it is learned at, the skill
-where it turns yellow, green and grey, and the kind of its source (trainer,
-vendor, drop, quest). The numbers were read from the "All recipes" lists of the
+where it turns yellow, green and grey, the kind of its source (trainer,
+vendor, drop, quest) and where to get it (vendors and their zones, the pattern
+price, the level of the creatures a world drop comes from). The facts were read from the "All recipes" lists of the
 WoW Forever profession tables on timesaver.gg (November 2026) with
 `tools/fetch-recipe-skills.js`. None of it was measured in the game.
 

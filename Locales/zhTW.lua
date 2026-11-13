@@ -881,4 +881,6 @@ ns.LOCALES.zhTW = function() return {
   ["Not learned yet, and it would give skill now."] = "尚未學會，現在能提升技能。",
   ["reagents: %d of %d"] = "材料：%d/%d",
   ["Auction house: remind in chat on login when prices are old"] = "拍賣場：登入時在聊天中提醒價格已過期",
+  ["Quest reward"] = "任務獎勵",
+  ["Drops from creatures of level %d-%d."] = "由 %d-%d 級的怪物掉落。",
 } end

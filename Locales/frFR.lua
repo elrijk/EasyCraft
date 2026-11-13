@@ -868,4 +868,6 @@ ns.LOCALES.frFR = function() return {
   ["Not learned yet, and it would give skill now."] = "Pas encore apprise, et elle donnerait de la compétence maintenant.",
   ["reagents: %d of %d"] = "composants : %d sur %d",
   ["Auction house: remind in chat on login when prices are old"] = "Hôtel des ventes : rappeler dans le chat à la connexion si les prix sont anciens",
+  ["Quest reward"] = "Récompense de quête",
+  ["Drops from creatures of level %d-%d."] = "Butin des créatures de niveau %d-%d.",
 } end
