@@ -2344,7 +2344,8 @@ function Mini:Reset(f)
   f.nextRow = 0
   if f.queueHead then f.queueHead:Hide() end
   if f.learnHead then f.learnHead:Hide() end
-  for _, k in ipairs({ "cntMinus", "cntPlus" }) do if f[k] then f[k]:Hide() end end
+  for _, k in ipairs({ "cntMinus", "cntPlus", "pickFill" }) do if f[k] then f[k]:Hide() end end
+  for _, t in ipairs(f.pickEdges or {}) do t:Hide() end
   if f.queueBtn then f.queueBtn:Hide() end
   for _, fl in pairs(f.flows) do fl:Hide() end
   for _, fl in pairs(f.flow2s or {}) do fl:Hide() end
@@ -2701,6 +2702,34 @@ function Mini:Queue(f, key, y)
 end
 
 -- Кнопка «Создать N» на всю ширину.
+-- The opened recipe is one block: a gold outline and a darker backing from
+-- the top of its row to the end of what opened under it, so it is clear what
+-- belongs to the choice. Drawn on the window itself, under the rows.
+local function pickBox(f, y0, y1)
+  if not f.pickFill then
+    f.pickFill = f:CreateTexture(nil, "OVERLAY")
+    f.pickFill:SetColorTexture(0.12, 0.09, 0.03, 0.45)
+    f.pickEdges = {}
+    for i = 1, 4 do
+      local t = f:CreateTexture(nil, "OVERLAY", nil, 1)
+      t:SetColorTexture(1, 0.82, 0, 0.9)
+      f.pickEdges[i] = t
+    end
+  end
+  local x0, x1, th = MINI_PAD - 8, MINI_W - MINI_PAD + 8, 2
+  local function at(t, ax, ay, bx, by)
+    t:ClearAllPoints()
+    t:SetPoint("TOPLEFT", f, "TOPLEFT", ax, -ay)
+    t:SetPoint("BOTTOMRIGHT", f, "TOPLEFT", bx, -by)
+    t:Show()
+  end
+  at(f.pickFill, x0, y0, x1, y1)
+  at(f.pickEdges[1], x0, y0, x1, y0 + th)       -- top
+  at(f.pickEdges[2], x0, y1 - th, x1, y1)       -- bottom
+  at(f.pickEdges[3], x0, y0, x0 + th, y1)       -- left
+  at(f.pickEdges[4], x1 - th, y0, x1, y1)       -- right
+end
+
 -- Crafting profession: no route steps. A list of recipes that give skill now
 -- (the advice has the star) and the player picks one. The picked recipe opens
 -- right under its own row: its reagents for the planned number of crafts, a
@@ -2810,6 +2839,8 @@ function Mini:ShowChoice(f, key, rank, maxRank, y)
           y = place(h, f, y) + 3
         end
         shown = shown + 1
+        local boxTop = y - 4
+        if isPick then y = y + 2 end
         local where = (not known) and ns:AdviceWhere(e) or ""
         local tip = (isPick and X.unpickTip or X.pickTip) .. (where ~= "" and ("\n" .. where) or "")
           .. (e.cost and ("\n" .. format(X.perCraft, W.Money(e.cost))) or "")
@@ -2820,7 +2851,11 @@ function Mini:ShowChoice(f, key, rank, maxRank, y)
             ns:Pick(key, e.spell)
             if e.known then ns:OpenRecipe(key, e.spell) end
           end })
-        if isPick then detail() end
+        if isPick then
+          detail()
+          pickBox(f, boxTop, y - 2)
+          y = y + 6
+        end
       end
     end
     if shown > 0 then y = y + GAP_SECTION - 3 end
