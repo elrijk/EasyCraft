@@ -477,14 +477,14 @@ end
 -- Шапки вкладок главной, как у страниц MacroCoach: заголовок - главная
 -- мысль, строка пояснения, кнопки «куда дальше».
 local HOW = {
-  { title = "Профессия до 300 - шаг за шагом",
-    text = "Делай текущий шаг: аддон сам засчитает его по навыку и покажет следующий. Без гайдов и подсчётов." },
+  { title = "Профессии: что качать сейчас",
+    text = "Аддон советует рецепт, который сейчас проще сделать, а ты выбираешь. Реагенты, банк и аукцион подстроятся под выбор." },
   { title = "Карта: где собирать",
     text = "Руда и травы, которые сейчас дают навык, - прямо на карте мира." },
   { title = "Лагерь: бонусы у костра",
     text = "Костёр и предметы твоих профессий рядом с ним дают бонусы всем, кто в лагере." },
-  { title = "Покупки до учителя",
-    text = "Чего не хватает до следующего учителя по всем профессиям. Что уже есть, не считается." },
+  { title = "Покупки под выбранные рецепты",
+    text = "Чего не хватает на выбранные рецепты по всем профессиям. Что уже есть, не считается." },
   { title = "Рецепты: что выгодно создавать",
     text = "Все твои рецепты по выгоде на аукционе, очередь крафта и откаты персонажей." },
 }
@@ -494,8 +494,8 @@ local HOW = {
 -- вкладки отдельно, вернуть - «?» в заголовке окна.
 local GUIDE = {
   { -- Профессии
-    { "INV_Misc_Book_11", "Смотри текущий шаг", "Вверху карточки профессии: что создать и сколько. Щелчок - все шаги подробно." },
-    { "Trade_BlackSmithing", "Создавай у окна профессии", "Рядом с ним мини-окно: рецепт шага и кнопка создания." },
+    { "INV_Misc_Book_11", "Выбери рецепт", "В карточке профессии - рецепты, которые сейчас дают навык. Совет отмечен звездой." },
+    { "Trade_BlackSmithing", "Создавай у окна профессии", "Рядом с ним мини-окно: выбранный рецепт, его реагенты и кнопка создания." },
     { "INV_Misc_Bag_08", "Докупи, чего не хватает", "Список - во вкладке «Покупки». Сумки, банк и почта уже учтены." },
     { "INV_Misc_Book_09", "Учи новый ранг вовремя", "На 75, 150 и 225 нужен учитель: аддон напомнит и поставит метку." },
   },
@@ -624,6 +624,8 @@ function C:BuildHome(UI, tab)
 end
 
 function C:BuildProfession(UI, key)
+  -- a crafting profession has no route: a list to choose from (UI/ChoicePage.lua)
+  if ns:IsCraftProf(key) then return self:BuildChoice(UI, key) end
   self:BuildRoute(UI, key)
 end
 
@@ -673,8 +675,10 @@ function C:ProfCard(UI, key, pool)
   ns:MarkNextRank(bar)
   local nx = tx
   local pos, total = C:StepPos(p, cur or 0)
+  local craft = ns:IsCraftProf(key)
   local where = cur and format(T("Шаг %d из %d"), pos or 1, total) or (GREEN .. T("Маршрут пройден") .. "|r")
-  local _, ww = c:Note(nx, y2, where, cur and { title = format(T("Шаг %d из %d"), pos or 1, total),
+  if craft then where = self:HomeChoiceLine(key, rank, maxRank) end
+  local _, ww = c:Note(nx, y2, where, (cur and not craft) and { title = format(T("Шаг %d из %d"), pos or 1, total),
     lines = { ns:StepName(p.steps[cur]) }, hint = T("Щелчок - открыть профессию на этом шаге.") } or nil, open)
   -- отставание - табличкой посередине верхнего края карточки
   local lag, lagTip = lagInfo(key)
@@ -697,6 +701,13 @@ function C:ProfCard(UI, key, pool)
   -- текущий шаг - строкой во всю ширину над плитками (подпись, название,
   -- что нужно, стрелка); ниже все шаги одинаковыми плитками без дыр в
   -- рядах, текущий среди них - в золотой рамке
+  if craft then
+    -- no route steps: the top of the list to choose from
+    c.y = top + headH + 6
+    self:HomeChoice(UI, c, key, rank, maxRank)
+    UI:End(c, 10)
+    return
+  end
   local tiles, wide = {}, nil
   for _, si in ipairs(order) do
     local t, st, bb, cost = stepTile(key, p, si, rank, maxRank, cur, nil, pool, {
@@ -926,9 +937,38 @@ function C:ShoppingData()
   local grand, noPrice, count, oldPrices, vendorCount = 0, 0, 0, 0, 0
   -- Один запас на все профессии: что ушло на одну, другой уже не достанется.
   local pool = {}
+  local planPool = {} -- the same for the chosen recipes of crafting professions
   for _, key in ipairs(ns:LearnedList()) do
     local cap = ns:ShoppingCap(key)
-    local list = ns:ShoppingList(key, cap)
+    local craft = ns:IsCraftProf(key)
+    local list = craft and {} or ns:ShoppingList(key, cap)
+    if craft then
+      -- a crafting profession buys for its chosen recipe; a reagent the
+      -- character makes itself is replaced by what it is made of
+      local plan = ns:PickPlan(key, nil, nil, planPool)
+      local card = { key = key, cap = cap, rows = {}, total = 0, choice = true, plan = plan }
+      local function add(it)
+        if it.make or it.buy <= 0 then return end
+        local e = { id = it.id, need = it.need, have = it.all, alts = it.alts, mail = it.mail, buy = it.buy }
+        local cost, age = buyCost(e.id, e.buy)
+        e.cost, e.age = cost, age
+        if cost then
+          card.total = card.total + cost
+          if age then oldPrices = oldPrices + 1 end
+        elseif not ns:IsVendorItem(e.id) then
+          noPrice = noPrice + 1
+        end
+        if ns:IsVendorItem(e.id) then vendorCount = vendorCount + 1 else tinsert(toAuction, e) end
+        tinsert(card.rows, e)
+        count = count + 1
+      end
+      for _, it in ipairs(plan and plan.b.items or {}) do
+        add(it)
+        for _, sub in ipairs(it.make and it.make.b.items or {}) do add(sub) end
+      end
+      grand = grand + card.total
+      tinsert(cards, card)
+    end
     if #list > 0 then
       local card = { key = key, cap = cap, rows = {}, total = 0 }
       for _, e in ipairs(list) do
@@ -988,8 +1028,13 @@ function C:BuildShopping(UI, d)
     local pc = UI:Card(#card.rows == 0 and "done" or "normal")
     local py = pc.y
     if card.total > 0 then pc:Corner(W.Money(card.total), "body", py + 8, W.LIGHT) end
-    pc:Head({ ring = ns.Icon(p.icon) }, ns:N(p), { { format(T("до %d навыка"), card.cap), "small" } }, 32)
-    if #card.rows == 0 then
+    local X = ns:ChoiceText()
+    local under = format(T("до %d навыка"), card.cap)
+    if card.choice then under = card.plan and (card.plan.e.name .. " x" .. card.plan.n) or X.choose end
+    pc:Head({ ring = ns.Icon(p.icon) }, ns:N(p), { { under, "small" } }, 32)
+    if #card.rows == 0 and card.choice then
+      if card.plan then pc:Text(GREEN .. X.allHave .. "|r", "body") end
+    elseif #card.rows == 0 then
       pc:Text(GREEN .. format(T("Всё есть для шагов до %d."), card.cap) .. "|r", "body")
     else
       for _, e in ipairs(card.rows) do
@@ -1020,7 +1065,8 @@ function C:BuildShopping(UI, d)
         })
       end
     end
-    local route, routeNoPrice = ns:RouteCost(card.key)
+    local route, routeNoPrice = 0, 0
+    if not card.choice then route, routeNoPrice = ns:RouteCost(card.key) end
     if route > 0 then
       pc:Text(format(T("Весь путь до 300: около %s"), W.Money(route))
         .. (routeNoPrice > 0 and ("  |cff9d9d9d" .. format(T("(и ещё %d без цены)"), routeNoPrice) .. "|r") or ""), "small")

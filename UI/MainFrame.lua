@@ -2744,7 +2744,23 @@ function Mini:ShowChoice(f, key, rank, maxRank, y)
   local list = ns:Advice(key, rank)
   local plan = ns:PickPlan(key, rank, maxRank, nil, list)
   local picked = plan and plan.e.spell
-  if not plan then
+  if #list == 0 and rank >= 300 then
+    -- nothing to level: the most profitable learned recipes
+    f.note:SetText(X.capNote)
+    y = place(f.note, f, y) + 2
+    local n = 0
+    for _, e in ipairs((ns:BookList(key))) do
+      if n >= 4 then break end
+      if e.profit and e.profit > 0 then
+        n = n + 1
+        local spell = e.spell
+        y = SetRow(f, 0, y, { icon = (e.out and ns:ItemIcon(e.out)) or e.icon or ns.Icon(nil), star = n == 1, hot = n == 1, text = e.name or "?",
+          right = "|cff33dd33+" .. W.Money(e.profit) .. "|r", tipTitle = e.name or "?", tip = X.openTip,
+          onClick = function() ns:OpenRecipe(key, spell) end })
+      end
+    end
+    y = y + GAP_SECTION - 3
+  elseif not plan then
     f.note:SetText(X.choose)
     y = place(f.note, f, y) + GAP_SECTION - 4
   end

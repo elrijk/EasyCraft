@@ -516,7 +516,8 @@ function ns:AllNeeds()
   local all = {}
   for _, key in ipairs(self:LearnedList()) do
     local cap = self:ShoppingCap(key)
-    for _, e in ipairs(self:ShoppingList(key, cap)) do
+    -- a crafting profession has no route: its needs come from the chosen recipe, below
+    for _, e in ipairs((self.IsCraftProf and self:IsCraftProf(key)) and {} or self:ShoppingList(key, cap)) do
       if not e.crafted then
         local a = all[e.id]
         if not a then
@@ -526,6 +527,23 @@ function ns:AllNeeds()
         a.need = a.need + e.need
         tinsert(a.profs, { key = key, need = e.need, cap = cap })
       end
+    end
+  end
+  for _, pp in ipairs(self.PickPlans and (self:PickPlans()) or {}) do
+    local rank = self:GetSkill(pp.key)
+    local function add(it)
+      if it.make then return end -- made by the character: its own reagents are counted instead
+      local a = all[it.id]
+      if not a then
+        a = { need = 0, have = it.all, alts = it.alts, mail = it.mail, profs = {} }
+        all[it.id] = a
+      end
+      a.need = a.need + it.need
+      tinsert(a.profs, { key = pp.key, need = it.need, cap = rank + pp.plan.n })
+    end
+    for _, it in ipairs(pp.plan.b.items) do
+      add(it)
+      for _, sub in ipairs(it.make and it.make.b.items or {}) do add(sub) end
     end
   end
   for _, a in pairs(all) do a.buy = max(0, a.need - a.have - a.alts - a.mail) end

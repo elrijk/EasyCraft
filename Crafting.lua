@@ -806,6 +806,14 @@ local function skillSource(self, key, rs, t)
   return nil
 end
 
+-- Where to get any recipe of a profession (ns:RecipeSource shape) or nil.
+function ns:RecipeWhere(key, spell)
+  local t = self.RecipeSkill and self.RecipeSkill[key] and self.RecipeSkill[key][spell]
+  if t then return skillSource(self, key, { k = "craft", spell = spell, sk = t, src = SRC_BY_KIND[t[5]] or "other" }, t) end
+  local s = self:SpellStep(key, spell)
+  return s and self:RecipeSource(key, s) or nil
+end
+
 function ns:LearnableRecipes(key, s, rank, limit)
   local p = self.Profs[key]
   local out, seen = {}, {}
@@ -2144,8 +2152,23 @@ local function TrainerState()
     local p = ns.Profs[k]
     local rank, maxRank, has = ns:GetSkill(k)
     if p and has then
+      -- a crafting profession: the star goes to the recipes that give skill
+      -- right now (orange or yellow, can be learned) and to the chosen one
+      local craft = ns:IsCraftProf(k)
+      if craft then
+        local pick = ns.char and ns.char.pick and ns.char.pick[k] and ns.char.pick[k].spell
+        local cap = (maxRank and maxRank > 0) and maxRank or 300
+        for sp, t in pairs(ns.RecipeSkill[k]) do
+          local col = ns:RecipeColor({ sk = t }, rank)
+          if sp == pick or (rank >= t[1] and (col == "orange" or col == "yellow")) then
+            local e = { key = k, s = { k = "craft", spell = sp, sk = t, f = rank, t = math.min(t[3], cap) }, now = sp == pick, rank = rank, choice = true }
+            local n = SpellName(sp)
+            if n and not names[n] then names[n] = e end
+          end
+        end
+      end
       local cur = ns:CurrentStep(k, rank, maxRank)
-      for i, s in ipairs(p.steps) do
+      for i, s in ipairs(craft and {} or p.steps) do
         if s.k == "craft" and s.spell and ns:StepState(k, i, rank, maxRank) ~= "done" then
           local e = { key = k, i = i, s = s, now = (i == cur), rank = rank }
           for _, n in ipairs({ SpellName(s.spell) or false, ns:StepName(s) or false }) do
@@ -2237,7 +2260,10 @@ local function TrainerTip(tip, index)
     tip:AddLine("|cff33ff99Easy|rCraft: " .. format(ns.T("следующий ранг: предел навыка станет %d"), st.nextRank.max), 1, 0.82, 0)
   else
     local s = w.s
-    if w.now then
+    if w.choice then
+      local X = ns:ChoiceText()
+      tip:AddLine("|cff33ff99Easy|rCraft: " .. (w.now and X.picked or X.givesSkill), 0.25, 1, 0.25)
+    elseif w.now then
       tip:AddLine("|cff33ff99Easy|rCraft: " .. ns.T("это твой шаг сейчас"), 0.25, 1, 0.25)
       local left = ns:RemainingCrafts(s, w.rank)
       if left > 0 then tip:AddLine(format(ns.T("Сделать ещё ~%d шт., до навыка %d"), left, s.t), 1, 1, 1) end

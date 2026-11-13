@@ -57,6 +57,7 @@ UI\Content.lua
 UI\Choose.lua
 UI\Share.lua
 UI\Book.lua
+UI\ChoicePage.lua
 UI\Xp.lua
 UI\ForMe.lua
 UI\Intro.lua

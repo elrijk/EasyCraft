@@ -9,6 +9,11 @@ The addon advises and you choose: no more route steps for crafting professions i
 - A reagent you are short of but can make yourself gets its own row: "Make: Fire Oil" with how many you can make now. A click makes them.
 - Bank and auction house work from the chosen recipe: what to take and what to buy, including the reagents of a reagent you make yourself. Nothing chosen: "Choose what to craft" with the list right there.
 - The choice is kept per character and profession and is cleared when the recipe stops giving skill.
+- Main window: the page of a crafting profession is the same list to choose from instead of route steps; the chosen recipe opens under its row. The home card of a profession shows the top of the list.
+- Shopping tab: what the chosen recipes are short of, across professions.
+- At the skill cap the addon shows what is profitable to craft for sale, and profitable recipes you do not have with where to get them.
+- Trainer window: the star marks recipes that give skill right now and the recipe you chose.
+- Item tooltips and the merchant button count what the chosen recipe needs.
 
 ## 1.2.3
 
