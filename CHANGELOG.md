@@ -2,36 +2,42 @@
 
 ## 1.3.0
 
-The addon advises and you choose: no more route steps for crafting professions in the mini window, at the bank and at the auction house.
+The addon advises and you choose. Crafting professions no longer follow route steps: you get a list of recipes that give skill right now, pick one, and the reagents, the bank and the auction house follow your pick.
 
-- Mini window: a list of recipes that give skill right now, learned ones first and recipes to learn below. The advice has a star: the recipe that is easiest to do (reagents on hand, cheaper to top up, a recipe that is easy to get).
-- Click a recipe to choose it. The chosen recipe opens right under its row: its reagents for the number of crafts until it turns green, and one line with minus, "Create" and plus. The number is how many crafts are planned: it sets how much to take and to buy and how many the button makes (Shift: by 5). A recipe that is not learned shows the places to get it instead: a click sets the map pin or opens the zone on the map.
-- A reagent you are short of but can make yourself gets its own row: "Make: Fire Oil" with how many you can make now. A click makes them.
-- Bank and auction house work from the chosen recipe: what to take and what to buy, including the reagents of a reagent you make yourself. Nothing chosen: "Choose what to craft" with the list right there.
+**Choosing a recipe**
+
+- A list of recipes that give skill right now: learned ones that are orange or yellow, and recipes worth learning. The advice has a star: the recipe that is easiest to do (reagents on hand, cheaper to top up, a recipe that is easy to get).
+- Click a recipe to choose it. It opens right under its row, in a dark inset panel: its reagents for the number of crafts until it turns green, and one line with minus, "Create" and plus. The number is how many crafts are planned: it sets how much to take and to buy and how many the button makes (Shift: by 5).
+- Reagent counts are green when you have enough for all the planned crafts, yellow when enough for at least one, red when not even for one.
+- A reagent you are short of but can make yourself gets its own row, for example "Make: Fire Oil", with how many you can make now. A click makes them.
+- What is missing is listed as rows with the price on the right: from a vendor, to buy at the auction house, lying in the bank, waiting in the mail.
 - The choice is kept per character and profession and is cleared when the recipe stops giving skill.
-- Main window: one page. The side tabs and the separate profession pages are gone: every profession is a card on the first tab. A crafting profession has the list to choose from right in its card, and the chosen recipe opens under its row. A gathering profession shows what to do now: what to gather and where, or the rank to learn.
-- The "Link in chat" button is in the card of each profession.
-- The setting "Hide completed steps" is removed: there is no list of steps any more.
-- Shopping tab: what the chosen recipes are short of, across professions.
+
+**Recipes to learn**
+
+- Every recipe of the profession is known to the addon, not only a fixed route: the skill a recipe is learned at and its colours are built in for alchemy, blacksmithing, cooking, enchanting (partly), engineering, first aid, leatherworking and tailoring.
+- Each one says where to get it: the nearest trainer, the vendor or the zone where it is sold and the price, the level of the creatures a world drop comes from, the zones of a drop, or "Quest reward". A click sets the map pin or opens the zone on the map. Recipes sold only to the other faction are not offered.
+- 126 more recipe vendors are known by name and position. Vendors that exist only on WoW Forever are shown as a zone.
+
+**Bank, auction house, vendor**
+
+- Bank and auction house work from the chosen recipe: what to take and what to buy, including the reagents of a reagent you make yourself. Nothing chosen: "Choose what to craft" with the list right there.
+- Shopping tab, item tooltips and the merchant button count what the chosen recipes need.
+- Item tooltips show the auction price of one item, with coin icons, for anything listed at the auction house. Over a stack, the price of the whole stack follows in brackets. A price older than a day says how old it is. A setting turns the line off.
+
+**Main window**
+
+- One page. The side tabs and the separate profession pages are gone: every profession is a card on the first tab. A crafting profession has the list to choose from right in its card. A gathering profession shows what to do now: what to gather and where, or the rank to learn.
 - At the skill cap the addon shows what is profitable to craft for sale, and profitable recipes you do not have with where to get them.
+- The "Link in chat" button is in the card of each profession.
+
+**Also**
+
 - Trainer window: the star marks recipes that give skill right now and the recipe you chose.
-- Item tooltips and the merchant button count what the chosen recipe needs.
-- Mini window: the opened recipe lies in a dark inset panel right under its row, and every row has an arrow that shows whether it is opened.
-- Lighter: the code and about 30 texts of the old route steps for crafting professions are removed. Gathering professions keep their steps.
-
-## 1.2.3
-
-- Item tooltips show the auction price of one item, with coin icons. The price comes from the addon's own pass over the whole auction house, so it works for any item that is listed, not only profession reagents. A price older than a day says how old it is. Over a stack, the price of the whole stack follows in brackets.
-- A setting turns the price line off: Tooltips > "Tooltips: auction price of the item".
-- Recipes to learn: the current step lists recipes you have not learned yet that would give skill right now (orange or yellow), each with who teaches or sells it, where, and the price of a vendor recipe. The recommended one is in the gold frame. A click sets the map pin. The mini window shows two of them.
 - Minimap: hovering an ore vein or a herb shows the skill it needs in brackets, in the colour it has for your skill.
-- Clicking a recipe under "Options to choose from" selects it in the profession window also when the window is already open on another recipe.
-- Reagent counts on a step are for all the crafts left. A count is now yellow when you have enough for at least one craft but not for all of them; red only when there is not enough even for one.
-- Recipes to learn now cover every recipe of the profession, not only the ones of the route: the skill a recipe is learned at and its colours are built in for alchemy, blacksmithing, cooking, enchanting (partly), engineering, first aid, leatherworking and tailoring. Recipes from a trainer or a vendor come before quests and drops, and a recipe you already have the reagents for comes first; the row says how many crafts the reagents are enough for, or how many of the reagents you have.
-- Every recipe to learn says where to get it: the nearest trainer, the vendor or the zone where it is sold and the price, the level of the creatures a world drop comes from, the zones of a drop, or "Quest reward". Recipes sold only to the other faction are not offered.
-- 126 more recipe vendors are known by name and position: a recipe sold by one of them shows the vendor and gets a map pin on a click. Vendors that exist only on WoW Forever are still shown as a zone.
 - Reminders are off by default: the "share recipe data" reminder and the chat line on login about old auction prices. Both are settings now.
-- Removed from the Recipes tab: the "Dungeons / Raids / PvP" filter and the "Best for" marks. The list behind them was put together from the classic game and never checked against WoW Forever.
+- Removed: the "Dungeons / Raids / PvP" filter and the "Best for" marks on the Recipes tab (the list behind them was never checked against WoW Forever), and the setting "Hide completed steps".
+- Lighter: the code and the texts of the old route steps for crafting professions are removed.
 
 ## 1.2.2
 
