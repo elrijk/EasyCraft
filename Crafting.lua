@@ -26,9 +26,32 @@ end
 
 -- Открыть окно профессии сразу на рецепте. Если окно закрыто - сначала
 -- открываем его, рецепт выберем, когда игра его покажет.
+-- The game's own call does not always move the selection when the window
+-- is already open on another recipe. A moment later we look at what the
+-- window shows and, if it is still not our recipe, select it through the
+-- window itself.
+local function selectInWindow(spell)
+  local pf = _G.ProfessionsFrame
+  local page = pf and pf:IsShown() and pf.CraftingPage
+  if type(page) ~= "table" or not (TS and TS.GetRecipeInfo) then return end
+  local form = page.SchematicForm
+  local cur = type(form) == "table" and form.GetRecipeInfo and form:GetRecipeInfo()
+  if type(cur) == "table" and cur.recipeID == spell then return end
+  local info = TS.GetRecipeInfo(spell)
+  if type(info) ~= "table" then return end
+  if page.SelectRecipe then
+    page:SelectRecipe(info)
+  elseif type(page.RecipeList) == "table" and page.RecipeList.SelectRecipe then
+    page.RecipeList:SelectRecipe(info, true)
+  end
+end
+
 function ns:OpenRecipe(key, spell)
   if self:IsProfOpen(key) then
-    if spell and TS and TS.OpenRecipe then pcall(TS.OpenRecipe, spell) end
+    if spell and TS and TS.OpenRecipe then
+      pcall(TS.OpenRecipe, spell)
+      C_Timer.After(0.2, function() pcall(selectInWindow, spell) end)
+    end
     return true
   end
   self.pendingRecipe = spell
@@ -565,7 +588,8 @@ function ns:StepBuy(s, left, pool)
   for j = 1, #rc - 1, 2 do
     local id = rc[j]
     local need = self:StepNeed(s, rc[j + 1], left or 0)
-    local e = { id = id, need = need, have = self:BagCount(id), all = self:ItemCount(id),
+    -- per: how many one craft takes (the counts on the step are for all the crafts left)
+    local e = { id = id, need = need, per = s.rc and rc[j + 1] or nil, have = self:BagCount(id), all = self:ItemCount(id),
       mail = self:MailCount(id), alts = alts[id] or 0, buy = 0 }
     -- pool: общий запас на несколько профессий - что ушло одной, другой не достанется
     local stock = e.all + e.alts + e.mail

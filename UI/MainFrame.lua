@@ -2528,7 +2528,9 @@ function Mini:Update()
           tip = (tip and (tip .. "\n") or "") .. how
         end
         tinsert(inputs, { id = e.id, done = e.have >= e.need,
-          text = (e.have >= e.need and "|cff33dd33" or "|cffff5555") .. min(e.have, 999) .. "/" .. e.need .. "|r", tip = tip })
+          -- yellow: enough for one craft, not for the whole step
+          text = (e.have >= e.need and "|cff33dd33" or (e.per and e.have >= e.per and "|cffffd100") or "|cffff5555")
+            .. min(e.have, 999) .. "/" .. e.need .. "|r", tip = tip })
       end
     end
     local out = s.id and { id = s.id } or { tex = ns:StepIcon(s, ns.Profs[key]), spell = s.spell }

@@ -6,6 +6,8 @@
 - A setting turns the price line off: Tooltips > "Tooltips: auction price of the item".
 - Recipes to learn: the current step lists recipes you have not learned yet that would give skill right now (orange or yellow), each with who teaches or sells it, where, and the price of a vendor recipe. The recommended one is in the gold frame. A click sets the map pin. The mini window shows two of them.
 - Minimap: hovering an ore vein or a herb shows the skill it needs in brackets, in the colour it has for your skill.
+- Clicking a recipe under "Options to choose from" selects it in the profession window also when the window is already open on another recipe.
+- Reagent counts on a step are for all the crafts left. A count is now yellow when you have enough for at least one craft but not for all of them; red only when there is not enough even for one.
 
 ## 1.2.2
 

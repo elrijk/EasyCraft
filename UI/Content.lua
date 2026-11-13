@@ -51,8 +51,11 @@ local function colorCode(c)
   return format("|cff%02x%02x%02x", c[1] * 255, c[2] * 255, c[3] * 255)
 end
 
-local function haveNeed(have, need)
-  return format("%s%d/%d|r", have >= need and GREEN or RED, min(have, 9999), need)
+-- Green: enough for everything; yellow: enough for at least one craft (per)
+-- but not for all of them; red: not enough even for one.
+local function haveNeed(have, need, per)
+  local col = have >= need and GREEN or (per and per > 0 and have >= per and YELLOW) or RED
+  return format("%s%d/%d|r", col, min(have, 9999), need)
 end
 
 
@@ -1286,7 +1289,7 @@ function C:CraftBody(UI, c, key, s, rank, isCur, b, left)
   for _, e in ipairs(b.items) do
     -- «есть» - то, что досталось этому шагу (раньше по маршруту могли забрать)
     local have = min(e.have, e.stock or e.have)
-    local it = { id = e.id, text = haveNeed(have, e.need), done = e.need > 0 and have >= e.need }
+    local it = { id = e.id, text = haveNeed(have, e.need, e.per), done = e.need > 0 and have >= e.need }
     if have < e.need then
       local tip = buyText(e.id, e.buy, e.cost, e.age, e.alts, e.mail, e.approx)
       if e.all > e.have then
