@@ -4,7 +4,7 @@
 
 - The route never leads through a green recipe. Where a recipe of the route turns green, the route switches to another recipe that is still orange or yellow.
 - One leveling route instead of three modes. The "Leveling route" switch on the home page is gone: the route itself picks the cheaper recipe where there is a choice and prices are known.
-- A step always lists a few recipes to level on (three on the page, two in the mini window): learned recipes that are orange or yellow now, with its cost and how many you can make. You choose; the step counts by skill, whatever you craft.
+- A step always lists a few recipes to level on (three on the page, two in the mini window): learned recipes that are orange or yellow now, each with its cost and how many you can make. You choose; the step counts by skill, whatever you craft.
 - Nothing is counted or bought for a green step.
 - Seven recipes fill the stretches where a route had only green recipes, so no route has a green stretch now. From the trainer: Goblin Deviled Clams (cooking 160-175), Iron Grenade (engineering 187-194), Mithril Gyro-Shot (engineering 255-260), Truesilver Breastplate (blacksmithing 242-250). From a quest or a vendor, with a note on where to get the recipe: Imperial Plate Belt (blacksmithing 267-270), Frostsaber Boots (leatherworking 265-270), Mantle of the Timbermaw (tailoring 297-300).
 - Merchant hint: a panel beside the merchant window, like the ones at the bank and the auction house. A row per item with its own "Buy" button, the total, and "Buy all".
