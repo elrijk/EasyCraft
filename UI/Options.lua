@@ -13,6 +13,7 @@ local OPTIONS = {
   { "miniGuide", "Мини-окно рядом с окном профессии", function(v) ns.settings.miniGuide = v; if ns.Tracker then ns.Tracker.hidden = nil end end },
   { "hideDone", "Скрывать выполненные шаги в маршруте" },
   { "itemTips", "Подсказки: сколько предмета нужно до учителя, цвет жилы и травы" },
+  { "ahTip", "Подсказки: цена предмета на аукционе" },
   { "trainerStars", "Окно учителя: звезда у рецептов, нужных маршруту" },
   { "ahScan", "Аукцион: читать цены самому при открытии" },
   { "askShare", "Напоминать поделиться данными о рецептах" },
@@ -223,6 +224,7 @@ function ns:BuildSettings()
   ------------------------------------------------------------ Подсказки
   Header(ns.T("Подсказки"))
   Check("itemTips")
+  Check("ahTip")
   Check("trainerStars")
   Check("askShare")
   Check("hintsLocked")

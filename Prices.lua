@@ -4,6 +4,8 @@ local _, ns = ...
 --  Own auction prices. EasyCraft reads them itself when the player opens
 --  the auction house: it pages through the browse list (the lowest price of
 --  every item) and also remembers prices from any search the player runs.
+--  The pass covers the whole auction house, not only profession items, so
+--  the item tooltip can show a price for anything that is listed.
 --  Stored in EasyCraftDB.ah[realm] = { p = { id -> copper per unit },
 --  d = { id -> day last seen }, t = time of the last full pass }.
 --  There is no other price source. Until the player has visited the auction
@@ -13,9 +15,9 @@ local _, ns = ...
 local AH = C_AuctionHouse
 local floor, min, time = math.floor, math.min, time
 
-local RESCAN = 15 * 60 -- полный обход не чаще, чем раз в столько секунд
-local scan = {}        -- active, n (сколько цен за обход), wait (ждём очередь)
-local batch = {}       -- предметы, уже встреченные в текущем списке
+local RESCAN = 15 * 60 -- a full pass no more often than once in this many seconds
+local scan = {}        -- active, n (prices read in this pass), wait (waiting for the request queue)
+local batch = {}       -- items already met in the current list
 local dirty
 
 local function today() return floor(time() / 86400) end
@@ -36,7 +38,7 @@ function ns:CanScanAuction()
     and type(AH.GetBrowseResults) == "function" or false
 end
 
--- Есть ли хоть одна своя цена.
+-- Whether there is at least one price.
 function ns:HasOwnPrices()
   local s = store()
   return s and next(s.p) ~= nil or false
@@ -89,7 +91,7 @@ local function finish(done)
   refreshSoon()
 end
 
--- Следующий шаг обхода: отправить запрос или попросить следующую страницу.
+-- Next step of the pass: send the query or ask for the next page.
 local function step()
   if not scan.active then return end
   if not ready() then scan.wait = true return end
@@ -105,12 +107,9 @@ local function step()
   if not pcall(AH.RequestMoreBrowseResults) then finish(true) end
 end
 
--- Начать обход. force - по команде игрока, не глядя на паузу.
+-- Start a pass. force: asked by the player, the pause between passes is ignored.
 function ns:ScanAuction(force)
-  if not self:CanScanAuction() then
-    if force then self:Print(ns.T("этот клиент не даёт читать аукцион.")) end
-    return false
-  end
+  if not self:CanScanAuction() then return false end
   if not self.ahOpen then
     if force then self:Print(ns.T("открой аукцион: цены читаются там.")) end
     return false
@@ -128,7 +127,7 @@ function ns:ScanAuction(force)
   return true
 end
 
--- Идёт ли обход и сколько цен уже прочитано.
+-- Whether a pass is running and how many prices it has read.
 function ns:AuctionScanState() return scan.active or false, scan.n or 0 end
 
 local ev = CreateFrame("Frame")
@@ -179,14 +178,14 @@ end
 ev:SetScript("OnEvent", function(_, e, a) if type(AH) == "table" then ns:Safe(onEvent, e, a) end end)
 
 -------------------------------------------------------------------------------
---  Источник цен для остального аддона.
+--  Price source for the rest of the addon.
 -------------------------------------------------------------------------------
--- Есть ли цены: "EasyCraft" или nil (на аукционе ещё не были).
+-- Whether there are prices: "EasyCraft" or nil (the auction house was never visited).
 function ns:PriceSource()
   return self:HasOwnPrices() and "EasyCraft" or nil
 end
 
--- Цена одной штуки в меди и сколько дней назад её видели.
+-- Price of one item in copper and how many days ago it was seen.
 function ns:AuctionPrice(id)
   if type(id) ~= "number" then return nil end
   local s = store()
@@ -196,8 +195,8 @@ function ns:AuctionPrice(id)
   return own, age < 0 and 0 or age
 end
 
--- Пора ли на аукцион: "none" - цен нет вовсе, "old" - последний обход
--- старше PRICE_OLD_DAYS дней, nil - цены свежие (или клиент не даёт читать).
+-- Time to visit the auction house: "none" - no prices at all, "old" - the last pass
+-- is older than PRICE_OLD_DAYS days, nil - prices are fresh.
 function ns:PricesStale()
   if not self:CanScanAuction() then return nil end
   local s = store()
@@ -205,15 +204,15 @@ function ns:PricesStale()
   if time() - s.t > (self.PRICE_OLD_DAYS or 3) * 86400 then return "old" end
 end
 
--- Строка-напоминание для окна (или nil).
+-- Reminder line for the window (or nil).
 function ns:PricesNote()
   local st = self:PricesStale()
   if st == "none" then return ns.T("Цен нет: открой аукцион - EasyCraft прочитает их сам") end
   if st == "old" then return format(ns.T("Цены старше %d дней: открой аукцион - EasyCraft обновит их сам"), self.PRICE_OLD_DAYS or 3) end
 end
 
--- При входе, один раз: напомнить в чате сходить на аукцион (только тем, у
--- кого есть профессии, где что-то покупают).
+-- On login, once: a chat reminder to visit the auction house (only for those
+-- who have professions that buy something).
 local remind = CreateFrame("Frame")
 remind:RegisterEvent("PLAYER_ENTERING_WORLD")
 remind:SetScript("OnEvent", function(self)

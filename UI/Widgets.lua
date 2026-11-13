@@ -1037,16 +1037,9 @@ end
 local NBSP = "\194\160"
 function W.Money(copper)
   copper = math.floor((copper or 0) + 0.5)
-  if GetMoneyString then
-    local ok, s = pcall(GetMoneyString, copper, true)
-    if ok and s then return (s:gsub(" ", NBSP)) end
-  end
-  local g, s, c = math.floor(copper / 10000), math.floor(copper / 100) % 100, copper % 100
-  local out = {}
-  if g > 0 then out[#out + 1] = "|cffffd700" .. g .. ns.T("з") .. "|r" end
-  if s > 0 or g > 0 then out[#out + 1] = "|cffc7c7cf" .. s .. ns.T("с") .. "|r" end
-  out[#out + 1] = "|cffeda55f" .. c .. ns.T("м") .. "|r"
-  return table.concat(out, NBSP)
+  local ok, s = pcall(GetMoneyString, copper, true)
+  if ok and s then return (s:gsub(" ", NBSP)) end
+  return tostring(copper)
 end
 
 -------------------------------------------------------------------------------

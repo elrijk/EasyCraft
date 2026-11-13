@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.2.3
+
+- Item tooltips show the auction price of one item, with coin icons. The price comes from the addon's own pass over the whole auction house, so it works for any item that is listed, not only profession reagents. A price older than a day says how old it is.
+- A setting turns the price line off: Tooltips > "Tooltips: auction price of the item".
+
 ## 1.2.2
 
 - The route never leads through a green recipe. Where a recipe of the route turns green, the route switches to another recipe that is still orange or yellow.

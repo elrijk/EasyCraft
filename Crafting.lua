@@ -1579,6 +1579,19 @@ local function AddNeedLine(tooltip, id, ours)
   tooltip:Show() -- подогнать размер под новые строки
 end
 
+-- Auction price of one item in the item tooltip, with coin icons. The price
+-- comes from the addon's own pass over the auction house; an item that was
+-- never seen there gets no line. A price older than a day says how old it is.
+function ns:AddPriceLine(tooltip, id)
+  if not (self.settings and self.settings.ahTip ~= false) then return false end
+  local price, age = self:AuctionPrice(id)
+  if not price then return false end
+  local label = ns.T("На аукционе: ") .. (age and age > 0 and "|cff808080(" .. format(ns.T("%d дн."), age) .. ")|r" or "")
+  tooltip:AddDoubleLine(label, ns.W.Money(price), 0.9, 0.9, 0.9, 1, 1, 1)
+  tooltip:Show() -- fit the tooltip to the new line
+  return true
+end
+
 -- «Где взять» коротко: у торговца, трава или жила и где их больше, с кого падает.
 function ns:SourceLine(id)
   local src = self.MatSources and self.MatSources[id]
@@ -1617,14 +1630,15 @@ function ns:HookItemTooltips()
   self.tipHooked = true
   local function OnItem(tooltip, data)
     if tooltip ~= GameTooltip and tooltip ~= ItemRefTooltip then return end
-    if not (ns.settings and ns.settings.itemTips ~= false) then return end
-    local ours = OwnedByUs(tooltip)
     local id = data and data.id
     if not id and tooltip.GetItem then
       local _, link = tooltip:GetItem()
       id = link and tonumber(link:match("item:(%d+)"))
     end
-    if type(id) == "number" then AddNeedLine(tooltip, id, ours) end
+    if type(id) ~= "number" then return end
+    -- the two lines have their own settings: one can be off while the other is on
+    if ns.settings and ns.settings.itemTips ~= false then AddNeedLine(tooltip, id, OwnedByUs(tooltip)) end
+    ns:AddPriceLine(tooltip, id)
   end
   local safe = function(tooltip, data) pcall(OnItem, tooltip, data) end
   if TooltipDataProcessor and TooltipDataProcessor.AddTooltipPostCall and Enum and Enum.TooltipDataType then

@@ -225,7 +225,7 @@ end
 ---------------------------------------------------------------------------
 local DEFAULTS = {
   hideDone = false, mapShow = true, mapAreaAlpha = 0.5, minimap = true, miniGuide = true, itemTips = true, trainerStars = true,
-  minimapAngle = 205, scale = 1, ahScan = true, askShare = true, useAlts = true,
+  minimapAngle = 205, scale = 1, ahScan = true, ahTip = true, askShare = true, useAlts = true,
 }
 
 function ns:InitDB()
