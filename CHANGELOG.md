@@ -2,7 +2,7 @@
 
 ## 1.2.3
 
-- Item tooltips show the auction price of one item, with coin icons. The price comes from the addon's own pass over the whole auction house, so it works for any item that is listed, not only profession reagents. A price older than a day says how old it is.
+- Item tooltips show the auction price of one item, with coin icons. The price comes from the addon's own pass over the whole auction house, so it works for any item that is listed, not only profession reagents. A price older than a day says how old it is. Over a stack, the price of the whole stack follows in brackets.
 - A setting turns the price line off: Tooltips > "Tooltips: auction price of the item".
 - Recipes to learn: the current step lists recipes you have not learned yet that would give skill right now (orange or yellow), each with who teaches or sells it, where, and the price of a vendor recipe. The recommended one is in the gold frame. A click sets the map pin. The mini window shows two of them.
 - Minimap: hovering an ore vein or a herb shows the skill it needs in brackets, in the colour it has for your skill.

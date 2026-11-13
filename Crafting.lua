@@ -1657,12 +1657,29 @@ end
 -- Auction price of one item in the item tooltip, with coin icons. The price
 -- comes from the addon's own pass over the auction house; an item that was
 -- never seen there gets no line. A price older than a day says how old it is.
-function ns:AddPriceLine(tooltip, id)
+-- How many items are in the stack under the cursor: a bag or bank slot is
+-- asked from the game, any other item button keeps its count on itself.
+-- nil when the tooltip is not over a stack (a link in chat, a recipe row).
+local function stackUnder(tooltip, id)
+  local owner = tooltip.GetOwner and tooltip:GetOwner()
+  if type(owner) ~= "table" then return nil end
+  if owner.GetBagID and owner.GetID and C_Container and C_Container.GetContainerItemInfo then
+    local ok, info = pcall(C_Container.GetContainerItemInfo, owner:GetBagID(), owner:GetID())
+    if ok and type(info) == "table" and info.itemID == id then return tonumber(info.stackCount) end
+  end
+  return type(owner.count) == "number" and owner.count or nil
+end
+
+function ns:AddPriceLine(tooltip, id, count)
   if not (self.settings and self.settings.ahTip ~= false) then return false end
   local price, age = self:AuctionPrice(id)
   if not price then return false end
   local label = ns.T("На аукционе: ") .. (age and age > 0 and "|cff808080(" .. format(ns.T("%d дн."), age) .. ")|r" or "")
-  tooltip:AddDoubleLine(label, ns.W.Money(price), 0.9, 0.9, 0.9, 1, 1, 1)
+  local money = ns.W.Money(price)
+  -- a stack: the price of the whole stack in brackets after the price of one
+  count = count or stackUnder(tooltip, id)
+  if count and count > 1 then money = money .. " |cffb0b0b0(\195\151" .. count .. ":|r " .. ns.W.Money(price * count) .. "|cffb0b0b0)|r" end
+  tooltip:AddDoubleLine(label, money, 0.9, 0.9, 0.9, 1, 1, 1)
   tooltip:Show() -- fit the tooltip to the new line
   return true
 end
