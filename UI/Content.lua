@@ -1262,9 +1262,7 @@ function C:StepCard(UI, key, i, n, st, cur, train, rank, maxRank, b, left)
   end
   c.indent = tx -- тело шага - под названием
   if isCur then self:CurrentWarnings(UI, c, key, s, st, rank, maxRank) end
-  if s.k == "craft" then
-    self:CraftBody(UI, c, key, s, rank, isCur, b, left)
-  elseif isRankStep(s) then
+  if isRankStep(s) then
     self:RankBody(UI, c, s, isCur)
   elseif s.k == "gather" then
     self:GatherBody(UI, c, s, rank, isCur)
@@ -1305,55 +1303,6 @@ function C:CurrentWarnings(UI, c, key, s, st, rank, maxRank)
   end
   -- заметки к сбору и ловле повторяют список жил и зон - не показываем
   if s.note and s.k == "craft" then c:Text(s.note, "small", { gap = 6 }) end
-end
-
--- Рецепт не выучен - одной строкой (у шагов впереди): где взять.
-local function recipeShort(src)
-  if src.kind == "vendor" then
-    local money = src.copper and W.Money(src.copper) or src.price
-    return money and format(T("Рецепт: купить у торговца за %s"), money) or T("Рецепт: купить у торговца")
-  elseif src.kind == "trainer" then
-    return T("Рецепт: выучить у учителя")
-  end
-  return T("Рецепт ещё не выучен")
-end
-
--- Создание: если рецепт не выучен - где его взять; картинка «реагенты ->
--- результат» (есть/нужно), справа - что докупить или «Всё есть».
-function C:CraftBody(UI, c, key, s, rank, isCur, b, left)
-  local known = ns:RecipeKnown(key, s.spell)
-  if known == false then
-    if isCur then self:TrainerBlock(UI, c, key, s)
-    else c:Text(ORANGE .. recipeShort(ns:RecipeSource(key, s)) .. "|r", "small", { gap = 6 }) end
-  elseif known == nil and s.src == "recipe" and isCur then
-    c:Text(T("Рецепт нужно купить") .. (s.info and (": " .. s.info) or "."), "small", { gap = 6 })
-    local items = npcItems(s.npcs, 2, s.recipe and ns:ItemIcon(s.recipe) or nil)
-    if #items > 0 then c:Items(items, 2, 22) end
-  end
-  if not b then return end
-  local inputs = {}
-  for _, e in ipairs(b.items) do
-    -- «есть» - то, что досталось этому шагу (раньше по маршруту могли забрать)
-    local have = min(e.have, e.stock or e.have)
-    local it = { id = e.id, text = haveNeed(have, e.need, e.per), done = e.need > 0 and have >= e.need }
-    if have < e.need then
-      local tip = buyText(e.id, e.buy, e.cost, e.age, e.alts, e.mail, e.approx)
-      if e.all > e.have then
-        tip = YELLOW .. format(T("в банке %d - забери у банкира"), e.all - e.have) .. "|r" .. (tip and ("\n" .. tip) or "")
-      end
-      it.tip = tip
-    end
-    tinsert(inputs, it)
-  end
-  local out = s.id and { id = s.id } or { tex = ns:StepIcon(s, ns.Profs[key]), spell = s.spell }
-  if left and left > 0 then out.text = "|cffffffff" .. left .. "|r" end
-  local lines
-  if b.allHave then lines = { GREEN .. T("Всё есть") .. "|r" }
-  else
-    lines = ns:StepBuyLines(b)
-    if isCur then UI.stepBuy = b end -- для «Найти на аукционе»
-  end
-  c:Flow(inputs, out, 32, c.indent - 2, lines)
 end
 
 -- Ранг: ближайшие учителя, торговцы книгой или кто даёт задание.
@@ -1419,13 +1368,6 @@ end
 -- сделать (рецепта нет в игре, он уже серый), «Вернуть шаг» - если его
 -- пропускали вручную.
 function C:CurrentActions(UI, c, key, i, s, st, train, rank, maxRank, left)
-  if s.k == "craft" then
-    local offers = ns:BestRecipes(key, s, rank, 3)
-    if #offers > 0 then self:BestBlock(UI, c, key, offers) end
-    self:LearnBlock(UI, c, key, s, rank)
-    local rs = s.spell and ns:RecipeState(key, s.spell)
-    if rs and rs.enchant then c:Text(T("Чары накладываются из окна профессии: выбери там вещь."), "small", { gap = 6 }) end
-  end
   local p = ns.Profs[key]
   if train and train ~= i and ns:CanLearnRank(p.steps[train], rank) then
     c:Text(YELLOW .. T("Уже можно выучить ранг: ") .. "|r" .. ns:RankName(p.steps[train].max), "body", { gap = 6 })
@@ -1435,10 +1377,8 @@ function C:CurrentActions(UI, c, key, i, s, st, train, rank, maxRank, left)
 
   local check = ns:StepCheck(key, s)
   local manual = ns.char.manual[key] and ns.char.manual[key][i]
-  local stuck = (check and check.missing)
-    or (s.k == "craft" and rank >= (s.f or 0) and (ns:RealColor(key, s.spell, rank) or (s.sk and ns:RecipeColor(s, rank))) == "gray")
-  local craft = s.k == "craft" and s.spell
-  if not (manual ~= nil or stuck or craft) then return end
+  local stuck = check and check.missing
+  if not (manual ~= nil or stuck) then return end
   local y = c.y + 4
   local placed = false
   if manual ~= nil or stuck then
@@ -1450,9 +1390,6 @@ function C:CurrentActions(UI, c, key, i, s, st, train, rank, maxRank, left)
         ns:ToggleManual(key, i)
         UI:Render(true)
       end }, c.indent or UI.PAD, y)
-  end
-  if craft and not green then
-    if self:CraftButtons(UI, c, key, s, left, y) then placed = true end
   end
   -- строку под кнопки - только если они есть: иначе пустое место снизу
   if placed then c.y = y + 32 end
@@ -1472,118 +1409,3 @@ function C:Mismatch(s, rank, maxRank, state)
   end
 end
 
--- «Где выучить рецепт» - как в подсказке у окна профессии: жёлтый
--- заголовок и строка в золотой рамке: слева значок карты, имя и зона,
--- справа цена и что взять (рецепт или свиток учителя). Щелчок - метка и карта.
-function C:TrainerBlock(UI, c, key, s)
-  local src = ns:RecipeSource(key, s)
-  local id = src.npc
-  if not id then
-    c:Text(YELLOW .. ns:RecipeSourceHead(src) .. "|r", "body", { gap = 8 })
-    return
-  end
-  local vendor = src.kind == "vendor"
-  c:Text(vendor and T("Купи рецепт") or T("Выучи рецепт у учителя"), "head", { gap = 6 })
-  local money = vendor and (src.copper and W.Money(src.copper) or src.price) or nil
-  -- every trainer or vendor, the nearest first and in the gold frame
-  local items = {}
-  for n, npc in ipairs((src.all and #src.all > 0) and src.all or { id }) do
-    if n > 8 then break end
-    tinsert(items, { tex = MAP_ICON, text = ns:NpcName(npc), sub = ns:NpcZone(npc) .. (src.extra and (", " .. src.extra) or ""),
-      right = money, icons = { vendor and src.item and ns:ItemIcon(src.item) or SCROLL_ICON }, hot = n == 1,
-      tip = { title = ns:NpcName(npc), lines = { n == 1 and (vendor and T("Ближайший торговец этим рецептом.") or T("Ближайший учитель.")) or nil },
-        hint = T("Щелчок поставит метку и откроет карту.") },
-      onClick = function() ns:Waypoint(npc, true) end })
-  end
-  c:Items(items, #items > 1 and 2 or 1, 26)
-end
-
--- Recipes worth learning now: not learned yet, orange or yellow at this
--- skill. A row per recipe with who teaches or sells it and where; the
--- recommended one has the star and the gold frame. A click sets the map pin.
-function C:LearnBlock(UI, c, key, s, rank)
-  local list, head = ns:LearnRows(key, s, rank, 3)
-  if #list == 0 then return end
-  c:Space(2)
-  c:Text(head, "head", { gap = 6 })
-  local rows = {}
-  for k, r in ipairs(list) do
-    tinsert(rows, { tex = r.icon or ns.Icon(nil), text = r.text, sub = r.where, right = r.right, star = k == 1, hot = k == 1,
-      tip = { title = r.name, lines = { r.why }, hint = r.hint }, onClick = r.onClick })
-  end
-  c:Items(rows, 1, 28)
-end
-
--- Другие рецепты, как в подсказке у окна профессии: «Можно качать и на
--- них» (на шаг нет реагентов или рецепт не выучен) или «Выгоднее сейчас».
--- Строки: значок, название цветом рецепта, справа цена и сколько хватит;
--- лучший - со звездой и в золотой рамке, у него «Создать N».
-function C:BestBlock(UI, c, key, offers)
-  local best = offers[1]
-  c:Space(2)
-  c:Text(T("Варианты на выбор"), "head", { gap = 6 })
-  local rows = {}
-  for k, o in ipairs(offers) do
-    local why = (o.instead and T("Навык растёт и от него, а реагенты на шаг пока соберёшь."))
-      or (o.better and T("Даст навык вернее, чем рецепт шага.")) or T("Ещё вариант.")
-    local lines = { why }
-    if o.cost then tinsert(lines, { T("За создание"), "~" .. W.Money(o.cost) }) end
-    if o.chance then tinsert(lines, format(T("Навык растёт не всегда: %s за создание."), o.chance)) end
-    if o.cheaperBy then
-      tinsert(lines, format(T("Самый дешёвый из рецептов этого цвета: на %s дешевле «%s»."), W.Money(o.cheaperBy), o.cheaperThan or "?"))
-    end
-    local id = o.id
-    local col = ns:Hex(o.color) .. (ns.ColorName[o.color] or "") .. "|r" .. (o.chance and (", " .. o.chance) or "")
-    tinsert(rows, { tex = o.icon or ns.Icon(nil), text = ns:Hex(o.color) .. (o.name or "?") .. "|r", sub = col,
-      right = (o.cost and (W.Money(o.cost) .. "  ") or "") .. (o.a > 0 and format(T("хватит на %d"), o.a) or (GREY_C .. T("нет реагентов") .. "|r")),
-      star = k == 1, hot = k == 1,
-      tip = { title = o.name or "?", lines = lines, hint = T("Щелчок откроет его в окне профессии.") },
-      onClick = function() ns:OpenRecipe(key, id) end })
-  end
-  c:Items(rows, 1, 28)
-  -- «Создать N» для лучшего - когда на него есть реагенты, а на шаг нет
-  if best.a > 0 and best.n > 0 then
-    c:Buttons({ { text = format(T("Создать %d: %s"), best.n, best.name or "?"), w = 300,
-      tip = format(T("Создаст «%s»: %d шт. (не больше, чем осталось до конца шага)."), best.name or "?", best.n),
-      onClick = function() ns:CraftOrOpen(key, best.id, best.n) end } })
-  end
-end
-
--- Кнопка создания справа в нижней строке: одна, «Создать все (N)» - сколько
--- нужно до конца шага. При закрытом окне она сама откроет профессию; для
--- чар и неизвестных рецептов - «Открыть рецепт».
-function C:CraftButtons(UI, c, key, s, left, y)
-  if ns:RecipeKnown(key, s.spell) == false then
-    -- сначала выучить; окно закрыто - может, уже выучил: окно обновит скан
-    if not ns:IsProfOpen(key) then
-      c:Button({ text = T("Открыть рецепт"), w = 160, onClick = function() ns:OpenRecipe(key, s.spell) end,
-        tip = T("Откроет окно профессии. Тогда здесь появятся кнопки создания.") }, UI.PAD, y, true)
-      return true
-    end
-    return false
-  end
-  local open = ns:IsProfOpen(key)
-  local n, tip
-  if open then
-    local st = ns:RecipeState(key, s.spell)
-    if st and not st.unknown and st.known and not st.enchant then n = st.count or 0 end
-  elseif key ~= "enchanting" or s.id then
-    -- Окно закрыто: считаем по сумкам, кнопка сама откроет профессию.
-    n = ns:CanMake(s)
-    tip = ns:NoAutoCraft() and T("Откроет окно профессии на этом рецепте.") or T("Откроет окно профессии и сразу начнёт создавать.")
-  end
-  if not n then
-    c:Button({ text = T("Открыть рецепт"), w = 160, onClick = function() ns:OpenRecipe(key, s.spell) end,
-      tip = T("Откроет окно профессии. Тогда здесь появятся кнопки создания.") }, UI.PAD, y, true)
-    return true
-  end
-  -- «Создать все» - сколько нужно до конца шага (не больше, чем хватит)
-  local all = (left and left > 0) and min(n, left) or n
-  -- не из чего - кнопок создания нет: что докупить и чем заняться пока,
-  -- видно на карточке выше
-  if n <= 0 then return false end
-  -- кнопка откроет окно профессии (если закрыто) и начнёт создавать
-  c:Button({ text = format(T("Создать все (%d)"), all), w = 190, tip = tip,
-    onClick = function() ns:CraftOrOpen(key, s.spell, all) end }, UI.PAD, y, true)
-  return true
-end

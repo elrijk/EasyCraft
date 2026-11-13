@@ -2344,8 +2344,7 @@ function Mini:Reset(f)
   f.nextRow = 0
   if f.queueHead then f.queueHead:Hide() end
   if f.learnHead then f.learnHead:Hide() end
-  for _, k in ipairs({ "cntMinus", "cntPlus", "pickFill" }) do if f[k] then f[k]:Hide() end end
-  for _, t in ipairs(f.pickEdges or {}) do t:Hide() end
+  for _, k in ipairs({ "cntMinus", "cntPlus", "pickInset" }) do if f[k] then f[k]:Hide() end end
   if f.queueBtn then f.queueBtn:Hide() end
   for _, fl in pairs(f.flows) do fl:Hide() end
   for _, fl in pairs(f.flow2s or {}) do fl:Hide() end
@@ -2492,6 +2491,11 @@ function Mini:Update()
   f.findTrainer.glyph:SetDesaturated(not need)
   f.findTrainer:SetAlpha(need and 1 or 0.65)
   local y = HEAD_H
+  if ns:IsCraftProf(key) then
+    f.stepBig:SetText(ns:N(ns.Profs[key]))
+    f.stepOf:SetText("")
+    return self:ShowChoice(f, key, rank, maxRank, y)
+  end
   if finished then
     y = self:Queue(f, key, y + GAP_SECTION / 2)
     f:SetHeight(y + 4)
@@ -2499,59 +2503,14 @@ function Mini:Update()
     return
   end
   if smelt then return self:ShowSmelt(f, key, smelt, y) end
-  if ns:IsCraftProf(key) then
-    f.stepBig:SetText(ns:N(ns.Profs[key]))
-    f.stepOf:SetText("")
-    return self:ShowChoice(f, key, rank, maxRank, y)
-  end
 
-  local isCraft = s.k == "craft" and state ~= "done"
-  local col = s.k == "craft" and (ns:RealColor(key, s.spell, rank) or (s.sk and ns:RecipeColor(s, rank)))
-  local nameText = col and (ns:Hex(col) .. ns:StepName(s) .. "|r") or ns:StepName(s)
-  if isCraft and s.spell then
-    f.nameBtn:SetScript("OnClick", function() ns:OpenRecipe(key, s.spell) end)
-    tipOn(f.nameBtn, ns:StepName(s), T("Щелчок выберет рецепт в окне профессии."))
-  end
-
-  -- 2. Что делается
-  local left = isCraft and ns:RemainingCrafts(s, rank) or 0
-  local n = 0
-  local st = isCraft and s.spell and ns:RecipeState(key, s.spell)
-  if st and not st.unknown and st.known and not st.enchant then n = math.min(st.count or 0, math.max(left, 1)) end
-  if isCraft and s.rc and left > 0 then
-    local b = ns:StepBuy(s, left)
-    local inputs, total = {}, #b.items
-    for _, e in ipairs(b.items) do
-      if #inputs < MAX_REAGENTS then
-        local tip = e.mail > 0 and (ns.MAIL_COLOR .. format(T("на почте %d"), e.mail) .. "|r") or nil
-        if e.have < e.need and e.all > e.have then
-          tip = "|cffffd100" .. format(T("в банке %d - забери у банкира"), e.all - e.have) .. "|r" .. (tip and ("\n" .. tip) or "")
-        end
-        if e.buy > 0 then
-          local how = e.vendor and (format(T("купить %d у торговца"), e.buy)
-              .. (e.cost and (": " .. (e.approx and "~" or "") .. W.Money(e.cost)) or ""))
-            or (e.cost and format(T("докупить %d: %s на аукционе"), e.buy, W.Money(e.cost)))
-            or format(T("докупить %d"), e.buy)
-          tip = (tip and (tip .. "\n") or "") .. how
-        end
-        tinsert(inputs, { id = e.id, done = e.have >= e.need,
-          -- yellow: enough for one craft, not for the whole step
-          text = (e.have >= e.need and "|cff33dd33" or (e.per and e.have >= e.per and "|cffffd100") or "|cffff5555")
-            .. min(e.have, 999) .. "/" .. e.need .. "|r", tip = tip })
-      end
-    end
-    local out = s.id and { id = s.id } or { tex = ns:StepIcon(s, ns.Profs[key]), spell = s.spell }
-    out.text = "|cffffffff" .. left .. "|r"
-    -- где взять недостающее (хватает - видно по галочкам, отдельно не пишем) -
-    -- в той же рамке, что реагенты
-    local lines = b.allHave and {} or ns:StepBuyLines(b)
-    if total > #inputs then tinsert(lines, 1, "|cff9d9d9d" .. format(T("и ещё %d"), total - #inputs) .. "|r") end
-    y = self:PlaceFlow(f, inputs, out, y, lines)
-  elseif s.k == "gather" or s.k == "zone" then
+  -- Only gathering professions get here: what to gather, or a rank step.
+  local nameText = ns:StepName(s)
+  if s.k == "gather" or s.k == "zone" then
     y = self:Gather(f, key, s, rank, y, nameText)
   else
-    -- ранг у учителя, книга, задание: если ниже будет кнопка «к кому идти»,
-    -- название и «навык упёрся» не пишем - кнопка говорит всё сама
+    -- a rank at the trainer, a book, a quest: when the "who to go to" button
+    -- follows, the name is not repeated - the button says it all
     local ra0 = ns:RankAction(key)
     if not (ra0 and ra0.can and ra0.id and ra0.s == s) then
       y = placeName(f, nameText, MINI_W, y, 0, y)
@@ -2559,80 +2518,18 @@ function Mini:Update()
       if stx then f.note:SetText(stx); y = place(f.note, f, y) end
     end
   end
-  if f.name:IsShown() and isCraft and s.spell then f.nameBtn:SetAllPoints(f.name); f.nameBtn:Show() end
 
-  -- 3. Главное действие
   local ra = ns:RankAction(key)
-  if isCraft and st and st.known == false and not st.unknown then
-    y = self:LearnBox(f, key, s, y)
-  elseif ra and ra.can and ra.id then
-    -- следующий ранг уже можно взять: без него навык упрётся в предел
+  if ra and ra.can and ra.id then
+    -- the next rank can be learned already: without it the skill stops
     y = self:RankBox(f, ra, y)
   elseif ra and maxRank > 0 and rank >= maxRank - 10 then
-    -- скоро упрёшься в предел, а ранг ещё нельзя - сказать, когда можно
+    -- the cap is close and the rank cannot be learned yet: say when it can
     local _, why = ns:NeededTrainer(key)
     if why then
       f.note:SetText("|cffa03000" .. format(T("Предел навыка %d."), maxRank) .. "|r " .. why)
       y = place(f.note, f, y) + GAP_SECTION - 4
     end
-  end
-  -- other recipes to level on: found here, the green note needs them too
-  local offers = isCraft and ns:BestRecipes(key, s, rank, 2) or {} -- the mini window stays small: two options
-  if isCraft and ns:StepIsGreen(key, s, rank) then
-    -- a green recipe is not offered for crafting: say what to do instead
-    f.note:SetText("|cffa03000" .. T("Рецепт шага уже зелёный: навык с него почти не растёт.") .. "|r "
-      .. (#offers > 0 and T("Качай на рецепте ниже.") or T("Выучи у учителя рецепт, который сейчас оранжевый или жёлтый.")))
-    y = place(f.note, f, y) + GAP_SECTION - 4
-  elseif not (isCraft and st and st.known == false and not st.unknown) and n > 0 then
-    self:CreateBtn(f, key, s.spell, n, y, T("Сделает столько, сколько нужно до конца шага (и сколько хватит реагентов)."))
-    y = y + 22 + GAP_SECTION
-  end
-
-  -- 4. Other recipes to choose from: the best one in the frame
-  if #offers > 0 then
-    y = sep(f, 1, y - GAP_SECTION / 2)
-    local best = offers[1]
-    local instead = best.instead and n <= 0
-    -- заголовок жёлтым, без описания (почему - в подсказке строки)
-    f.secHead:SetText(T("Варианты на выбор"))
-    y = place(f.secHead, f, y) + 3
-    for k, o in ipairs(offers) do
-      local right = o.a > 0 and format(T("хватит на %d"), o.a) or "|cff9d9d9d" .. T("нет реагентов") .. "|r"
-      if o.cost then right = W.Money(o.cost) .. "  " .. right end
-      local why = ((o.instead and T("Навык растёт и от него, а реагенты на шаг пока соберёшь."))
-        or (o.better and T("Даст навык вернее, чем рецепт шага.")) or T("Ещё вариант."))
-        .. (o.cost and ("\n" .. format(T("~%s за создание"), W.Money(o.cost))) or "")
-      if o.chance then why = why .. "\n" .. format(T("Навык растёт не всегда: %s за создание."), o.chance) end
-      local id = o.id
-      y = SetRow(f, k, y, { icon = o.icon or ns.Icon(nil), star = k == 1, hot = k == 1,
-        text = ns:Hex(o.color) .. (o.name or "?") .. "|r", right = right,
-        tipTitle = o.name, tip = why .. "\n" .. T("Щелчок откроет его в окне профессии."),
-        onClick = function() ns:OpenRecipe(key, id) end })
-    end
-    y = y + GAP_SECTION - 3
-    if instead and best.n > 0 then
-      self:CreateBtn(f, key, best.id, best.n, y,
-        format(T("Создаст «%s»: %d шт. (не больше, чем осталось до конца шага)."), best.name or "?", best.n))
-      f.create:SetText(format(T("Создать %d: %s"), best.n, best.name or "?"))
-      y = y + 22 + GAP_SECTION
-    end
-  end
-  -- 5. Recipes worth learning now and where to get them: the recommended one in the frame
-  local learn, learnHead = {}, nil
-  if isCraft then learn, learnHead = ns:LearnRows(key, s, rank, 2) end
-  if #learn > 0 then
-    y = sep(f, 2, y - GAP_SECTION / 2)
-    if not f.learnHead then f.learnHead = W.Text(f, "head") end
-    local ink = f.inkHead or W.INK_T
-    f.learnHead:SetTextColor(ink[1], ink[2], ink[3])
-    f.learnHead:SetText(learnHead)
-    y = place(f.learnHead, f, y) + 3
-    for k, r in ipairs(learn) do
-      local tip = r.why .. (r.where ~= "" and ("\n" .. r.where) or "") .. (r.hint and ("\n" .. r.hint) or "")
-      y = SetRow(f, k, y, { icon = r.icon or ns.Icon(nil), star = k == 1, hot = k == 1, text = r.text, right = r.right,
-        tipTitle = r.name, tip = tip, onClick = r.onClick })
-    end
-    y = y + GAP_SECTION - 3
   end
   y = self:Queue(f, key, y)
   f:SetHeight(y + 4)
@@ -2702,32 +2599,31 @@ function Mini:Queue(f, key, y)
 end
 
 -- Кнопка «Создать N» на всю ширину.
--- The opened recipe is one block: a gold outline and a darker backing from
--- the top of its row to the end of what opened under it, so it is clear what
--- belongs to the choice. Drawn on the window itself, under the rows.
+-- The opened recipe lies in a dark inset panel with the game's own grey
+-- border (the one tooltips have), right under its row. Everything inside is
+-- raised above the panel.
 local function pickBox(f, y0, y1)
-  if not f.pickFill then
-    f.pickFill = f:CreateTexture(nil, "OVERLAY")
-    f.pickFill:SetColorTexture(0.12, 0.09, 0.03, 0.45)
-    f.pickEdges = {}
-    for i = 1, 4 do
-      local t = f:CreateTexture(nil, "OVERLAY", nil, 1)
-      t:SetColorTexture(1, 0.82, 0, 0.9)
-      f.pickEdges[i] = t
+  local box = f.pickInset
+  if not box then
+    box = CreateFrame("Frame", nil, f, BackdropTemplateMixin and "BackdropTemplate" or nil)
+    if box.SetBackdrop then
+      box:SetBackdrop({ bgFile = "Interface\\Tooltips\\UI-Tooltip-Background", edgeFile = "Interface\\Tooltips\\UI-Tooltip-Border",
+        tile = true, tileSize = 16, edgeSize = 12, insets = { left = 3, right = 3, top = 3, bottom = 3 } })
+      box:SetBackdropColor(0.03, 0.03, 0.03, 0.85)
+      box:SetBackdropBorderColor(0.6, 0.6, 0.6, 1)
     end
+    f.pickInset = box
   end
-  local x0, x1, th = MINI_PAD - 8, MINI_W - MINI_PAD + 8, 2
-  local function at(t, ax, ay, bx, by)
-    t:ClearAllPoints()
-    t:SetPoint("TOPLEFT", f, "TOPLEFT", ax, -ay)
-    t:SetPoint("BOTTOMRIGHT", f, "TOPLEFT", bx, -by)
-    t:Show()
-  end
-  at(f.pickFill, x0, y0, x1, y1)
-  at(f.pickEdges[1], x0, y0, x1, y0 + th)       -- top
-  at(f.pickEdges[2], x0, y1 - th, x1, y1)       -- bottom
-  at(f.pickEdges[3], x0, y0, x0 + th, y1)       -- left
-  at(f.pickEdges[4], x1 - th, y0, x1, y1)       -- right
+  box:ClearAllPoints()
+  box:SetPoint("TOPLEFT", f, "TOPLEFT", MINI_PAD - 4, -y0)
+  box:SetPoint("BOTTOMRIGHT", f, "TOPLEFT", MINI_W - MINI_PAD + 4, -y1)
+  box:SetFrameLevel(f:GetFrameLevel() + 1)
+  box:Show()
+end
+
+-- Above the inset panel: rows, buttons and the reagent picture of the opened recipe.
+local function raise(f, frame)
+  if frame then frame:SetFrameLevel(f:GetFrameLevel() + 3) end
 end
 
 -- Crafting profession: no route steps. A list of recipes that give skill now
@@ -2786,6 +2682,7 @@ function Mini:ShowChoice(f, key, rank, maxRank, y)
     local lines = b.allHave and {} or ns:StepBuyLines(b)
     if #b.items > #inputs then tinsert(lines, 1, "|cff9d9d9d" .. format(X.more, #b.items - #inputs) .. "|r") end
     y = self:PlaceFlow(f, inputs, out, y, lines)
+    f.flowBox:SetFrameLevel(f:GetFrameLevel() + 2)
 
     -- reagents the character is short of but can make: a row each
     for _, it in ipairs(b.makes) do
@@ -2796,19 +2693,18 @@ function Mini:ShowChoice(f, key, rank, maxRank, y)
         onClick = function()
           if mk.can > 0 then ns:CraftOrOpen(mk.key, mk.spell, mk.can) else ns:OpenRecipe(mk.key, mk.spell) end
         end })
+      raise(f, f.rows[f.nextRow])
     end
     if #b.makes > 0 then y = y + GAP_SECTION - 3 end
 
     if not e.known then
       -- where to get the recipe: a row per place, a click sets the pin or opens the zone on the map
       local places = ns:AdvicePlaces(e, X)
-      if #places == 0 then
-        f.note:SetText("|cffa03000" .. X.learn .. "|r")
-        y = place(f.note, f, y) + 2
-      end
+      if #places == 0 then places = { { text = "|cffff9d6b" .. X.learn .. "|r" } } end
       for k, pl in ipairs(places) do
         y = SetRow(f, 0, y, { icon = "Interface\\Icons\\INV_Misc_Map_01", hot = k == 1 and pl.go ~= nil, text = pl.text, right = pl.right,
           tipTitle = e.name, tip = pl.tip, onClick = pl.go })
+        raise(f, f.rows[f.nextRow])
       end
       y = y + GAP_SECTION - 3
       return
@@ -2836,6 +2732,7 @@ function Mini:ShowChoice(f, key, rank, maxRank, y)
     f.create:SetScript("OnClick", function() ns:Craft(key, e.spell, can) end)
     tipOn(f.create, e.name, X.createTip)
     f.create:Show()
+    raise(f, f.create); raise(f, f.cntMinus); raise(f, f.cntPlus)
     y = y + 22 + GAP_SECTION
   end
 
@@ -2855,21 +2752,23 @@ function Mini:ShowChoice(f, key, rank, maxRank, y)
           y = place(h, f, y) + 3
         end
         shown = shown + 1
-        local boxTop = y - 4
-        if isPick then y = y + 2 end
         local where = (not known) and ns:AdviceWhere(e) or ""
         local tip = (isPick and X.unpickTip or X.pickTip) .. (where ~= "" and ("\n" .. where) or "")
           .. (e.cost and ("\n" .. format(X.perCraft, W.Money(e.cost))) or "")
         y = SetRow(f, 0, y, { icon = e.icon or ns.Icon(nil), star = e.advice, hot = isPick,
-          text = ns:Hex(e.color) .. e.name .. "|r", right = ns:AdviceRight(e, X), tipTitle = e.name, tip = tip,
+          text = ns:Hex(e.color) .. e.name .. "|r", tipTitle = e.name, tip = tip,
+          -- an arrow at the right edge: down - can be opened, up - opened
+          right = ns:AdviceRight(e, X) .. " |TInterface\\Buttons\\Arrow-" .. (isPick and "Up" or "Down") .. "-Up:12:12:0:" .. (isPick and "2" or "-3") .. "|t",
           onClick = function()
             if isPick then ns:Pick(key, nil) return end
             ns:Pick(key, e.spell)
             if e.known then ns:OpenRecipe(key, e.spell) end
           end })
         if isPick then
+          local top = y - 4
+          y = y + 4
           detail()
-          pickBox(f, boxTop, y - 2)
+          pickBox(f, top, y - 2)
           y = y + 6
         end
       end
@@ -2893,18 +2792,6 @@ function Mini:CreateBtn(f, key, spell, count, y, tip)
   f.create:SetScript("OnClick", function() ns:Craft(key, spell, count) end)
   tipOn(f.create, ns.T("Создать"), tip)
   f.create:Show()
-end
-
--- Рамка «выучи рецепт»: заголовок с ценой, торговец или учитель (значок
--- рецепта или учителя, имя, зона) и «На карте» - метка и карта.
-function Mini:LearnBox(f, key, s, y)
-  local T = ns.T
-  local src = ns:RecipeSource(key, s)
-  local head = src.kind == "vendor" and T("Купи рецепт") or (src.kind == "trainer" and src.npc and T("Выучи рецепт у учителя"))
-    or ns:RecipeSourceHead(src)
-  local money = src.kind == "vendor" and (src.copper and W.Money(src.copper) or src.price) or nil
-  return self:NpcBox(f, head, src.npc, src.kind == "vendor" and src.item or nil,
-    src.extra, (src.kind == "vendor" and T("Ближайший торговец этим рецептом.") or T("Ближайший учитель.")), y, src.all, money)
 end
 
 -- Можно взять следующий ранг: у учителя, купить книгу, взять задание.

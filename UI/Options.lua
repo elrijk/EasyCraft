@@ -91,7 +91,7 @@ function ns:BuildSettings()
   sub:SetPoint("TOPLEFT", lang, "BOTTOMLEFT", 0, -6)
   sub:SetWidth(560)
   sub:SetJustifyH("LEFT")
-  sub:SetText(ns.T("Прокачка профессий WoW Forever: текущий шаг и цель, кнопки создания, учителя и рецепты, точки на карте."))
+  sub:SetText(ns.T("Прокачка профессий WoW Forever: совет, какой рецепт качать сейчас, реагенты под твой выбор, учителя и рецепты, зоны сбора на карте."))
 
   local open = ns.W.Button(body, ns.T("Открыть окно"), 200, 28)
   open:SetPoint("TOPLEFT", sub, "BOTTOMLEFT", 0, -14)

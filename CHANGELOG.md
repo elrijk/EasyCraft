@@ -14,6 +14,8 @@ The addon advises and you choose: no more route steps for crafting professions i
 - At the skill cap the addon shows what is profitable to craft for sale, and profitable recipes you do not have with where to get them.
 - Trainer window: the star marks recipes that give skill right now and the recipe you chose.
 - Item tooltips and the merchant button count what the chosen recipe needs.
+- Mini window: the opened recipe lies in a dark inset panel right under its row, and every row has an arrow that shows whether it is opened.
+- Lighter: the code and about 30 texts of the old route steps for crafting professions are removed. Gathering professions keep their steps.
 
 ## 1.2.3
 

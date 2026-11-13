@@ -1,16 +1,16 @@
 ## Interface: 16001
 ## Title: |cff33ff99Easy|rCraft
-## Notes: Profession leveling for WoW Forever, step by step: your current step and how many to craft, craft buttons, trainers and recipes, shopping with auction prices, gathering zones on the map. /ec
-## Notes-ruRU: Прокачка профессий WoW Forever по шагам: текущий шаг и сколько создать, кнопки создания, учителя и рецепты, покупки с ценами аукциона, зоны сбора на карте. /ec
-## Notes-deDE: Berufe leveln für WoW Forever, Schritt für Schritt: dein aktueller Schritt und wie viele herzustellen sind, Herstellknöpfe, Lehrer und Rezepte, Einkäufe mit Auktionspreisen, Sammelgebiete auf der Karte. /ec
-## Notes-frFR: Progression des métiers pour WoW Forever, étape par étape : ton étape actuelle et combien fabriquer, boutons de fabrication, maîtres et recettes, achats avec prix aux enchères, zones de récolte sur la carte. /ec
-## Notes-esES: Subida de profesiones para WoW Forever, paso a paso: tu paso actual y cuántos fabricar, botones de fabricar, instructores y recetas, compras con precios de subasta, zonas de recolección en el mapa. /ec
-## Notes-esMX: Subida de profesiones para WoW Forever, paso a paso: tu paso actual y cuántos fabricar, botones de fabricar, instructores y recetas, compras con precios de subasta, zonas de recolección en el mapa. /ec
-## Notes-itIT: Livellamento delle professioni per WoW Forever, passo dopo passo: il tuo passo attuale e quanti crearne, pulsanti per creare, istruttori e ricette, acquisti con prezzi d'asta, zone di raccolta sulla mappa. /ec
-## Notes-ptBR: Evolução de profissões para o WoW Forever, passo a passo: seu passo atual e quantos criar, botões de criar, instrutores e receitas, compras com preços de leilão, zonas de coleta no mapa. /ec
-## Notes-koKR: WoW Forever 전문기술 숙련을 단계별로: 현재 단계와 만들 개수, 제작 버튼, 상급자와 제조법, 경매장 가격이 있는 구매, 지도의 채집 지역. /ec
-## Notes-zhCN: WoW Forever 专业升级，一步一步：当前步骤和要做的数量、制作按钮、训练师和配方、带拍卖价格的采购、地图上的采集区域。/ec
-## Notes-zhTW: WoW Forever 專業升級，一步一步：目前步驟和要做的數量、製作按鈕、訓練師和配方、帶拍賣價格的採購、地圖上的採集區域。/ec
+## Notes: Profession leveling for WoW Forever: advises the recipe that gives skill now and is easiest to do, and you choose. Reagents, bank and auction house follow your choice; trainers and recipes, gathering zones on the map. /ec
+## Notes-ruRU: Прокачка профессий WoW Forever: советует рецепт, который сейчас даёт навык и который проще сделать, а ты выбираешь. Реагенты, банк и аукцион подстраиваются под выбор; учителя и рецепты, зоны сбора на карте. /ec
+## Notes-deDE: Berufe leveln für WoW Forever: empfiehlt das Rezept, das jetzt Fertigkeit gibt und am leichtesten geht, und du wählst. Reagenzien, Bank und Auktionshaus richten sich nach deiner Wahl; Lehrer und Rezepte, Sammelgebiete auf der Karte. /ec
+## Notes-frFR: Progression des métiers pour WoW Forever : conseille la recette qui donne de la compétence maintenant et qui est la plus facile à faire, et vous choisissez. Composants, banque et hôtel des ventes suivent votre choix ; maîtres et recettes, zones de récolte sur la carte. /ec
+## Notes-esES: Subida de profesiones para WoW Forever: aconseja la receta que da habilidad ahora y es más fácil de hacer, y tú eliges. Componentes, banco y subasta se ajustan a tu elección; instructores y recetas, zonas de recolección en el mapa. /ec
+## Notes-esMX: Subida de profesiones para WoW Forever: aconseja la receta que da habilidad ahora y es más fácil de hacer, y tú eliges. Componentes, banco y subasta se ajustan a tu elección; instructores y recetas, zonas de recolección en el mapa. /ec
+## Notes-itIT: Livellamento delle professioni per WoW Forever: consiglia la ricetta che dà abilità ora ed è più facile da fare, e tu scegli. Reagenti, banca e asta seguono la tua scelta; istruttori e ricette, zone di raccolta sulla mappa. /ec
+## Notes-ptBR: Evolução de profissões para o WoW Forever: aconselha a receita que dá perícia agora e é mais fácil de fazer, e você escolhe. Reagentes, banco e leilão seguem a sua escolha; instrutores e receitas, zonas de coleta no mapa. /ec
+## Notes-koKR: WoW Forever 전문기술 숙련: 지금 숙련도가 오르고 가장 쉽게 만들 수 있는 제조법을 추천하고, 선택은 당신이 합니다. 재료, 은행, 경매장이 선택에 맞춰집니다. 상급자와 제조법, 지도의 채집 지역. /ec
+## Notes-zhCN: WoW Forever 专业升级：推荐现在能提升技能且最容易做的配方，由你来选。材料、银行和拍卖行跟随你的选择；训练师和配方、地图上的采集区域。/ec
+## Notes-zhTW: WoW Forever 專業升級：推薦現在能提升技能且最容易做的配方，由你來選。材料、銀行和拍賣場跟隨你的選擇；訓練師和配方、地圖上的採集區域。/ec
 ## Author: DesignerGod
 ## Version: 1.3.0
 ## Category: Professions

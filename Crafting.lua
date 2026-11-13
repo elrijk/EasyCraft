@@ -680,88 +680,7 @@ function ns:RecipeCost(rc)
   return total
 end
 
--- Рецепт, который сейчас даст навык вернее, чем рецепт шага s, или на
--- который есть реагенты, когда на шаг их нет:
--- { id, name, icon, color, a = сколько можно сделать, n = сколько советуем,
---   instead = шаг сейчас не сделать, а этот можно, cost = цена штуки,
---   chance, cheaperBy, cheaperThan } или nil.
--- Цвета - из окна профессии; если его ещё не открывали на этом навыке -
--- по порогам маршрута для рецептов, которые уже были в окне (выучены).
--- Запас при закрытом окне считаем по сумкам: скан окна мог устареть.
 local D_BY_COLOR = { orange = 0, yellow = 1, green = 2, gray = 3 }
-function ns:BestRecipe(key, s, rank)
-  return (self:BestRecipes(key, s, rank, 1))[1]
-end
-
--- То же, но несколько вариантов по порядку (первый - лучший).
-function ns:BestRecipes(key, s, rank, limit)
-  local open = self:IsProfOpen(key)
-  local sc = self:FreshScan(key, rank)
-  local cands, cost, avail = {}, {}, {}
-  local stepD, stepA
-  local function add(r, rs)
-    tinsert(cands, r)
-    cost[r] = self:RecipeCost(rs)
-    if not open and rs then avail[r] = self:CanMake({ rc = rs }) or 0 else avail[r] = r.a or 0 end
-  end
-  local known = self:RecipeKnown(key, s.spell)
-  if sc then
-    stepD = s.spell and sc.colors[s.spell]
-    -- выучен после скана окна (у учителя): цвет по порогам маршрута
-    if stepD == nil and known and s.sk then stepD = D_BY_COLOR[self:RecipeColor(s, rank)] end
-    -- запас на рецепт шага: из полного списка (в sc.list только 40 рецептов)
-    stepA = sc.avail and s.spell and sc.avail[s.spell]
-    for _, r in ipairs(sc.list) do
-      if r.id == s.spell then
-        stepA = r.a or stepA
-      elseif r.id and r.d and r.d <= 1 then -- orange or yellow only: green is never an option
-        add(r, r.rc or (self:SpellStep(key, r.id) or {}).rc)
-      end
-    end
-  else
-    local learned = self.char.scan[key] and self.char.scan[key].colors
-    if not learned then return {} end -- окно профессии ещё не открывали: не с чем сравнивать
-    local col = s.sk and self:RecipeColor(s, rank)
-    stepD = col and D_BY_COLOR[col]
-    if known == false then stepD = nil end
-    local seen, p = {}, self.Profs[key]
-    for _, rs in ipairs(p.steps) do
-      local sp = rs.spell
-      if rs.k == "craft" and sp and sp ~= s.spell and rs.sk and rs.rc and learned[sp] and not seen[sp] then
-        seen[sp] = true
-        local d = D_BY_COLOR[self:RecipeColor(rs, rank)]
-        if d and d <= 1 then
-          add({ id = sp, n = self:StepName(rs), i = self:StepIcon(rs, p), d = d }, rs.rc)
-        end
-      end
-    end
-  end
-  if not open and s.rc then stepA = self:CanMake(s) end
-  -- Сначала то, что можно сделать прямо сейчас, затем по цвету, затем
-  -- что дешевле (рецепты без цены - после), затем по запасу.
-  table.sort(cands, function(x, y)
-    local xa, ya = avail[x] > 0, avail[y] > 0
-    if xa ~= ya then return xa end
-    if x.d ~= y.d then return x.d < y.d end
-    local xc, yc = cost[x], cost[y]
-    if xc and yc and xc ~= yc then return xc < yc end
-    if (xc ~= nil) ~= (yc ~= nil) then return xc ~= nil end
-    if avail[x] ~= avail[y] then return avail[x] > avail[y] end
-    return (x.n or "") < (y.n or "")
-  end)
-  local stuck = stepA == 0 -- на шаг сейчас нет реагентов (nil - не знаем)
-  local list = {}
-  for i, r in ipairs(cands) do
-    local a = avail[r]
-    -- every orange or yellow recipe is an option: the player chooses
-    tinsert(list, i)
-    if #list >= (limit or 1) then break end
-  end
-  local out = {}
-  for _, bi in ipairs(list) do tinsert(out, self:RecipeOffer(key, s, rank, cands, bi, avail, cost, stepD, known, stuck)) end
-  return out
-end
-
 -- Recipes the character has not learned yet that would give skill right now
 -- (orange or yellow at this skill) and can already be learned, each with
 -- where to get it. Two sources: the recipes of the route, and the rest of
@@ -861,56 +780,6 @@ function ns:LearnableRecipes(key, s, rank, limit)
     return (x.s.spell or 0) < (y.s.spell or 0)
   end)
   for i = #out, (limit or 3) + 1, -1 do out[i] = nil end
-  return out
-end
-
--- The same as ready rows for the page and the mini window, and the heading.
--- On the right: how many crafts the reagents in the bags are enough for, or
--- how many of the reagents are there. A click sets the map pin on the nearest
--- trainer or vendor; a recipe from a quest or a drop has nobody to go to, so
--- the click opens it instead.
-function ns:LearnRows(key, s, rank, limit)
-  local T, rows = ns.T, {}
-  local why, hint, enough, part = T("Ещё не выучен, а навык сейчас даст."), T("Щелчок поставит метку и откроет карту."), T("хватит на %d"), T("реагенты: %d из %d")
-  for k, e in ipairs(self:LearnableRecipes(key, s, rank, limit)) do
-    local src, rs = e.src, e.s
-    local npc, vendor, spell = src.npc, src.kind == "vendor", rs.spell
-    local name = rs.name or self:StepName(rs)
-    local where = npc and (self:NpcName(npc) .. ", " .. self:NpcZone(npc)) or (src.info and T(src.info)) or ""
-    local price = vendor and (src.copper and self.W.Money(src.copper) or src.price) or nil
-    if price and where ~= "" then where = where .. ", " .. price end
-    if npc and src.extra then where = where .. ", " .. src.extra end
-    local right = (e.a > 0 and format(enough, e.a)) or (e.got > 0 and format(part, e.got, e.total)) or nil
-    rows[k] = { icon = rs.tex or self:StepIcon(rs, self.Profs[key]), name = name, text = self:Hex(e.color) .. name .. "|r", where = where,
-      right = right, why = why, hint = npc and hint or nil,
-      onClick = function()
-        if npc then ns:Waypoint(npc, true)
-        elseif src.areas and src.areas[1] then ns.Content:ShowOnMap(src.areas[1])
-        else ns:OpenRecipe(key, spell) end
-      end }
-  end
-  return rows, T("Можно выучить")
-end
-
--- Описание одного варианта для BestRecipes.
-function ns:RecipeOffer(key, s, rank, cands, bi, avail, cost, stepD, known, stuck)
-  local best = cands[bi]
-  local a = avail[best]
-  local left = self:RemainingCrafts(s, rank)
-  local out = { id = best.id, name = best.n, icon = best.i, color = COLOR_BY_D[best.d], a = a, cost = cost[best],
-    sameColor = stepD ~= nil and best.d == stepD, worse = stepD ~= nil and best.d > stepD, better = stepD ~= nil and best.d < stepD,
-    unknownStep = known == false,
-    instead = (stuck or known == false) and a > 0,
-    -- сколько делать: не больше, чем осталось до конца шага
-    n = left > 0 and min(a, left) or a }
-  -- Шанс навыка: если рецепт есть в маршруте, у нас есть его пороги цветов.
-  local rs = self:SpellStep(key, best.id)
-  if rs then out.chance = self:ChanceText(rs, rank, out.color) end
-  -- Почему этот, а не соседний того же цвета: он дешевле.
-  local nx = cands[bi + 1]
-  if nx and nx.d == best.d and (avail[nx] > 0) == (a > 0) and out.cost and cost[nx] and cost[nx] > out.cost then
-    out.cheaperBy, out.cheaperThan = cost[nx] - out.cost, nx.n
-  end
   return out
 end
 
@@ -1512,24 +1381,6 @@ local function AhPanel()
   return ahPanel
 end
 
--- Что купить на аукционе для текущих шагов: { {key, s, pos, b}, ... }.
-function ns:AuctionNeeds()
-  local out, pool = {}, {}
-  for _, key in ipairs(self:LearnedList()) do
-    local rank, maxRank = self:GetSkill(key)
-    local i, s = self:CurrentStep(key, rank, maxRank)
-    -- a crafting profession buys for its chosen recipe (ns:PickPlans), not for a route step
-    if s and s.k == "craft" and (s.rc or s.m) and not self:IsCraftProf(key) then
-      local left = self:RemainingCrafts(s, rank)
-      if left > 0 then
-        local b = self:StepBuy(s, left, pool)
-        if #b.auction > 0 then tinsert(out, { key = key, s = s, i = i, b = b }) end
-      end
-    end
-  end
-  return out
-end
-
 function ns:UpdateAuctionPanel()
   local win = AuctionWindow()
   if not win then
@@ -1575,19 +1426,8 @@ function ns:UpdateAuctionPanel()
     y, n = self:ChoiceRows(f, key, y + (chosen + choices > 0 and 4 or 0), again)
     choices = choices + n
   end
-  -- 1. Текущие шаги: по профессиям
-  local list = self:AuctionNeeds()
-  for k, e in ipairs(list) do
-    local p = self.Profs[e.key]
-    local noRecipe = self:RecipeKnown(e.key, e.s.spell) == false
-    if k > 1 then y = y + 4 end
-    y = f:Head(self:N(p) .. ": " .. self:StepName(e.s) .. (noRecipe and ("  |cffa03000" .. T("(сначала рецепт)") .. "|r") or ""), y)
-    for _, it in ipairs(e.b.items) do
-      if it.buy > 0 and not it.vendor then row(it.id, it.buy, it.cost) end
-    end
-  end
-  -- 2. На текущие шаги всё есть - что купить дальше, до учителя
-  if #list == 0 then
+  -- 1. Professions that still follow a route (gathering): what to buy on the way to the trainer
+  do
     local rest = {}
     for id, a in pairs(self:AllNeeds()) do
       local other = false -- needed by a profession that still follows a route (gathering)
