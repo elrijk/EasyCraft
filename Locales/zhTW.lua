@@ -886,10 +886,10 @@ ns.LOCALES.zhTW = function() return {
   ["What to level on"] = "現在練什麼",
   ["Choose what to craft"] = "選擇要製作的配方",
   ["Make: %s"] = "製作：%s",
-  ["Crafts: %d"] = "製作次數：%d",
   ["Click to choose this recipe: its reagents show here, at the bank and at the auction house."] = "點擊選擇此配方：它的材料會顯示在這裡、銀行和拍賣場。",
   ["Click to clear the choice."] = "點擊取消選擇。",
   ["You are short of this reagent, but you can make it. Click to make as many as the reagents allow."] = "你缺少這種材料，但你會製作它。點擊依現有材料盡量製作。",
-  ["This many until the recipe turns green. The buttons change the number."] = "配方變綠之前需要這麼多次。按鈕可以調整數量。",
-  ["Makes as many as chosen (and as the reagents allow)."] = "依所選數量製作（以材料夠用為限）。",
+  ["Create %d of %d"] = "製作 %d / %d",
+  ["How many crafts to plan: reagents at the bank and the auction house are counted for this many. It starts at the number until the recipe turns green. Shift: by 5."] = "計劃製作的次數：銀行和拍賣場的材料依這個數量計算。初始為配方變綠之前的次數。按住 Shift：每次 5。",
+  ["Makes as many as planned and as the reagents allow. Greyed out: no reagents yet."] = "依計劃數量製作，以材料夠用為限。灰色：還沒有材料。",
 } end

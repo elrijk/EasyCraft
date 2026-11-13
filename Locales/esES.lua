@@ -882,10 +882,10 @@ ns.LOCALES.esES = function() return {
   ["What to level on"] = "Con qué subir",
   ["Choose what to craft"] = "Elige qué fabricar",
   ["Make: %s"] = "Fabricar: %s",
-  ["Crafts: %d"] = "Fabricaciones: %d",
   ["Click to choose this recipe: its reagents show here, at the bank and at the auction house."] = "Clic para elegir esta receta: sus componentes se muestran aquí, en el banco y en la subasta.",
   ["Click to clear the choice."] = "Clic para quitar la elección.",
   ["You are short of this reagent, but you can make it. Click to make as many as the reagents allow."] = "Te falta este componente, pero sabes fabricarlo. Clic para fabricar tantos como alcancen los componentes.",
-  ["This many until the recipe turns green. The buttons change the number."] = "Tantas hasta que la receta se ponga verde. Los botones cambian el número.",
-  ["Makes as many as chosen (and as the reagents allow)."] = "Fabrica tantos como hayas elegido (y como alcancen los componentes).",
+  ["Create %d of %d"] = "Fabricar %d de %d",
+  ["How many crafts to plan: reagents at the bank and the auction house are counted for this many. It starts at the number until the recipe turns green. Shift: by 5."] = "Cuántas fabricaciones planear: los componentes en el banco y en la subasta se cuentan para ese número. Empieza en el número hasta que la receta se ponga verde. Con Mayús: de 5 en 5.",
+  ["Makes as many as planned and as the reagents allow. Greyed out: no reagents yet."] = "Fabrica tantos como hayas planeado y como alcancen los componentes. En gris: aún no hay componentes.",
 } end

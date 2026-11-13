@@ -5,7 +5,7 @@
 The addon advises and you choose: no more route steps for crafting professions in the mini window, at the bank and at the auction house.
 
 - Mini window: a list of recipes that give skill right now, learned ones first and recipes to learn below. The advice has a star: the recipe that is easiest to do (reagents on hand, cheaper to top up, a recipe that is easy to get).
-- Click a recipe to choose it. The chosen recipe opens at the top: its reagents for the number of crafts until it turns green, minus and plus buttons to change the number (Shift: by 5), and "Create".
+- Click a recipe to choose it. The chosen recipe opens right under its row: its reagents for the number of crafts until it turns green, and one line with minus, "Create" and plus. The number is how many crafts are planned: it sets how much to take and to buy and how many the button makes (Shift: by 5). A recipe that is not learned shows the places to get it instead: a click sets the map pin or opens the zone on the map.
 - A reagent you are short of but can make yourself gets its own row: "Make: Fire Oil" with how many you can make now. A click makes them.
 - Bank and auction house work from the chosen recipe: what to take and what to buy, including the reagents of a reagent you make yourself. Nothing chosen: "Choose what to craft" with the list right there.
 - The choice is kept per character and profession and is cleared when the recipe stops giving skill.

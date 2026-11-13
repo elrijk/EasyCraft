@@ -885,10 +885,10 @@ ns.LOCALES.koKR = function() return {
   ["What to level on"] = "지금 올릴 제조법",
   ["Choose what to craft"] = "만들 것을 선택하세요",
   ["Make: %s"] = "제작: %s",
-  ["Crafts: %d"] = "제작 횟수: %d",
   ["Click to choose this recipe: its reagents show here, at the bank and at the auction house."] = "클릭하면 이 제조법을 선택합니다: 재료가 여기, 은행, 경매장에 표시됩니다.",
   ["Click to clear the choice."] = "클릭하면 선택을 해제합니다.",
   ["You are short of this reagent, but you can make it. Click to make as many as the reagents allow."] = "이 재료가 부족하지만 직접 만들 수 있습니다. 클릭하면 재료가 되는 만큼 만듭니다.",
-  ["This many until the recipe turns green. The buttons change the number."] = "제조법이 초록색이 될 때까지 필요한 횟수입니다. 버튼으로 숫자를 바꿉니다.",
-  ["Makes as many as chosen (and as the reagents allow)."] = "선택한 만큼 (재료가 되는 만큼) 만듭니다.",
+  ["Create %d of %d"] = "%d개 제작 (전체 %d개)",
+  ["How many crafts to plan: reagents at the bank and the auction house are counted for this many. It starts at the number until the recipe turns green. Shift: by 5."] = "계획할 제작 횟수: 은행과 경매장의 재료가 이 횟수만큼 계산됩니다. 처음에는 제조법이 초록색이 될 때까지의 횟수입니다. Shift: 5씩.",
+  ["Makes as many as planned and as the reagents allow. Greyed out: no reagents yet."] = "계획한 만큼, 재료가 되는 만큼 만듭니다. 회색: 아직 재료가 없습니다.",
 } end

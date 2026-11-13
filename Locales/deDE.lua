@@ -881,10 +881,10 @@ ns.LOCALES.deDE = function() return {
   ["What to level on"] = "Worauf leveln",
   ["Choose what to craft"] = "Wähle, was du herstellst",
   ["Make: %s"] = "Herstellen: %s",
-  ["Crafts: %d"] = "Herstellungen: %d",
   ["Click to choose this recipe: its reagents show here, at the bank and at the auction house."] = "Klick wählt dieses Rezept: seine Reagenzien erscheinen hier, bei der Bank und im Auktionshaus.",
   ["Click to clear the choice."] = "Klick hebt die Auswahl auf.",
   ["You are short of this reagent, but you can make it. Click to make as many as the reagents allow."] = "Dieses Reagenz fehlt dir, aber du kannst es herstellen. Klick stellt so viele her, wie die Reagenzien reichen.",
-  ["This many until the recipe turns green. The buttons change the number."] = "So viele, bis das Rezept grün wird. Die Knöpfe ändern die Zahl.",
-  ["Makes as many as chosen (and as the reagents allow)."] = "Stellt so viele her wie gewählt (und wie die Reagenzien reichen).",
+  ["Create %d of %d"] = "%d von %d herstellen",
+  ["How many crafts to plan: reagents at the bank and the auction house are counted for this many. It starts at the number until the recipe turns green. Shift: by 5."] = "Wie viele Herstellungen geplant werden: für so viele werden die Reagenzien bei der Bank und im Auktionshaus gezählt. Zuerst steht hier die Zahl, bis das Rezept grün wird. Mit Shift: je 5.",
+  ["Makes as many as planned and as the reagents allow. Greyed out: no reagents yet."] = "Stellt so viele her wie geplant und wie die Reagenzien reichen. Grau: noch keine Reagenzien.",
 } end

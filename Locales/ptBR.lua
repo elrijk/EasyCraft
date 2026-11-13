@@ -876,10 +876,10 @@ ns.LOCALES.ptBR = function() return {
   ["What to level on"] = "Com o que evoluir",
   ["Choose what to craft"] = "Escolha o que criar",
   ["Make: %s"] = "Criar: %s",
-  ["Crafts: %d"] = "Criações: %d",
   ["Click to choose this recipe: its reagents show here, at the bank and at the auction house."] = "Clique para escolher esta receita: os reagentes dela aparecem aqui, no banco e no leilão.",
   ["Click to clear the choice."] = "Clique para desfazer a escolha.",
   ["You are short of this reagent, but you can make it. Click to make as many as the reagents allow."] = "Falta este reagente, mas você sabe criá-lo. Clique para criar quantos os reagentes permitirem.",
-  ["This many until the recipe turns green. The buttons change the number."] = "Tantas até a receita ficar verde. Os botões mudam o número.",
-  ["Makes as many as chosen (and as the reagents allow)."] = "Cria quantos foram escolhidos (e quantos os reagentes permitirem).",
+  ["Create %d of %d"] = "Criar %d de %d",
+  ["How many crafts to plan: reagents at the bank and the auction house are counted for this many. It starts at the number until the recipe turns green. Shift: by 5."] = "Quantas criações planejar: os reagentes no banco e no leilão são contados para esse número. Começa no número até a receita ficar verde. Com Shift: de 5 em 5.",
+  ["Makes as many as planned and as the reagents allow. Greyed out: no reagents yet."] = "Cria quantos foram planejados e quantos os reagentes permitirem. Cinza: ainda sem reagentes.",
 } end

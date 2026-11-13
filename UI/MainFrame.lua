@@ -2344,7 +2344,7 @@ function Mini:Reset(f)
   f.nextRow = 0
   if f.queueHead then f.queueHead:Hide() end
   if f.learnHead then f.learnHead:Hide() end
-  for _, k in ipairs({ "cntMinus", "cntPlus", "cntText" }) do if f[k] then f[k]:Hide() end end
+  for _, k in ipairs({ "cntMinus", "cntPlus" }) do if f[k] then f[k]:Hide() end end
   if f.queueBtn then f.queueBtn:Hide() end
   for _, fl in pairs(f.flows) do fl:Hide() end
   for _, fl in pairs(f.flow2s or {}) do fl:Hide() end
@@ -2702,10 +2702,12 @@ end
 
 -- Кнопка «Создать N» на всю ширину.
 -- Crafting profession: no route steps. A list of recipes that give skill now
--- (the advice has the star), the player picks one, and the picked recipe is
--- opened at the top: its reagents for the planned number of crafts, the
--- minus and plus buttons, "Create", and a row for every reagent the
--- character is short of but can make.
+-- (the advice has the star) and the player picks one. The picked recipe opens
+-- right under its own row: its reagents for the planned number of crafts, a
+-- row for every reagent the character is short of but can make, and one line
+-- with minus, "Create" and plus (the number is how many crafts are planned:
+-- it sets how much to buy and how many the button makes). A recipe that is
+-- not learned has the places to get it instead of that line.
 function Mini:ShowChoice(f, key, rank, maxRank, y)
   local X = ns:ChoiceText()
   local ra = ns:RankAction(key)
@@ -2713,14 +2715,14 @@ function Mini:ShowChoice(f, key, rank, maxRank, y)
   local list = ns:Advice(key, rank)
   local plan = ns:PickPlan(key, rank, maxRank, nil, list)
   local picked = plan and plan.e.spell
+  if not plan then
+    f.note:SetText(X.choose)
+    y = place(f.note, f, y) + GAP_SECTION - 4
+  end
 
-  if plan then
+  local function detail()
     local e, b = plan.e, plan.b
-    y = placeName(f, ns:Hex(e.color) .. e.name .. "|r", MINI_W, y, 0, y)
-    f.nameBtn:SetAllPoints(f.name)
-    f.nameBtn:SetScript("OnClick", function() ns:OpenRecipe(key, e.spell) end)
-    tipOn(f.nameBtn, e.name, X.openTip)
-    f.nameBtn:Show()
+    y = y + 2
     -- reagents for all the planned crafts: green enough for all, yellow for one craft, red for none
     local inputs = {}
     for _, it in ipairs(b.items) do
@@ -2740,30 +2742,6 @@ function Mini:ShowChoice(f, key, rank, maxRank, y)
     if #b.items > #inputs then tinsert(lines, 1, "|cff9d9d9d" .. format(X.more, #b.items - #inputs) .. "|r") end
     y = self:PlaceFlow(f, inputs, out, y, lines)
 
-    -- how many crafts to plan: minus, the number, plus
-    if not f.cntMinus then
-      f.cntMinus, f.cntPlus = W.Button(f, "-", 28, 22), W.Button(f, "+", 28, 22)
-      f.cntText = W.Text(f, "body", false)
-    end
-    f.cntMinus:ClearAllPoints()
-    f.cntMinus:SetPoint("TOPLEFT", f, "TOPLEFT", MINI_PAD, -y)
-    f.cntPlus:ClearAllPoints()
-    f.cntPlus:SetPoint("TOPRIGHT", f, "TOPRIGHT", -MINI_PAD, -y)
-    f.cntText:ClearAllPoints()
-    f.cntText:SetPoint("LEFT", f.cntMinus, "RIGHT", 6, 0)
-    f.cntText:SetPoint("RIGHT", f.cntPlus, "LEFT", -6, 0)
-    f.cntText:SetJustifyH("CENTER")
-    local ink = f.inkHead or W.INK_T
-    f.cntText:SetTextColor(ink[1], ink[2], ink[3])
-    f.cntText:SetText(format(X.crafts, plan.n))
-    local step = function(d) return function() ns:PickAdd(key, (IsShiftKeyDown and IsShiftKeyDown()) and d * 5 or d) end end
-    f.cntMinus:SetScript("OnClick", step(-1))
-    f.cntPlus:SetScript("OnClick", step(1))
-    tipOn(f.cntMinus, format(X.crafts, plan.n), X.countTip)
-    tipOn(f.cntPlus, format(X.crafts, plan.n), X.countTip)
-    f.cntMinus:Show(); f.cntPlus:Show(); f.cntText:Show()
-    y = y + 22 + GAP_SECTION
-
     -- reagents the character is short of but can make: a row each
     for _, it in ipairs(b.makes) do
       local mk = it.make
@@ -2776,31 +2754,52 @@ function Mini:ShowChoice(f, key, rank, maxRank, y)
     end
     if #b.makes > 0 then y = y + GAP_SECTION - 3 end
 
-    -- the main action
-    local st = ns:RecipeState(key, e.spell)
     if not e.known then
       -- where to get the recipe: a row per place, a click sets the pin or opens the zone on the map
-      f.note:SetText("|cffa03000" .. X.learn .. "|r")
-      y = place(f.note, f, y) + 2
-      for k, pl in ipairs(ns:AdvicePlaces(e, X)) do
+      local places = ns:AdvicePlaces(e, X)
+      if #places == 0 then
+        f.note:SetText("|cffa03000" .. X.learn .. "|r")
+        y = place(f.note, f, y) + 2
+      end
+      for k, pl in ipairs(places) do
         y = SetRow(f, 0, y, { icon = "Interface\\Icons\\INV_Misc_Map_01", hot = k == 1 and pl.go ~= nil, text = pl.text, right = pl.right,
           tipTitle = e.name, tip = pl.tip, onClick = pl.go })
       end
       y = y + GAP_SECTION - 3
-    elseif st and not st.unknown and st.known and not st.enchant and (st.count or 0) > 0 then
-      self:CreateBtn(f, key, e.spell, min(st.count, plan.n), y, X.createTip)
-      y = y + 22 + GAP_SECTION
+      return
     end
-  else
-    f.note:SetText(X.choose)
-    y = place(f.note, f, y) + GAP_SECTION - 4
+
+    -- minus, "Create", plus: the number is how many crafts are planned
+    local st = ns:RecipeState(key, e.spell)
+    local can = (st and not st.unknown and st.known and not st.enchant) and min(st.count or 0, plan.n) or 0
+    if not f.cntMinus then f.cntMinus, f.cntPlus = W.Button(f, "-", 28, 22), W.Button(f, "+", 28, 22) end
+    f.cntMinus:ClearAllPoints()
+    f.cntMinus:SetPoint("TOPLEFT", f, "TOPLEFT", MINI_PAD, -y)
+    f.cntPlus:ClearAllPoints()
+    f.cntPlus:SetPoint("TOPRIGHT", f, "TOPRIGHT", -MINI_PAD, -y)
+    local step = function(d) return function() ns:PickAdd(key, (IsShiftKeyDown and IsShiftKeyDown()) and d * 5 or d) end end
+    f.cntMinus:SetScript("OnClick", step(-1))
+    f.cntPlus:SetScript("OnClick", step(1))
+    tipOn(f.cntMinus, e.name, X.countTip)
+    tipOn(f.cntPlus, e.name, X.countTip)
+    f.cntMinus:Show(); f.cntPlus:Show()
+    f.create:ClearAllPoints()
+    f.create:SetPoint("TOPLEFT", f, "TOPLEFT", MINI_PAD + 28 + 4, -y)
+    f.create:SetWidth(MINI_W - MINI_PAD * 2 - 2 * (28 + 4))
+    f.create:SetText((can >= plan.n or can == 0) and format(X.create, plan.n) or format(X.createOf, can, plan.n))
+    f.create:SetEnabled(can > 0)
+    f.create:SetScript("OnClick", function() ns:Craft(key, e.spell, can) end)
+    tipOn(f.create, e.name, X.createTip)
+    f.create:Show()
+    y = y + 22 + GAP_SECTION
   end
 
   -- the list: learned recipes, then recipes to learn; the advice has the star, the pick has the gold frame
   local function rows(known, headText, headKey, sepIdx, limit)
     local shown = 0
     for _, e in ipairs(list) do
-      if e.known == known and shown < limit then
+      local isPick = e.spell == picked
+      if e.known == known and (shown < limit or isPick) then
         if shown == 0 then
           y = sep(f, sepIdx, y - GAP_SECTION / 2)
           local h = f[headKey]
@@ -2811,7 +2810,6 @@ function Mini:ShowChoice(f, key, rank, maxRank, y)
           y = place(h, f, y) + 3
         end
         shown = shown + 1
-        local isPick = e.spell == picked
         local where = (not known) and ns:AdviceWhere(e) or ""
         local tip = (isPick and X.unpickTip or X.pickTip) .. (where ~= "" and ("\n" .. where) or "")
           .. (e.cost and ("\n" .. format(X.perCraft, W.Money(e.cost))) or "")
@@ -2822,6 +2820,7 @@ function Mini:ShowChoice(f, key, rank, maxRank, y)
             ns:Pick(key, e.spell)
             if e.known then ns:OpenRecipe(key, e.spell) end
           end })
+        if isPick then detail() end
       end
     end
     if shown > 0 then y = y + GAP_SECTION - 3 end
