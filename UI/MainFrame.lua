@@ -2664,6 +2664,18 @@ function Mini:ShowChoice(f, key, rank, maxRank, y)
   local function detail()
     local e, b = plan.e, plan.b
     y = y + 2
+    -- inner edges of the inset panel: its border is at MINI_PAD - 4, the content keeps 8 from it
+    local inX, inW = MINI_PAD + 4, MINI_W - MINI_PAD * 2 - 8
+    -- a row inside the panel: narrower than a row of the list, and above the panel
+    local function inRow(d)
+      local y0 = y
+      y = SetRow(f, 0, y, d)
+      local r = f.rows[f.nextRow]
+      r:ClearAllPoints()
+      r:SetPoint("TOPLEFT", f, "TOPLEFT", inX, -y0)
+      r:SetWidth(inW)
+      raise(f, r)
+    end
     -- reagents for all the planned crafts: green enough for all, yellow for one craft, red for none
     local inputs = {}
     for _, it in ipairs(b.items) do
@@ -2682,18 +2694,17 @@ function Mini:ShowChoice(f, key, rank, maxRank, y)
     local lines = b.allHave and {} or ns:StepBuyLines(b)
     if #b.items > #inputs then tinsert(lines, 1, "|cff9d9d9d" .. format(X.more, #b.items - #inputs) .. "|r") end
     y = self:PlaceFlow(f, inputs, out, y, lines)
-    f.flowBox:SetFrameLevel(f:GetFrameLevel() + 2)
+    f.flowBox:Hide() -- the inset panel is the backing here: no second dark box inside it
 
     -- reagents the character is short of but can make: a row each
     for _, it in ipairs(b.makes) do
       local mk = it.make
       local right = (mk.can > 0 and "|cff33dd33" or "|cffff5555") .. mk.can .. "/" .. mk.crafts .. "|r"
-      y = SetRow(f, 0, y, { icon = ns:ItemIcon(it.id), hot = mk.can > 0, text = format(X.make, mk.name), right = right,
+      inRow({ icon = ns:ItemIcon(it.id), hot = mk.can > 0, text = format(X.make, mk.name), right = right,
         tipTitle = mk.name, tip = X.makeTip,
         onClick = function()
           if mk.can > 0 then ns:CraftOrOpen(mk.key, mk.spell, mk.can) else ns:OpenRecipe(mk.key, mk.spell) end
         end })
-      raise(f, f.rows[f.nextRow])
     end
     if #b.makes > 0 then y = y + GAP_SECTION - 3 end
 
@@ -2702,10 +2713,9 @@ function Mini:ShowChoice(f, key, rank, maxRank, y)
       local places = ns:AdvicePlaces(e, X)
       if #places == 0 then places = { { text = "|cffff9d6b" .. X.learn .. "|r" } } end
       for k, pl in ipairs(places) do
-        y = SetRow(f, 0, y, { icon = "Interface\\Icons\\INV_Misc_Map_01", hot = k == 1 and pl.go ~= nil, text = pl.text, right = pl.right,
+        inRow({ icon = "Interface\\Icons\\INV_Misc_Map_01", hot = k == 1 and pl.go ~= nil, text = pl.text, right = pl.right,
           tipTitle = e.name, tip = pl.tip, onClick = pl.go })
-        raise(f, f.rows[f.nextRow])
-      end
+        end
       y = y + GAP_SECTION - 3
       return
     end
@@ -2715,9 +2725,9 @@ function Mini:ShowChoice(f, key, rank, maxRank, y)
     local can = (st and not st.unknown and st.known and not st.enchant) and min(st.count or 0, plan.n) or 0
     if not f.cntMinus then f.cntMinus, f.cntPlus = W.Button(f, "-", 28, 22), W.Button(f, "+", 28, 22) end
     f.cntMinus:ClearAllPoints()
-    f.cntMinus:SetPoint("TOPLEFT", f, "TOPLEFT", MINI_PAD, -y)
+    f.cntMinus:SetPoint("TOPLEFT", f, "TOPLEFT", inX, -y)
     f.cntPlus:ClearAllPoints()
-    f.cntPlus:SetPoint("TOPRIGHT", f, "TOPRIGHT", -MINI_PAD, -y)
+    f.cntPlus:SetPoint("TOPLEFT", f, "TOPLEFT", inX + inW - 28, -y)
     local step = function(d) return function() ns:PickAdd(key, (IsShiftKeyDown and IsShiftKeyDown()) and d * 5 or d) end end
     f.cntMinus:SetScript("OnClick", step(-1))
     f.cntPlus:SetScript("OnClick", step(1))
@@ -2725,8 +2735,8 @@ function Mini:ShowChoice(f, key, rank, maxRank, y)
     tipOn(f.cntPlus, e.name, X.countTip)
     f.cntMinus:Show(); f.cntPlus:Show()
     f.create:ClearAllPoints()
-    f.create:SetPoint("TOPLEFT", f, "TOPLEFT", MINI_PAD + 28 + 4, -y)
-    f.create:SetWidth(MINI_W - MINI_PAD * 2 - 2 * (28 + 4))
+    f.create:SetPoint("TOPLEFT", f, "TOPLEFT", inX + 28 + 4, -y)
+    f.create:SetWidth(inW - 2 * (28 + 4))
     f.create:SetText((can >= plan.n or can == 0) and format(X.create, plan.n) or format(X.createOf, can, plan.n))
     f.create:SetEnabled(can > 0)
     f.create:SetScript("OnClick", function() ns:Craft(key, e.spell, can) end)
@@ -2766,10 +2776,10 @@ function Mini:ShowChoice(f, key, rank, maxRank, y)
           end })
         if isPick then
           local top = y - 4
-          y = y + 4
-          detail()
-          pickBox(f, top, y - 2)
           y = y + 6
+          detail()
+          pickBox(f, top, y + 2)
+          y = y + 10
         end
       end
     end
