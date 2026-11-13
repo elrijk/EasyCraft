@@ -879,4 +879,13 @@ ns.LOCALES.esES = function() return {
   ["Auction house: remind in chat on login when prices are old"] = "Casa de subastas: recordar en el chat al entrar si los precios son viejos",
   ["Quest reward"] = "Recompensa de misión",
   ["Drops from creatures of level %d-%d."] = "Cae de criaturas de nivel %d-%d.",
+  ["What to level on"] = "Con qué subir",
+  ["Choose what to craft"] = "Elige qué fabricar",
+  ["Make: %s"] = "Fabricar: %s",
+  ["Crafts: %d"] = "Fabricaciones: %d",
+  ["Click to choose this recipe: its reagents show here, at the bank and at the auction house."] = "Clic para elegir esta receta: sus componentes se muestran aquí, en el banco y en la subasta.",
+  ["Click to clear the choice."] = "Clic para quitar la elección.",
+  ["You are short of this reagent, but you can make it. Click to make as many as the reagents allow."] = "Te falta este componente, pero sabes fabricarlo. Clic para fabricar tantos como alcancen los componentes.",
+  ["This many until the recipe turns green. The buttons change the number."] = "Tantas hasta que la receta se ponga verde. Los botones cambian el número.",
+  ["Makes as many as chosen (and as the reagents allow)."] = "Fabrica tantos como hayas elegido (y como alcancen los componentes).",
 } end

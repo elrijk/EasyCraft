@@ -882,4 +882,13 @@ ns.LOCALES.koKR = function() return {
   ["Auction house: remind in chat on login when prices are old"] = "경매장: 접속 시 가격이 오래되면 대화창에 알림",
   ["Quest reward"] = "퀘스트 보상",
   ["Drops from creatures of level %d-%d."] = "%d-%d 레벨 몬스터에게서 나옵니다.",
+  ["What to level on"] = "지금 올릴 제조법",
+  ["Choose what to craft"] = "만들 것을 선택하세요",
+  ["Make: %s"] = "제작: %s",
+  ["Crafts: %d"] = "제작 횟수: %d",
+  ["Click to choose this recipe: its reagents show here, at the bank and at the auction house."] = "클릭하면 이 제조법을 선택합니다: 재료가 여기, 은행, 경매장에 표시됩니다.",
+  ["Click to clear the choice."] = "클릭하면 선택을 해제합니다.",
+  ["You are short of this reagent, but you can make it. Click to make as many as the reagents allow."] = "이 재료가 부족하지만 직접 만들 수 있습니다. 클릭하면 재료가 되는 만큼 만듭니다.",
+  ["This many until the recipe turns green. The buttons change the number."] = "제조법이 초록색이 될 때까지 필요한 횟수입니다. 버튼으로 숫자를 바꿉니다.",
+  ["Makes as many as chosen (and as the reagents allow)."] = "선택한 만큼 (재료가 되는 만큼) 만듭니다.",
 } end

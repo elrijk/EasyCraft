@@ -873,4 +873,13 @@ ns.LOCALES.ptBR = function() return {
   ["Auction house: remind in chat on login when prices are old"] = "Casa de leilões: lembrar no chat ao entrar se os preços estiverem antigos",
   ["Quest reward"] = "Recompensa de missão",
   ["Drops from creatures of level %d-%d."] = "Cai de criaturas de nível %d-%d.",
+  ["What to level on"] = "Com o que evoluir",
+  ["Choose what to craft"] = "Escolha o que criar",
+  ["Make: %s"] = "Criar: %s",
+  ["Crafts: %d"] = "Criações: %d",
+  ["Click to choose this recipe: its reagents show here, at the bank and at the auction house."] = "Clique para escolher esta receita: os reagentes dela aparecem aqui, no banco e no leilão.",
+  ["Click to clear the choice."] = "Clique para desfazer a escolha.",
+  ["You are short of this reagent, but you can make it. Click to make as many as the reagents allow."] = "Falta este reagente, mas você sabe criá-lo. Clique para criar quantos os reagentes permitirem.",
+  ["This many until the recipe turns green. The buttons change the number."] = "Tantas até a receita ficar verde. Os botões mudam o número.",
+  ["Makes as many as chosen (and as the reagents allow)."] = "Cria quantos foram escolhidos (e quantos os reagentes permitirem).",
 } end

@@ -1231,10 +1231,17 @@ function ns:BankLacks()
       local covered = math.min(pr.need, bags)
       bags = bags - covered
       local n = pr.need - covered
-      if n > 0 then
+      -- a crafting profession is counted below, from its chosen recipe
+      if n > 0 and not self:IsCraftProf(pr.key) then
         lack[pr.key] = lack[pr.key] or {}
         lack[pr.key][id] = (lack[pr.key][id] or 0) + n
       end
+    end
+  end
+  for _, pp in ipairs((self:PickPlans())) do
+    for id, n in pairs(pp.plan.b.lack) do
+      lack[pp.key] = lack[pp.key] or {}
+      lack[pp.key][id] = n
     end
   end
   return lack
@@ -1376,14 +1383,20 @@ function ns:UpdateBankButton()
     end
   end
   local inBags = #BagReagents()
-  if #profs == 0 and inBags == 0 then
+  local plans, empty = self:PickPlans()
+  local planOf = {}
+  for _, pp in ipairs(plans) do planOf[pp.key] = pp.plan end
+  if #profs == 0 and inBags == 0 and #empty == 0 then
     if bankPanel then bankPanel:Hide() end
     return
   end
   local f = BankPanel()
   f:Reset()
   local y = f.top
-  if #profs == 0 then y = f:Note(T("Из банка для шагов брать нечего."), y) end
+  local function again() ns:UpdateBankButton() end
+  -- crafting professions with nothing chosen: choose right here
+  for _, key in ipairs(empty) do y = self:ChoiceRows(f, key, y, again) + 4 end
+  if #profs == 0 and #empty == 0 then y = f:Note(T("Из банка для шагов брать нечего."), y) end
   for k, pr in ipairs(profs) do
     local p = self.Profs[pr.key]
     local key = pr.key
@@ -1396,6 +1409,8 @@ function ns:UpdateBankButton()
       off.prof[key] = (not v) or nil
       ns:UpdateBankButton()
     end, y)
+    -- what it is for: the chosen recipe (a click clears the choice)
+    if planOf[key] then y = self:PickedRow(f, key, planOf[key], y, again) end
     -- каждый предмет - своя строка: справа сколько и знак «беру / не беру»
     for _, it in ipairs(pr.items) do
       local id = it.id
@@ -1491,7 +1506,8 @@ function ns:AuctionNeeds()
   for _, key in ipairs(self:LearnedList()) do
     local rank, maxRank = self:GetSkill(key)
     local i, s = self:CurrentStep(key, rank, maxRank)
-    if s and s.k == "craft" and (s.rc or s.m) then
+    -- a crafting profession buys for its chosen recipe (ns:PickPlans), not for a route step
+    if s and s.k == "craft" and (s.rc or s.m) and not self:IsCraftProf(key) then
       local left = self:RemainingCrafts(s, rank)
       if left > 0 then
         local b = self:StepBuy(s, left, pool)
@@ -1527,6 +1543,26 @@ function ns:UpdateAuctionPanel()
       tip = format(T("Купить %d"), buy) .. (cost and (": " .. W.Money(cost)) or "") .. "\n" .. T("Щелчок - найти на аукционе."),
       onClick = function() ns:SearchAuction(id, buy) end }, y)
   end
+  -- 0. Crafting professions: what the chosen recipe is short of (the reagents
+  -- of a reagent the character makes are in the list too); nothing chosen -
+  -- the list to choose from
+  local function again() ns:UpdateAuctionPanel() end
+  local plans, empty = self:PickPlans()
+  local chosen = 0
+  for _, pp in ipairs(plans) do
+    if #pp.plan.b.shop > 0 then
+      y = f:Head(self:N(self.Profs[pp.key]), y + (chosen > 0 and 4 or 0))
+      y = self:PickedRow(f, pp.key, pp.plan, y, again)
+      for _, it in ipairs(pp.plan.b.shop) do row(it.id, it.buy, it.cost) end
+      chosen = chosen + 1
+    end
+  end
+  local choices = 0
+  for _, key in ipairs(empty) do
+    local n
+    y, n = self:ChoiceRows(f, key, y + (chosen + choices > 0 and 4 or 0), again)
+    choices = choices + n
+  end
   -- 1. Текущие шаги: по профессиям
   local list = self:AuctionNeeds()
   for k, e in ipairs(list) do
@@ -1542,7 +1578,9 @@ function ns:UpdateAuctionPanel()
   if #list == 0 then
     local rest = {}
     for id, a in pairs(self:AllNeeds()) do
-      if a.buy > 0 and not self:IsVendorItem(id) then tinsert(rest, { id = id, buy = a.buy }) end
+      local other = false -- needed by a profession that still follows a route (gathering)
+      for _, pr in ipairs(a.profs) do if not self:IsCraftProf(pr.key) then other = true end end
+      if other and a.buy > 0 and not self:IsVendorItem(id) then tinsert(rest, { id = id, buy = a.buy }) end
     end
     if #rest > 0 then
       table.sort(rest, function(x, z) return x.buy > z.buy end)
@@ -1554,7 +1592,7 @@ function ns:UpdateAuctionPanel()
       end
     end
   end
-  if shown == 0 then f:Hide(); return end -- покупать нечего
+  if shown == 0 and choices == 0 then f:Hide(); return end -- nothing to buy and nothing to choose
   if hidden > 0 then y = f:Head(format(T("и ещё %d"), hidden), y) end
   y = f:EndList(y)
   -- 3. Итог и «Найти всё»

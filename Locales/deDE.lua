@@ -878,4 +878,13 @@ ns.LOCALES.deDE = function() return {
   ["Auction house: remind in chat on login when prices are old"] = "Auktionshaus: beim Einloggen im Chat an alte Preise erinnern",
   ["Quest reward"] = "Questbelohnung",
   ["Drops from creatures of level %d-%d."] = "Droppt von Kreaturen der Stufe %d-%d.",
+  ["What to level on"] = "Worauf leveln",
+  ["Choose what to craft"] = "Wähle, was du herstellst",
+  ["Make: %s"] = "Herstellen: %s",
+  ["Crafts: %d"] = "Herstellungen: %d",
+  ["Click to choose this recipe: its reagents show here, at the bank and at the auction house."] = "Klick wählt dieses Rezept: seine Reagenzien erscheinen hier, bei der Bank und im Auktionshaus.",
+  ["Click to clear the choice."] = "Klick hebt die Auswahl auf.",
+  ["You are short of this reagent, but you can make it. Click to make as many as the reagents allow."] = "Dieses Reagenz fehlt dir, aber du kannst es herstellen. Klick stellt so viele her, wie die Reagenzien reichen.",
+  ["This many until the recipe turns green. The buttons change the number."] = "So viele, bis das Rezept grün wird. Die Knöpfe ändern die Zahl.",
+  ["Makes as many as chosen (and as the reagents allow)."] = "Stellt so viele her wie gewählt (und wie die Reagenzien reichen).",
 } end

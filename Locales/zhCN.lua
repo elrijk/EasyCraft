@@ -883,4 +883,13 @@ ns.LOCALES.zhCN = function() return {
   ["Auction house: remind in chat on login when prices are old"] = "拍卖行：登录时在聊天中提醒价格已过期",
   ["Quest reward"] = "任务奖励",
   ["Drops from creatures of level %d-%d."] = "由 %d-%d 级的怪物掉落。",
+  ["What to level on"] = "现在练什么",
+  ["Choose what to craft"] = "选择要制作的配方",
+  ["Make: %s"] = "制作：%s",
+  ["Crafts: %d"] = "制作次数：%d",
+  ["Click to choose this recipe: its reagents show here, at the bank and at the auction house."] = "点击选择此配方：它的材料会显示在这里、银行和拍卖行。",
+  ["Click to clear the choice."] = "点击取消选择。",
+  ["You are short of this reagent, but you can make it. Click to make as many as the reagents allow."] = "你缺少这种材料，但你会制作它。点击按现有材料尽量制作。",
+  ["This many until the recipe turns green. The buttons change the number."] = "配方变绿之前需要这么多次。按钮可以调整数量。",
+  ["Makes as many as chosen (and as the reagents allow)."] = "按所选数量制作（以材料够用为限）。",
 } end
