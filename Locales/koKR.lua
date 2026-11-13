@@ -889,4 +889,6 @@ ns.LOCALES.koKR = function() return {
   ["Tooltips: auction price of the item"] = "툴팁: 아이템의 경매장 가격",
   ["Recipes to learn"] = "배울 제조법",
   ["Not learned yet, and it would give skill now."] = "아직 배우지 않았고, 지금 숙련도가 오릅니다.",
+  ["reagents: %d of %d"] = "재료: %d/%d",
+  ["Auction house: remind in chat on login when prices are old"] = "경매장: 접속 시 가격이 오래되면 대화창에 알림",
 } end

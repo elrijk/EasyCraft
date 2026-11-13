@@ -880,4 +880,6 @@ ns.LOCALES.ptBR = function() return {
   ["Tooltips: auction price of the item"] = "Dicas: preço de leilão do item",
   ["Recipes to learn"] = "Receitas para aprender",
   ["Not learned yet, and it would give skill now."] = "Ainda não aprendida, e daria perícia agora.",
+  ["reagents: %d of %d"] = "reagentes: %d de %d",
+  ["Auction house: remind in chat on login when prices are old"] = "Casa de leilões: lembrar no chat ao entrar se os preços estiverem antigos",
 } end

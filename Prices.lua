@@ -219,6 +219,7 @@ remind:SetScript("OnEvent", function(self)
   self:UnregisterAllEvents()
   C_Timer.After(12, function()
     if not (ns.db and ns.char and ns.LearnedList) then return end
+    if not (ns.settings and ns.settings.ahRemind) then return end -- off by default: the window says the same
     if #ns:LearnedList() == 0 then return end
     local st = ns:PricesStale()
     if st == "none" then

@@ -225,7 +225,7 @@ end
 ---------------------------------------------------------------------------
 local DEFAULTS = {
   hideDone = false, mapShow = true, mapAreaAlpha = 0.5, minimap = true, miniGuide = true, itemTips = true, trainerStars = true,
-  minimapAngle = 205, scale = 1, ahScan = true, ahTip = true, askShare = true, useAlts = true,
+  minimapAngle = 205, scale = 1, ahScan = true, ahTip = true, ahRemind = false, askShare = false, useAlts = true,
 }
 
 function ns:InitDB()
@@ -233,6 +233,11 @@ function ns:InitDB()
   local db = EasyCraftDB
   db.settings = db.settings or {}
   for k, v in pairs(DEFAULTS) do if db.settings[k] == nil then db.settings[k] = v end end
+  -- 1.2.3: reminders are off unless the player turns them on; the old default (on) is unticked once
+  if not db.quietReminders then
+    db.quietReminders = true
+    db.settings.askShare = false
+  end
   db.nodes = db.nodes or {}
   db.vprice = db.vprice or {} -- цена у торговца за штуку (id -> медь), запоминаем у торговцев
   self.db, self.settings = db, db.settings

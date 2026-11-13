@@ -764,26 +764,54 @@ end
 
 -- Recipes the character has not learned yet that would give skill right now
 -- (orange or yellow at this skill) and can already be learned, each with
--- where to get it. The first one is the recommendation: orange before
--- yellow, a trainer before a vendor before anything else, then the cheaper
--- craft. The recipe of step s is left out: the step shows it itself.
+-- where to get it. Two sources: the recipes of the route, and the rest of
+-- the game's own recipe list (read when the profession window opens) with
+-- the thresholds from Data\Skills.lua.
+-- The first one is the recommendation. Order: what a trainer or a vendor
+-- gives before quests and drops; then what the reagents in the bags are
+-- already enough for; then the larger share of reagents on hand; orange
+-- before yellow; a trainer before a vendor; the cheaper craft.
+-- The recipe of step s is left out: the step shows it itself.
+local SRC_BY_KIND = { t = "trainer" }
 function ns:LearnableRecipes(key, s, rank, limit)
   local p = self.Profs[key]
   local out, seen = {}, {}
   if not p then return out end
   local ORDER = { trainer = 0, vendor = 1, other = 2 }
-  for _, rs in ipairs(p.steps) do
+  local function consider(rs)
     local sp = rs.spell
-    if rs.k == "craft" and sp and rs.sk and not seen[sp] and not (s and s.spell == sp) then
-      seen[sp] = true
-      local col = self:RecipeColor(rs, rank)
-      if rank >= (rs.sk[1] or 0) and (col == "orange" or col == "yellow") and self:RecipeKnown(key, sp) == false then
-        local src = self:RecipeSource(key, rs)
-        tinsert(out, { s = rs, color = col, src = src, d = D_BY_COLOR[col], o = ORDER[src.kind] or 2, cost = self:RecipeCost(rs.rc) })
-      end
+    if seen[sp] or (s and s.spell == sp) then return end
+    seen[sp] = true
+    local col = self:RecipeColor(rs, rank)
+    if rank < (rs.sk[1] or 0) or not (col == "orange" or col == "yellow") or self:RecipeKnown(key, sp) ~= false then return end
+    local src = self:RecipeSource(key, rs)
+    -- reagents in the bags: for how many crafts, and how many of the reagents are there at all
+    local rc, got, total = rs.rc, 0, 0
+    for i = 1, rc and #rc - 1 or 0, 2 do
+      total = total + 1
+      if self:BagCount(rc[i]) >= math.max(1, rc[i + 1] or 1) then got = got + 1 end
+    end
+    tinsert(out, { s = rs, color = col, src = src, d = D_BY_COLOR[col], o = ORDER[src.kind] or 2, cost = self:RecipeCost(rc),
+      easy = (src.kind == "trainer" or src.kind == "vendor") and 0 or 1,
+      a = rc and self:CanMake({ rc = rc }) or 0, got = got, total = total })
+  end
+  for _, rs in ipairs(p.steps) do
+    if rs.k == "craft" and rs.spell and rs.sk then consider(rs) end
+  end
+  local skill = self.RecipeSkill and self.RecipeSkill[key]
+  local base = self.db and self.db.recipes and self.db.recipes[key]
+  for sp, r in pairs(skill and base or {}) do
+    local t = skill[sp]
+    -- a recipe with no known source and no source text from the game cannot be recommended
+    if t and (t[5] ~= "o" or r.src) then
+      consider({ k = "craft", spell = sp, sk = t, rc = r.rc, src = SRC_BY_KIND[t[5]] or "other", info = r.src, name = r.n, tex = r.i })
     end
   end
   table.sort(out, function(x, y)
+    if x.easy ~= y.easy then return x.easy < y.easy end
+    if (x.a > 0) ~= (y.a > 0) then return x.a > 0 end
+    local xs, ys = x.total > 0 and x.got / x.total or 0, y.total > 0 and y.got / y.total or 0
+    if xs ~= ys then return xs > ys end
     if x.d ~= y.d then return x.d < y.d end
     if x.o ~= y.o then return x.o < y.o end
     if x.cost and y.cost and x.cost ~= y.cost then return x.cost < y.cost end
@@ -795,19 +823,24 @@ function ns:LearnableRecipes(key, s, rank, limit)
 end
 
 -- The same as ready rows for the page and the mini window, and the heading.
--- A click sets the map pin on the nearest trainer or vendor; a recipe from a
--- quest or a drop has nobody to go to, so the click opens it instead.
+-- On the right: how many crafts the reagents in the bags are enough for, or
+-- how many of the reagents are there. A click sets the map pin on the nearest
+-- trainer or vendor; a recipe from a quest or a drop has nobody to go to, so
+-- the click opens it instead.
 function ns:LearnRows(key, s, rank, limit)
   local T, rows = ns.T, {}
-  local why, hint = T("Ещё не выучен, а навык сейчас даст."), T("Щелчок поставит метку и откроет карту.")
+  local why, hint, enough, part = T("Ещё не выучен, а навык сейчас даст."), T("Щелчок поставит метку и откроет карту."), T("хватит на %d"), T("реагенты: %d из %d")
   for k, e in ipairs(self:LearnableRecipes(key, s, rank, limit)) do
     local src, rs = e.src, e.s
     local npc, vendor, spell = src.npc, src.kind == "vendor", rs.spell
-    local name = self:StepName(rs)
+    local name = rs.name or self:StepName(rs)
     local where = npc and (self:NpcName(npc) .. ", " .. self:NpcZone(npc)) or (src.info and T(src.info)) or ""
+    local price = vendor and (src.copper and self.W.Money(src.copper) or src.price) or nil
+    if npc and price then where = where .. ", " .. price end
     if npc and src.extra then where = where .. ", " .. src.extra end
-    rows[k] = { icon = self:StepIcon(rs, self.Profs[key]), name = name, text = self:Hex(e.color) .. name .. "|r", where = where,
-      right = vendor and (src.copper and self.W.Money(src.copper) or src.price) or nil, why = why, hint = npc and hint or nil,
+    local right = (e.a > 0 and format(enough, e.a)) or (e.got > 0 and format(part, e.got, e.total)) or nil
+    rows[k] = { icon = rs.tex or self:StepIcon(rs, self.Profs[key]), name = name, text = self:Hex(e.color) .. name .. "|r", where = where,
+      right = right, why = why, hint = npc and hint or nil,
       onClick = function() if npc then ns:Waypoint(npc, true) else ns:OpenRecipe(key, spell) end end }
   end
   return rows, T("Можно выучить")

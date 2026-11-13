@@ -890,4 +890,6 @@ ns.LOCALES.zhCN = function() return {
   ["Tooltips: auction price of the item"] = "提示：物品的拍卖价格",
   ["Recipes to learn"] = "可学的配方",
   ["Not learned yet, and it would give skill now."] = "尚未学会，现在能提升技能。",
+  ["reagents: %d of %d"] = "材料：%d/%d",
+  ["Auction house: remind in chat on login when prices are old"] = "拍卖行：登录时在聊天中提醒价格已过期",
 } end

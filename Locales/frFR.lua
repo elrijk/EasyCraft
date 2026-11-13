@@ -877,4 +877,6 @@ ns.LOCALES.frFR = function() return {
   ["Tooltips: auction price of the item"] = "Infobulles : prix aux enchères de l'objet",
   ["Recipes to learn"] = "Recettes à apprendre",
   ["Not learned yet, and it would give skill now."] = "Pas encore apprise, et elle donnerait de la compétence maintenant.",
+  ["reagents: %d of %d"] = "composants : %d sur %d",
+  ["Auction house: remind in chat on login when prices are old"] = "Hôtel des ventes : rappeler dans le chat à la connexion si les prix sont anciens",
 } end

@@ -885,4 +885,6 @@ ns.LOCALES.deDE = function() return {
   ["Tooltips: auction price of the item"] = "Tooltips: Auktionspreis des Gegenstands",
   ["Recipes to learn"] = "Rezepte zum Lernen",
   ["Not learned yet, and it would give skill now."] = "Noch nicht gelernt, würde jetzt aber Fertigkeit geben.",
+  ["reagents: %d of %d"] = "Reagenzien: %d von %d",
+  ["Auction house: remind in chat on login when prices are old"] = "Auktionshaus: beim Einloggen im Chat an alte Preise erinnern",
 } end

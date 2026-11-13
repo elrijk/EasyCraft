@@ -884,4 +884,6 @@ ns.LOCALES.itIT = function() return {
   ["Tooltips: auction price of the item"] = "Suggerimenti: prezzo d'asta dell'oggetto",
   ["Recipes to learn"] = "Ricette da imparare",
   ["Not learned yet, and it would give skill now."] = "Non ancora imparata, e ora darebbe abilità.",
+  ["reagents: %d of %d"] = "reagenti: %d su %d",
+  ["Auction house: remind in chat on login when prices are old"] = "Casa d'aste: ricorda in chat all'accesso se i prezzi sono vecchi",
 } end

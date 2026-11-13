@@ -35,6 +35,12 @@ thresholds, vendors and prices from the WoW Forever profession tables on
 timesaver.gg; the skill a recipe item asks for from the WoW Forever recipe
 lists on warcraft.wiki.gg (November 2026). None of it was measured in the game.
 
+`Data/Skills.lua` lists, for every recipe, the skill it is learned at, the skill
+where it turns yellow, green and grey, and the kind of its source (trainer,
+vendor, drop, quest). The numbers were read from the "All recipes" lists of the
+WoW Forever profession tables on timesaver.gg (November 2026) with
+`tools/fetch-recipe-skills.js`. None of it was measured in the game.
+
 No code or data was taken from other profession addons. Recipe lists, reagents
 and recipe colours come from the game client at run time.
 

@@ -8,6 +8,8 @@
 - Minimap: hovering an ore vein or a herb shows the skill it needs in brackets, in the colour it has for your skill.
 - Clicking a recipe under "Options to choose from" selects it in the profession window also when the window is already open on another recipe.
 - Reagent counts on a step are for all the crafts left. A count is now yellow when you have enough for at least one craft but not for all of them; red only when there is not enough even for one.
+- Recipes to learn now cover every recipe of the profession, not only the ones of the route: the skill a recipe is learned at and its colours are built in for alchemy, blacksmithing, cooking, enchanting (partly), engineering, first aid, leatherworking and tailoring. Recipes from a trainer or a vendor come before quests and drops, and a recipe you already have the reagents for comes first; the row says how many crafts the reagents are enough for, or how many of the reagents you have.
+- Reminders are off by default: the "share recipe data" reminder and the chat line on login about old auction prices. Both are settings now.
 
 ## 1.2.2
 
