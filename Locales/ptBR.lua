@@ -878,4 +878,6 @@ ns.LOCALES.ptBR = function() return {
   ["price: 4g, Timbermaw Hold reputation needed"] = "preço: 4o, requer reputação com o Domínio Presamatos",
   ["Options to choose from"] = "Opções à escolha",
   ["Tooltips: auction price of the item"] = "Dicas: preço de leilão do item",
+  ["Recipes to learn"] = "Receitas para aprender",
+  ["Not learned yet, and it would give skill now."] = "Ainda não aprendida, e daria perícia agora.",
 } end

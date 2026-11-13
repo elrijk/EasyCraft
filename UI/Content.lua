@@ -1373,6 +1373,7 @@ function C:CurrentActions(UI, c, key, i, s, st, train, rank, maxRank, left)
   if s.k == "craft" then
     local offers = ns:BestRecipes(key, s, rank, 3)
     if #offers > 0 then self:BestBlock(UI, c, key, offers) end
+    self:LearnBlock(UI, c, key, s, rank)
     local rs = s.spell and ns:RecipeState(key, s.spell)
     if rs and rs.enchant then c:Text(T("Чары накладываются из окна профессии: выбери там вещь."), "small", { gap = 6 }) end
   end
@@ -1446,6 +1447,22 @@ function C:TrainerBlock(UI, c, key, s)
       onClick = function() ns:Waypoint(npc, true) end })
   end
   c:Items(items, #items > 1 and 2 or 1, 26)
+end
+
+-- Recipes worth learning now: not learned yet, orange or yellow at this
+-- skill. A row per recipe with who teaches or sells it and where; the
+-- recommended one has the star and the gold frame. A click sets the map pin.
+function C:LearnBlock(UI, c, key, s, rank)
+  local list, head = ns:LearnRows(key, s, rank, 3)
+  if #list == 0 then return end
+  c:Space(2)
+  c:Text(head, "head", { gap = 6 })
+  local rows = {}
+  for k, r in ipairs(list) do
+    tinsert(rows, { tex = r.icon or ns.Icon(nil), text = r.text, sub = r.where, right = r.right, star = k == 1, hot = k == 1,
+      tip = { title = r.name, lines = { r.why }, hint = r.hint }, onClick = r.onClick })
+  end
+  c:Items(rows, 1, 28)
 end
 
 -- Другие рецепты, как в подсказке у окна профессии: «Можно качать и на

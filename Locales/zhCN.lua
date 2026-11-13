@@ -888,4 +888,6 @@ ns.LOCALES.zhCN = function() return {
   ["price: 4g, Timbermaw Hold reputation needed"] = "价格：4金，需要木喉要塞声望",
   ["Options to choose from"] = "可选配方",
   ["Tooltips: auction price of the item"] = "提示：物品的拍卖价格",
+  ["Recipes to learn"] = "可学的配方",
+  ["Not learned yet, and it would give skill now."] = "尚未学会，现在能提升技能。",
 } end

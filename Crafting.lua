@@ -738,6 +738,57 @@ function ns:BestRecipes(key, s, rank, limit)
   return out
 end
 
+-- Recipes the character has not learned yet that would give skill right now
+-- (orange or yellow at this skill) and can already be learned, each with
+-- where to get it. The first one is the recommendation: orange before
+-- yellow, a trainer before a vendor before anything else, then the cheaper
+-- craft. The recipe of step s is left out: the step shows it itself.
+function ns:LearnableRecipes(key, s, rank, limit)
+  local p = self.Profs[key]
+  local out, seen = {}, {}
+  if not p then return out end
+  local ORDER = { trainer = 0, vendor = 1, other = 2 }
+  for _, rs in ipairs(p.steps) do
+    local sp = rs.spell
+    if rs.k == "craft" and sp and rs.sk and not seen[sp] and not (s and s.spell == sp) then
+      seen[sp] = true
+      local col = self:RecipeColor(rs, rank)
+      if rank >= (rs.sk[1] or 0) and (col == "orange" or col == "yellow") and self:RecipeKnown(key, sp) == false then
+        local src = self:RecipeSource(key, rs)
+        tinsert(out, { s = rs, color = col, src = src, d = D_BY_COLOR[col], o = ORDER[src.kind] or 2, cost = self:RecipeCost(rs.rc) })
+      end
+    end
+  end
+  table.sort(out, function(x, y)
+    if x.d ~= y.d then return x.d < y.d end
+    if x.o ~= y.o then return x.o < y.o end
+    if x.cost and y.cost and x.cost ~= y.cost then return x.cost < y.cost end
+    if (x.cost ~= nil) ~= (y.cost ~= nil) then return x.cost ~= nil end
+    return (x.s.spell or 0) < (y.s.spell or 0)
+  end)
+  for i = #out, (limit or 3) + 1, -1 do out[i] = nil end
+  return out
+end
+
+-- The same as ready rows for the page and the mini window, and the heading.
+-- A click sets the map pin on the nearest trainer or vendor; a recipe from a
+-- quest or a drop has nobody to go to, so the click opens it instead.
+function ns:LearnRows(key, s, rank, limit)
+  local T, rows = ns.T, {}
+  local why, hint = T("Ещё не выучен, а навык сейчас даст."), T("Щелчок поставит метку и откроет карту.")
+  for k, e in ipairs(self:LearnableRecipes(key, s, rank, limit)) do
+    local src, rs = e.src, e.s
+    local npc, vendor, spell = src.npc, src.kind == "vendor", rs.spell
+    local name = self:StepName(rs)
+    local where = npc and (self:NpcName(npc) .. ", " .. self:NpcZone(npc)) or (src.info and T(src.info)) or ""
+    if npc and src.extra then where = where .. ", " .. src.extra end
+    rows[k] = { icon = self:StepIcon(rs, self.Profs[key]), name = name, text = self:Hex(e.color) .. name .. "|r", where = where,
+      right = vendor and (src.copper and self.W.Money(src.copper) or src.price) or nil, why = why, hint = npc and hint or nil,
+      onClick = function() if npc then ns:Waypoint(npc, true) else ns:OpenRecipe(key, spell) end end }
+  end
+  return rows, T("Можно выучить")
+end
+
 -- Описание одного варианта для BestRecipes.
 function ns:RecipeOffer(key, s, rank, cands, bi, avail, cost, stepD, known, stuck)
   local best = cands[bi]
@@ -1695,6 +1746,46 @@ function ns:NodeLine(name)
     .. self:Hex(nx[1]) .. (ns.ColorName[nx[1]] or "") .. "|r" .. format(ns.T(" с навыка %d"), n.req + nx[2])
 end
 
+-- Minimap: the game lists the nodes under the cursor by name. Every ore or
+-- herb gets the skill it needs in brackets, in the colour it has for the
+-- player's skill (red: cannot gather yet; no such profession: plain grey).
+-- A name that already has its brackets is not a node name any more, so a
+-- text that went through here once comes back unchanged (nil).
+function ns:MinimapNodeText(text)
+  if secret(text) or type(text) ~= "string" or text == "" then return nil end
+  local out, changed = {}, false
+  for line in (text .. "\n"):gmatch("(.-)\n") do
+    local plain = line:gsub("|T.-|t", ""):gsub("|A.-|a", ""):gsub("|c%x%x%x%x%x%x%x%x", ""):gsub("|r", ""):gsub("^%s+", ""):gsub("%s+$", "")
+    local key = plain ~= "" and NodeByName(plain)
+    local n = key and self.Nodes[key]
+    if n and n.req then
+      local rank, _, has = self:GetSkill(n.prof)
+      local col = has and self:Hex(self:GatherColor(rank, n.req)) or "|cffb0b0b0"
+      line = line .. " " .. col .. "(" .. n.req .. ")|r"
+      changed = true
+    end
+    out[#out + 1] = line
+  end
+  return changed and table.concat(out, "\n") or nil
+end
+
+-- The minimap keeps one tooltip open and only swaps its text while the
+-- cursor moves over the dots, so the text is checked on every frame the
+-- tooltip is shown; a text seen already costs one comparison.
+local function MinimapTip(tooltip)
+  if not (ns.settings and ns.settings.itemTips ~= false) then return end
+  if not (Minimap and tooltip.GetOwner and tooltip:GetOwner() == Minimap) then return end
+  local fs = _G.GameTooltipTextLeft1
+  local text = fs and fs:GetText()
+  if not text or secret(text) or text == tooltip.ecMapText then return end
+  local new = ns:MinimapNodeText(text)
+  tooltip.ecMapText = new or text
+  if new then
+    fs:SetText(new)
+    tooltip:Show() -- fit the tooltip to the longer lines
+  end
+end
+
 function ns:HookNodeTooltips()
   if self.nodeTipHooked then return end
   self.nodeTipHooked = true
@@ -1728,6 +1819,8 @@ function ns:HookNodeTooltips()
     end)
     GameTooltip:HookScript("OnTooltipCleared", function(tooltip) tooltip.godNode = nil end)
     GameTooltip:HookScript("OnHide", function(tooltip) tooltip.godNode = nil end)
+    GameTooltip:HookScript("OnShow", function(tooltip) pcall(MinimapTip, tooltip) end)
+    GameTooltip:HookScript("OnUpdate", function(tooltip) pcall(MinimapTip, tooltip) end)
   end
 end
 

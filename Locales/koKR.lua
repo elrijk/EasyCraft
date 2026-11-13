@@ -887,4 +887,6 @@ ns.LOCALES.koKR = function() return {
   ["price: 4g, Timbermaw Hold reputation needed"] = "가격: 4골, 나무구렁 요새 평판 필요",
   ["Options to choose from"] = "선택할 수 있는 제조법",
   ["Tooltips: auction price of the item"] = "툴팁: 아이템의 경매장 가격",
+  ["Recipes to learn"] = "배울 제조법",
+  ["Not learned yet, and it would give skill now."] = "아직 배우지 않았고, 지금 숙련도가 오릅니다.",
 } end

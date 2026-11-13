@@ -875,4 +875,6 @@ ns.LOCALES.frFR = function() return {
   ["price: 4g, Timbermaw Hold reputation needed"] = "prix : 4po, réputation auprès des Grumegueules requise",
   ["Options to choose from"] = "Options au choix",
   ["Tooltips: auction price of the item"] = "Infobulles : prix aux enchères de l'objet",
+  ["Recipes to learn"] = "Recettes à apprendre",
+  ["Not learned yet, and it would give skill now."] = "Pas encore apprise, et elle donnerait de la compétence maintenant.",
 } end

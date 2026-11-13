@@ -884,4 +884,6 @@ ns.LOCALES.esES = function() return {
   ["price: 4g, Timbermaw Hold reputation needed"] = "precio: 4o, hace falta reputación con el Bastión Fauces de Madera",
   ["Options to choose from"] = "Opciones para elegir",
   ["Tooltips: auction price of the item"] = "Descripciones: precio de subasta del objeto",
+  ["Recipes to learn"] = "Recetas por aprender",
+  ["Not learned yet, and it would give skill now."] = "Aún no aprendida, y ahora daría habilidad.",
 } end

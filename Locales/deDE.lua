@@ -883,4 +883,6 @@ ns.LOCALES.deDE = function() return {
   ["price: 4g, Timbermaw Hold reputation needed"] = "Preis: 4g, Ruf bei der Holzschlundfeste nötig",
   ["Options to choose from"] = "Zur Auswahl",
   ["Tooltips: auction price of the item"] = "Tooltips: Auktionspreis des Gegenstands",
+  ["Recipes to learn"] = "Rezepte zum Lernen",
+  ["Not learned yet, and it would give skill now."] = "Noch nicht gelernt, würde jetzt aber Fertigkeit geben.",
 } end

@@ -882,4 +882,6 @@ ns.LOCALES.itIT = function() return {
   ["price: 4g, Timbermaw Hold reputation needed"] = "prezzo: 4o, serve reputazione con la Rocca dei Mordilegno",
   ["Options to choose from"] = "Opzioni a scelta",
   ["Tooltips: auction price of the item"] = "Suggerimenti: prezzo d'asta dell'oggetto",
+  ["Recipes to learn"] = "Ricette da imparare",
+  ["Not learned yet, and it would give skill now."] = "Non ancora imparata, e ora darebbe abilità.",
 } end

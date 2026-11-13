@@ -952,6 +952,8 @@ for k, v in pairs({
   ["Цены из %s. Открой аукцион, чтобы обновить: без цены %d, старше %d дн. - %d."] = "Prices from %s. Open the auction house to refresh: no price %d, older than %d days - %d.",
   ["Аукцион: читать цены самому при открытии"] = "Auction house: read prices on opening",
   ["Подсказки: цена предмета на аукционе"] = "Tooltips: auction price of the item",
+  ["Можно выучить"] = "Recipes to learn",
+  ["Ещё не выучен, а навык сейчас даст."] = "Not learned yet, and it would give skill now.",
   ["цены аукциона прочитаны, предметов: %d."] = "auction prices read, items: %d.",
   ["открой аукцион: цены читаются там."] = "open the auction house: prices are read there.",
   ["читаю цены аукциона..."] = "reading auction prices...",

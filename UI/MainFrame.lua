@@ -2343,6 +2343,7 @@ function Mini:Reset(f)
   for _, r in ipairs(f.rows) do r:Hide() end
   f.nextRow = 0
   if f.queueHead then f.queueHead:Hide() end
+  if f.learnHead then f.learnHead:Hide() end
   if f.queueBtn then f.queueBtn:Hide() end
   for _, fl in pairs(f.flows) do fl:Hide() end
   for _, fl in pairs(f.flow2s or {}) do fl:Hide() end
@@ -2606,6 +2607,23 @@ function Mini:Update()
       f.create:SetText(format(T("Создать %d: %s"), best.n, best.name or "?"))
       y = y + 22 + GAP_SECTION
     end
+  end
+  -- 5. Recipes worth learning now and where to get them: the recommended one in the frame
+  local learn, learnHead = {}, nil
+  if isCraft then learn, learnHead = ns:LearnRows(key, s, rank, 2) end
+  if #learn > 0 then
+    y = sep(f, 2, y - GAP_SECTION / 2)
+    if not f.learnHead then f.learnHead = W.Text(f, "head") end
+    local ink = f.inkHead or W.INK_T
+    f.learnHead:SetTextColor(ink[1], ink[2], ink[3])
+    f.learnHead:SetText(learnHead)
+    y = place(f.learnHead, f, y) + 3
+    for k, r in ipairs(learn) do
+      local tip = r.why .. (r.where ~= "" and ("\n" .. r.where) or "") .. (r.hint and ("\n" .. r.hint) or "")
+      y = SetRow(f, k, y, { icon = r.icon or ns.Icon(nil), star = k == 1, hot = k == 1, text = r.text, right = r.right,
+        tipTitle = r.name, tip = tip, onClick = r.onClick })
+    end
+    y = y + GAP_SECTION - 3
   end
   y = self:Queue(f, key, y)
   f:SetHeight(y + 4)
