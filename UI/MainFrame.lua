@@ -2669,8 +2669,8 @@ function Mini:ShowChoice(f, key, rank, maxRank, y)
   local function detail()
     local e, b = plan.e, plan.b
     y = y + 2
-    -- inner edges of the inset panel: its border is at MINI_PAD - 4, the content keeps 8 from it
-    local inX, inW = MINI_PAD + 4, MINI_W - MINI_PAD * 2 - 8
+    -- inner edges of the inset panel: its border is at MINI_PAD - 4, the content keeps 10 from it
+    local inX, inW = MINI_PAD + 6, MINI_W - MINI_PAD * 2 - 12
     -- a row inside the panel: narrower than a row of the list, and above the panel
     local function inRow(d)
       local y0 = y
@@ -2696,16 +2696,35 @@ function Mini:ShowChoice(f, key, rank, maxRank, y)
     end
     local out = e.out and { id = e.out } or { tex = e.icon, spell = e.spell }
     out.text = "|cffffffff" .. plan.n .. "|r"
-    local lines = b.allHave and {} or ns:StepBuyLines(b)
-    if #b.items > #inputs then tinsert(lines, 1, "|cff9d9d9d" .. format(X.more, #b.items - #inputs) .. "|r") end
-    y = self:PlaceFlow(f, inputs, out, y, lines)
-    -- the inset panel is the backing here: the reagent box keeps its text lines but loses its own fill and border
+    y = self:PlaceFlow(f, inputs, out, y, nil)
+    -- the inset panel is the backing here: the reagent box loses its own fill and border
     if f.flowBox.SetBackdropColor then
       f.flowBox:SetBackdropColor(0, 0, 0, 0)
       f.flowBox:SetBackdropBorderColor(0, 0, 0, 0)
     end
     f.flowBox:SetFrameLevel(f:GetFrameLevel() + 2)
 
+    -- where to get what is missing: a row each, the price on the right
+    local extra = 0
+    if #b.items > #inputs then
+      inRow({ text = "|cff9d9d9d" .. format(X.more, #b.items - #inputs) .. "|r" })
+      extra = extra + 1
+    end
+    if not b.allHave then
+      if b.bank then inRow({ icon = "Interface\\Icons\\INV_Misc_Bag_10", text = "|cffffd100" .. X.bankLine .. "|r" }); extra = extra + 1 end
+      if b.mail then inRow({ icon = "Interface\\Icons\\INV_Letter_15", text = ns.MAIL_COLOR .. X.mailLine .. "|r" }); extra = extra + 1 end
+      if #b.vendor > 0 then
+        inRow({ icon = "Interface\\Icons\\INV_Misc_Bag_08", text = X.vendorAt .. "|cff9d9d9d" .. table.concat(b.vendor, ", ") .. "|r",
+          right = b.vendorCost > 0 and ((b.vendorApprox and "~" or "") .. W.Money(b.vendorCost)) or nil,
+          tipTitle = X.vendorAt, tip = table.concat(b.vendor, ", ") })
+        extra = extra + 1
+      end
+      if b.total > 0 or b.noPrice > 0 then
+        inRow({ icon = "Interface\\Icons\\INV_Misc_Coin_02", text = (X.buyAt:gsub(":%s*$", "")),
+          right = b.total > 0 and W.Money(b.total) or ("|cff9d9d9d" .. X.noPrice .. "|r") })
+        extra = extra + 1
+      end
+    end
     -- reagents the character is short of but can make: a row each
     for _, it in ipairs(b.makes) do
       local mk = it.make
@@ -2716,7 +2735,7 @@ function Mini:ShowChoice(f, key, rank, maxRank, y)
           if mk.can > 0 then ns:CraftOrOpen(mk.key, mk.spell, mk.can) else ns:OpenRecipe(mk.key, mk.spell) end
         end })
     end
-    if #b.makes > 0 then y = y + GAP_SECTION - 3 end
+    if #b.makes + extra > 0 then y = y + GAP_SECTION - 3 end
 
     if not e.known then
       -- where to get the recipe: a row per place, a click sets the pin or opens the zone on the map
@@ -2786,10 +2805,10 @@ function Mini:ShowChoice(f, key, rank, maxRank, y)
           end })
         if isPick then
           local top = y - 4
-          y = y + 6
+          y = y + 8
           detail()
-          pickBox(f, top, y + 2)
-          y = y + 10
+          pickBox(f, top, y + 5)
+          y = y + 13
         end
       end
     end
