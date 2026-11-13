@@ -2779,9 +2779,14 @@ function Mini:ShowChoice(f, key, rank, maxRank, y)
     -- the main action
     local st = ns:RecipeState(key, e.spell)
     if not e.known then
-      local where = ns:AdviceWhere(e)
-      f.note:SetText("|cffa03000" .. X.learn .. "|r" .. (where ~= "" and (" " .. where) or ""))
-      y = place(f.note, f, y) + GAP_SECTION - 4
+      -- where to get the recipe: a row per place, a click sets the pin or opens the zone on the map
+      f.note:SetText("|cffa03000" .. X.learn .. "|r")
+      y = place(f.note, f, y) + 2
+      for k, pl in ipairs(ns:AdvicePlaces(e, X)) do
+        y = SetRow(f, 0, y, { icon = "Interface\\Icons\\INV_Misc_Map_01", hot = k == 1 and pl.go ~= nil, text = pl.text, right = pl.right,
+          tipTitle = e.name, tip = pl.tip, onClick = pl.go })
+      end
+      y = y + GAP_SECTION - 3
     elseif st and not st.unknown and st.known and not st.enchant and (st.count or 0) > 0 then
       self:CreateBtn(f, key, e.spell, min(st.count, plan.n), y, X.createTip)
       y = y + 22 + GAP_SECTION

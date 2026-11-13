@@ -22,7 +22,7 @@ function ns:ChoiceText()
   return { head = T("На чём качать"), choose = T("Выбери, что создавать"), make = T("Сделать: %s"), crafts = T("Созданий: %d"),
     pickTip = T("Щелчок выберет этот рецепт: реагенты на него покажутся здесь, в банке и на аукционе."), unpickTip = T("Щелчок снимет выбор."),
     makeTip = T("Этого реагента не хватает, но ты умеешь его делать. Щелчок создаст, сколько хватит реагентов."), countTip = T("Столько нужно, пока рецепт не позеленеет. Кнопки меняют число."),
-    enough = T("хватит на %d"), part = T("реагенты: %d из %d"), none = T("нет реагентов"), learn = T("Сначала выучи этот рецепт."), learnHead = T("Можно выучить"), openTip = T("Щелчок выберет рецепт в окне профессии."), inBank = T("в банке %d - забери у банкира"), more = T("и ещё %d"), perCraft = T("~%s за создание"), createTip = T("Создаст столько, сколько выбрано (и сколько хватит реагентов).") }
+    enough = T("хватит на %d"), part = T("реагенты: %d из %d"), none = T("нет реагентов"), learn = T("Сначала выучи этот рецепт."), learnHead = T("Можно выучить"), openTip = T("Щелчок выберет рецепт в окне профессии."), inBank = T("в банке %d - забери у банкира"), more = T("и ещё %d"), perCraft = T("~%s за создание"), createTip = T("Создаст столько, сколько выбрано (и сколько хватит реагентов)."), goPin = T("Щелчок поставит метку и откроет карту."), goZone = T("Щелчок откроет карту на этой зоне.") }
 end
 
 -- Crafting professions: the ones with recipe thresholds in Data\Skills.lua.
@@ -131,6 +131,31 @@ function ns:AdviceWhere(e)
   local price = src.kind == "vendor" and (src.copper and self.W.Money(src.copper) or src.price) or nil
   if price and where ~= "" then where = where .. ", " .. price end
   return where
+end
+
+-- Where to go for a recipe that is not learned, as rows { text, right, tip,
+-- go }. Trainers or vendors the addon knows: up to three, the nearest first,
+-- a click sets the map pin. Only zones known (a vendor without a name, a
+-- drop): a row per zone, a click opens the map on it. A world drop or a
+-- quest: one line of text, nothing to click.
+function ns:AdvicePlaces(e, X)
+  local src, out = e.src, {}
+  if not src then return out end
+  local price = src.kind == "vendor" and (src.copper and self.W.Money(src.copper) or src.price) or nil
+  for i, npc in ipairs(src.all or (src.npc and { src.npc }) or {}) do
+    if i > 3 then break end
+    out[#out + 1] = { text = self:NpcName(npc) .. ", " .. self:NpcZone(npc), right = price, tip = X.goPin,
+      go = function() ns:Waypoint(npc, true) end }
+  end
+  if #out == 0 then
+    for i, area in ipairs(src.areas or {}) do
+      if i > 3 then break end
+      out[#out + 1] = { text = (src.label or "") .. self:ZoneName(area), right = price, tip = X.goZone,
+        go = function() ns.Content:ShowOnMap(area) end }
+    end
+  end
+  if #out == 0 and src.info then out[1] = { text = ns.T(src.info) } end
+  return out
 end
 
 local function picks(self)

@@ -795,13 +795,13 @@ local function skillSource(self, key, rs, t)
     end
     local all = x.n and self:NpcsFor(x.n) or {}
     if #all == 0 and #zs == 0 then return nil end
-    return { kind = "vendor", npc = all[1], all = all, copper = x.c, info = T("Торговец: ") .. names(zs) }
+    return { kind = "vendor", npc = all[1], all = all, copper = x.c, info = T("Торговец: ") .. names(zs), areas = zs, label = T("Торговец: ") }
   elseif kind == "q" then
     return { kind = "other", info = T("Награда за задание") }
   elseif x.lv then
     return { kind = "other", info = format(T("Падает с монстров %d-%d ур."), x.lv[1], x.lv[2]) }
   elseif x.dz and #x.dz > 0 then
-    return { kind = "other", info = T("Добыча с существ") .. ": " .. names(x.dz) }
+    return { kind = "other", info = T("Добыча с существ") .. ": " .. names(x.dz), areas = x.dz, label = T("Добыча с существ") .. ": " }
   end
   return nil
 end
@@ -875,7 +875,11 @@ function ns:LearnRows(key, s, rank, limit)
     local right = (e.a > 0 and format(enough, e.a)) or (e.got > 0 and format(part, e.got, e.total)) or nil
     rows[k] = { icon = rs.tex or self:StepIcon(rs, self.Profs[key]), name = name, text = self:Hex(e.color) .. name .. "|r", where = where,
       right = right, why = why, hint = npc and hint or nil,
-      onClick = function() if npc then ns:Waypoint(npc, true) else ns:OpenRecipe(key, spell) end end }
+      onClick = function()
+        if npc then ns:Waypoint(npc, true)
+        elseif src.areas and src.areas[1] then ns.Content:ShowOnMap(src.areas[1])
+        else ns:OpenRecipe(key, spell) end
+      end }
   end
   return rows, T("Можно выучить")
 end
