@@ -11,7 +11,6 @@ local settingsCategory, panel
 local OPTIONS = {
   { "minimap", "Показывать кнопку у миникарты", function(v) ns:SetMinimapHidden(not v) end },
   { "miniGuide", "Мини-окно рядом с окном профессии", function(v) ns.settings.miniGuide = v; if ns.Tracker then ns.Tracker.hidden = nil end end },
-  { "hideDone", "Скрывать выполненные шаги в маршруте" },
   { "itemTips", "Подсказки: сколько предмета нужно до учителя, цвет жилы и травы" },
   { "ahTip", "Подсказки: цена предмета на аукционе" },
   { "trainerStars", "Окно учителя: звезда у рецептов, нужных маршруту" },
@@ -200,7 +199,6 @@ function ns:BuildSettings()
   Header(ns.T("Общее"))
   Check("minimap")
   Check("miniGuide")
-  Check("hideDone")
   Check("useAlts")
   do
     local sl, label, low, high = Slider("EasyCraftScaleSlider", 0.7, 1.3, 0.05)

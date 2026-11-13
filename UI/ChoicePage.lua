@@ -3,19 +3,20 @@ local W, C = ns.W, ns.Content
 local format, min = string.format, math.min
 
 -------------------------------------------------------------------------------
---  The page of a crafting profession in the main window, and its card on the
---  home tab. The same idea as the mini window (Choice.lua): a list of recipes
---  that give skill now, the advice with the star, the player picks one and it
---  opens under its row: reagents, what the character can make itself, minus,
---  "Create" and plus. A recipe that is not learned has the places to get it.
---  At the skill cap there is nothing to level, so the page shows what is
---  profitable to craft for sale and which profitable recipes are missing.
+--  A crafting profession inside its card on the home tab (there are no
+--  separate profession pages). The same idea as the mini window (Choice.lua):
+--  a list of recipes that give skill now, the advice with the star, the
+--  player picks one and it opens under its row: reagents, what the character
+--  can make itself, minus, "Create" and plus. A recipe that is not learned
+--  has the places to get it. At the skill cap there is nothing to level, so
+--  the card shows what is profitable to craft for sale and which profitable
+--  recipes are missing.
 -------------------------------------------------------------------------------
 local GREEN, RED, YELLOW, GREY = "|cff33dd33", "|cffff5555", "|cffffd100", "|cff9d9d9d"
 local MAP_ICON = "Interface\\Icons\\INV_Misc_Map_01"
 local CAP = 300
 
-local function adviceRow(UI, key, e, X, picked, open)
+local function adviceRow(UI, key, e, X, picked)
   local isPick = e.spell == picked
   local where = e.known and "" or ns:AdviceWhere(e)
   local lines = {}
@@ -25,7 +26,7 @@ local function adviceRow(UI, key, e, X, picked, open)
     tip = { title = e.name, lines = lines, hint = isPick and X.unpickTip or X.pickTip },
     onClick = function()
       ns:Pick(key, (not isPick) and e.spell or nil)
-      if open then UI:Open(key) else UI:Render(true) end
+      UI:Render(true)
     end }
 end
 
@@ -91,17 +92,13 @@ end
 
 -- At the skill cap: what is profitable to craft for sale (learned recipes),
 -- and profitable recipes the character does not have, with where to get them.
-function C:SellCards(UI, key, X)
+local function sellBody(UI, c, key, X)
   local known, unknown = ns:BookList(key)
-  local c = UI:Card("flat")
-  c:Text(X.capNote, "body", { x = UI.PAD })
-  local note = ns.PricesNote and ns:PricesNote()
-  if note then c:Text("|cffa03000" .. note .. ".|r", "body", { x = UI.PAD }) end
-  UI:End(c, 6)
-  local function card(title, list, isKnown)
+  c:Text(X.capNote, "body", { gap = 6 })
+  local function block(title, list, isKnown)
     local rows = {}
     for _, e in ipairs(list) do
-      if #rows >= 8 then break end
+      if #rows >= 4 then break end
       if e.profit and e.profit > 0 then
         local sub = (e.cost and e.sale) and format(X.costSale, W.Money(e.cost), W.Money(e.sale)) or nil
         local lines = sub and { sub } or {}
@@ -120,83 +117,38 @@ function C:SellCards(UI, key, X)
           star = #rows == 0, hot = #rows == 0, tip = { title = e.name or "?", lines = lines, hint = hint }, onClick = go }
       end
     end
-    local cc = UI:Card()
-    cc:Text(title, "head", { gap = 6 })
-    if #rows == 0 then cc:Text(GREY .. X.sellNone .. "|r", "body") else cc:Items(rows, 1, 28) end
-    UI:End(cc)
+    c:Text(title, "head", { gap = 6 })
+    if #rows == 0 then c:Text(GREY .. X.sellNone .. "|r", "body") else c:Items(rows, 1, 28) end
   end
-  card(X.sellHead, known, true)
-  card(X.sellLearn, unknown, false)
+  block(X.sellHead, known, true)
+  block(X.sellLearn, unknown, false)
 end
 
-function C:BuildChoice(UI, key)
+-- The body of the card: the list to choose from with the picked recipe
+-- opened in place, or the profitable recipes at the skill cap.
+function C:HomeChoice(UI, c, key, rank, maxRank)
   local X = ns:ChoiceText()
-  local p = ns.Profs[key]
-  local rank, maxRank = ns:GetSkill(key)
-  local cap = (maxRank and maxRank > 0) and maxRank or CAP
-  local c = UI:Card("normal")
-  c:Head({ ring = ns.Icon(p.icon) }, ns:N(p), { { format("%d / %d", rank, cap), "body" } }, 32)
-  -- the next rank can be learned already: without it the skill stops
-  local ra = ns:RankAction(key)
-  if ra and ra.can and ra.s then
-    c:Text(YELLOW .. X.rankNow .. "|r" .. ra.name, "body", { gap = 6 })
-    self:RankBody(UI, c, ra.s, true)
-  end
-  UI:End(c)
-  if rank >= CAP then return self:SellCards(UI, key, X) end
-
+  if rank >= CAP then return sellBody(UI, c, key, X) end
   local list = ns:Advice(key, rank)
   local plan = ns:PickPlan(key, rank, maxRank, nil, list)
   local picked = plan and plan.e.spell
-  if not plan and #list > 0 then
-    local n = UI:Card("flat")
-    n:Text(X.choose, "title", { x = UI.PAD })
-    UI:End(n, 6)
-  end
   local function section(known, title, limit)
-    local cc, shown = nil, 0
+    local shown = 0
     for _, e in ipairs(list) do
       local isPick = e.spell == picked
       if e.known == known and (shown < limit or isPick) then
-        if not cc then
-          cc = UI:Card(picked and known == plan.e.known and "current" or "normal")
-          cc:Text(title, "head", { gap = 6 })
-        end
+        if shown == 0 then c:Text(title, "head", { gap = 6 }) end
         shown = shown + 1
-        cc:Items({ adviceRow(UI, key, e, X, picked) }, 1, 28)
+        c:Items({ adviceRow(UI, key, e, X, picked) }, 1, 28)
         if isPick then
-          detail(UI, cc, key, plan, X)
-          cc:Space(6)
+          detail(UI, c, key, plan, X)
+          c:Space(6)
         end
       end
     end
-    if cc then UI:End(cc) end
     return shown
   end
-  local n = section(true, X.head, 8) + section(false, X.learnHead, 6)
-  if n == 0 then
-    local e = UI:Card()
-    e:Text(X.nothing, "body")
-    UI:End(e)
-  end
-end
-
--- Home tab, the card of a crafting profession under its heading: the top of
--- the list. A click picks the recipe and opens the profession.
-function C:HomeChoice(UI, c, key, rank, maxRank)
-  local X = ns:ChoiceText()
-  if rank >= CAP then
-    c:Text(X.capNote, "body")
-    return
-  end
-  local list = ns:Advice(key, rank)
-  local plan = ns:PickPlan(key, rank, maxRank, nil, list)
-  local picked = plan and plan.e.spell
-  local rows = {}
-  for _, e in ipairs(list) do
-    if #rows < 3 or e.spell == picked then rows[#rows + 1] = adviceRow(UI, key, e, X, picked, true) end
-  end
-  if #rows == 0 then c:Text(X.nothing, "body") else c:Items(rows, 1, 26) end
+  if section(true, X.head, 5) + section(false, X.learnHead, 3) == 0 then c:Text(X.nothing, "body") end
 end
 
 -- One line for the heading of that card: what is being crafted, or a prompt.

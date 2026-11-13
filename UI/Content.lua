@@ -414,37 +414,6 @@ local function stepTip(key, s, st, rank, isCur, b, cost, hint)
   return { title = title, color = color, lines = lines, hint = hint }
 end
 
--- Плитка шага i профессии key. pool - общий запас реагентов (шаги по
--- порядку: что ушло одному, другому не достанется). opts.hint, opts.onClick.
-local function stepTile(key, p, i, rank, maxRank, cur, sel, pool, opts)
-  local s = p.steps[i]
-  local st = ns:StepState(key, i, rank, maxRank)
-  local isCur = i == cur
-  local b, cost
-  local left = (s.k == "craft" and st ~= "done") and ns:RemainingCrafts(s, rank) or 0
-  if left > 0 and (s.rc or s.m) then
-    b = ns:StepBuy(s, left, pool)
-    cost = b.total + b.vendorCost
-  end
-  local icon = s.id or (s.k == "gather" and s.nodes and s.nodes[1] and ns.Nodes[s.nodes[1]].item) or nil
-  local tex
-  if not icon then
-    tex = ns:StepIcon(s, p)
-    if s.k == "quest" then tex = QUEST_ICON end
-  end
-  return {
-    item = icon, tex = tex,
-    badge = tostring(isRankStep(s) and (s.learn or s.at) or s.t),
-    count = left > 0 and left or nil,
-    text = ns:StepName(s) .. (s.approx and (ORANGE .. " ~|r") or ""),
-    foot = tileFoot(key, s, st, rank, isCur, b, cost),
-    state = st, cur = isCur, sel = sel == i and i ~= cur,
-    -- подсказку считаем при наведении: зоны сбора и NPC искать дорого
-    tip = function() return stepTip(key, s, st, rank, isCur, b, cost, opts and opts.hint) end,
-    onClick = opts and opts.onClick,
-  }, st, b, cost
-end
-
 -------------------------------------------------------------------------------
 --  Вкладки
 -------------------------------------------------------------------------------
@@ -458,11 +427,6 @@ function C:HomeTabs()
     { T("Покупки"), "Interface\\Icons\\INV_Misc_Coin_02", nil, nil, 4 },
     { T("Рецепты"), "Interface\\Icons\\INV_Scroll_03", nil, nil, 5 },
   }
-end
-
--- The profession page has no tabs.
-function C:ProfTabs(key)
-  return {}
 end
 
 -- Гайды вкладок снова (кнопка «?», настройки, /ec помощь): показать на
@@ -623,12 +587,6 @@ function C:BuildHome(UI, tab)
   end
 end
 
-function C:BuildProfession(UI, key)
-  -- a crafting profession has no route: a list to choose from (UI/ChoicePage.lua)
-  if ns:IsCraftProf(key) then return self:BuildChoice(UI, key) end
-  self:BuildRoute(UI, key)
-end
-
 -------------------------------------------------------------------------------
 --  Главная: профессии. Карточка на профессию: значок, название, пометки
 --  словами (отстаёшь, можно учить ранг) и полоса навыка; ниже - все шаги
@@ -641,14 +599,12 @@ function C:ProfCard(UI, key, pool)
   local p = ns.Profs[key]
   local rank, maxRank = ns:GetSkill(key)
   local cur, _, train = ns:CurrentStep(key)
-  local order = routeOrder(p)
-  local hide = ns.settings.hideDone
   local PAD, CW = UI.PAD, UI.CARD_W
   local c = UI:Card("normal")
   local cap = (maxRank and maxRank > 0) and maxRank or 300
-  local function open() UI:Open(key) end
+  local function open() end -- everything is in the card: there is no page to open
 
-  -- шапка: щелчок по ней открывает профессию
+  -- the heading: the skill and the next rank in its tooltip
   local rp = W.RingPad(HOME_RING)
   local top = UI.ICON_Y
   local headH = HOME_RING + rp * 2
@@ -656,7 +612,7 @@ function C:ProfCard(UI, key, pool)
     local lines = { { T("Навык"), format("%d / %d", rank, cap) } }
     local nr = ns:NextRank(key)
     if nr then tinsert(lines, { format(T("Ранг «%s»"), ns:RankName(nr.max)), rankShort(nr.s, rank) }) end
-    return { title = ns:N(p), lines = lines, hint = T("Щелчок - открыть профессию: все шаги подробно.") }
+    return { title = ns:N(p), lines = lines }
   end)
   c:Ring(HOME_RING, UI.ICON_X + rp, top + rp):SetIcon(ns.Icon(p.icon))
   local tx = UI.ICON_X + HOME_RING + rp * 2 + UI.ICON_GAP
@@ -679,7 +635,7 @@ function C:ProfCard(UI, key, pool)
   local where = cur and format(T("Шаг %d из %d"), pos or 1, total) or (GREEN .. T("Маршрут пройден") .. "|r")
   if craft then where = self:HomeChoiceLine(key, rank, maxRank) end
   local _, ww = c:Note(nx, y2, where, (cur and not craft) and { title = format(T("Шаг %d из %d"), pos or 1, total),
-    lines = { ns:StepName(p.steps[cur]) }, hint = T("Щелчок - открыть профессию на этом шаге.") } or nil, open)
+    lines = { ns:StepName(p.steps[cur]) } } or nil, open)
   -- отставание - табличкой посередине верхнего края карточки
   local lag, lagTip = lagInfo(key)
   if lag then c:EdgeBadge(0, lag, { center = true, edge = { 0.85, 0.45, 0.1 }, tip = lagTip, onClick = open }) end
@@ -701,40 +657,31 @@ function C:ProfCard(UI, key, pool)
   -- текущий шаг - строкой во всю ширину над плитками (подпись, название,
   -- что нужно, стрелка); ниже все шаги одинаковыми плитками без дыр в
   -- рядах, текущий среди них - в золотой рамке
-  if craft then
-    -- no route steps: the top of the list to choose from
-    c.y = top + headH + 6
-    self:HomeChoice(UI, c, key, rank, maxRank)
-    UI:End(c, 10)
-    return
-  end
-  local tiles, wide = {}, nil
-  for _, si in ipairs(order) do
-    local t, st, bb, cost = stepTile(key, p, si, rank, maxRank, cur, nil, pool, {
-      hint = T("Щелчок - открыть этот шаг."),
-      onClick = function() UI:Open(key, "step:" .. si) end })
-    if si == cur then
-      local s = p.steps[si]
-      wide = {}
-      for k, v in pairs(t) do wide[k] = v end
-      wide.span, wide.label = HOME_COLS, T("Текущий шаг")
-      if s.k == "gather" or s.k == "zone" then
-        wide.foot = YELLOW .. format(T("до навыка %d"), s.t) .. "|r"
-      elseif bb and not bb.allHave and buyCount(bb) > 0 and (cost or 0) > 0 then
-        wide.foot = T("докупить: ") .. (bb.vendorApprox and "~" or "") .. W.Money(cost)
-      end
-    end
-    if not (hide and st == "done") then tinsert(tiles, t) end
-  end
-  if wide then tinsert(tiles, 1, wide) end
   c.y = top + headH + 6
-  if #tiles == 0 then
-    c:Text(GREEN .. T("Все шаги выполнены.") .. "|r", "body", { x = tx })
+  if craft then
+    -- the list to choose from, the picked recipe opened in place (UI/ChoicePage.lua)
+    self:HomeChoice(UI, c, key, rank, maxRank)
   else
-    local w = floor((CW - PAD * 2 - HOME_GAP * (HOME_COLS - 1)) / HOME_COLS)
-    local h = c:Tiles(tiles, { mode = "home", cols = HOME_COLS, x = PAD, y = c.y, w = w, gap = HOME_GAP })
-    c.y = c.y + h + 6
+    -- a gathering profession: what to do now (what to gather and where, or the rank to learn)
+    local s = cur and p.steps[cur]
+    if not s then
+      c:Text(GREEN .. T("Все шаги выполнены.") .. "|r", "body", { x = tx })
+    else
+      local st = ns:StepState(key, cur, rank, maxRank)
+      c:Text(ns:StepTitle(s), "head", { gap = 6 })
+      self:CurrentWarnings(UI, c, key, s, st, rank, maxRank)
+      if isRankStep(s) then
+        self:RankBody(UI, c, s, true)
+      elseif s.k == "gather" then
+        self:GatherBody(UI, c, s, rank, true)
+      elseif s.k == "zone" then
+        self:ZoneBody(UI, c, s, true)
+      end
+      self:CurrentActions(UI, c, key, cur, s, st, train, rank, maxRank, 0)
+    end
   end
+  -- the profession's link for chat (it used to be on the profession page)
+  c:Buttons({ { text = T("Ссылка в чат"), w = 130, onClick = function(b) ns:LinkMenu(key, b) end } }, true)
   UI:End(c, 10)
 end
 
@@ -1087,191 +1034,6 @@ local function nodeItem(nk, rank)
   local n = ns.Nodes[nk]
   local col = ns:GatherColor(max(rank, 1), n.req)
   return { id = n.item, text = ns:Hex(col) .. ns:N(n) .. "|r", sub = format(T("С %d навыка"), n.req) }
-end
-
--- Строка под названием шага: навык и коротко, что осталось.
-local function stepSub(key, s, st, rank, left)
-  if isRankStep(s) then
-    local t = format(T("Предел навыка станет %d"), s.max)
-    if st ~= "done" then t = t .. ", " .. rankShort(s, rank) end
-    return t
-  end
-  local t = format(T("Навык %d-%d"), s.f, s.t)
-  if st == "done" then return t end
-  if s.k == "craft" then
-    -- цвет рецепта: из окна профессии точнее данных маршрута
-    if rank >= (s.f or 0) then
-      local col = ns:RealColor(key, s.spell, rank) or (s.sk and ns:RecipeColor(s, rank))
-      if col then
-        t = t .. ", " .. T("рецепт ") .. ns:Hex(col) .. (ns.ColorName[col] or "") .. "|r"
-        local chance = ns:ChanceText(s, rank, col)
-        if chance then t = t .. " (" .. chance .. ")" end
-      end
-    end
-    if left and left > 0 then t = t .. ", " .. format(T("сделать ещё %d"), left) end
-  elseif st == "current" and s.t then
-    t = t .. ", " .. format(T("осталось %d"), max(s.t - rank, 0))
-  end
-  return t
-end
-
--- Заголовок ранга на пергаменте: «Подмастерье 75-150», справа «5/7».
-function C:RankHead(UI, bk, done, total)
-  local lo, hi = RANKS[bk][1], RANKS[bk][2]
-  local c = UI:Card("flat")
-  local y = c.y + 4
-  -- справа «5/7»; ранг пройден - зелёным и с галочкой (отдельным значком,
-  -- по центру строки)
-  local all = total > 0 and done == total
-  local fs = c:Corner((all and "|cff33dd33" or "") .. format("%d/%d", done, total) .. (all and "|r" or ""), "head", y + 3, nil, all)
-  if all then
-    local ok = c:Take("rankok", function()
-      local t = c:CreateTexture(nil, "OVERLAY")
-      t:SetSize(16, 16)
-      t:SetTexture("Interface\\RaidFrame\\ReadyCheck-Ready")
-      return t
-    end)
-    ok:SetPoint("RIGHT", fs, "LEFT", -4, 1)
-  end
-  c:Text(ns:RankName(hi) .. "  " .. format("%d-%d", lo, hi), "title", { y = y, nowrap = true })
-  c.y = y + 24
-  UI:End(c, 4)
-end
-
-function C:BuildRoute(UI, key)
-  local p = ns.Profs[key]
-  local rank, maxRank = ns:GetSkill(key)
-  local cur, _, train = ns:CurrentStep(key)
-  local order = routeOrder(p)
-  local hide = ns.settings.hideDone
-  local states = {}
-  local inRank, doneInRank = {}, {}
-  for _, i in ipairs(order) do
-    local st = ns:StepState(key, i, rank, maxRank)
-    local bk = stepRank(p.steps[i])
-    states[i] = st
-    inRank[bk] = (inRank[bk] or 0) + 1
-    if st == "done" then
-      doneInRank[bk] = (doneInRank[bk] or 0) + 1
-    end
-  end
-
-  -- куда прокрутить: выбранный шаг или текущий
-  local focus = UI.focus[key]
-  UI.focus[key] = nil
-  if focus == "cur" then focus = cur end
-  if focus and hide and states[focus] == "done" then focus = cur end
-
-  local pool = {} -- запас реагентов идёт по маршруту: что ушло шагу, следующему не достанется
-  local lastB, shown = nil, 0
-  UI.stepBuy = nil
-  for n, i in ipairs(order) do
-    local s = p.steps[i]
-    local st = states[i]
-    local left = (s.k == "craft" and st ~= "done") and ns:RemainingCrafts(s, rank) or 0
-    local b
-    if left > 0 and (s.rc or s.m) then b = ns:StepBuy(s, left, pool) end
-    if not (hide and st == "done") then
-      local bk = stepRank(s)
-      if bk ~= lastB then
-        lastB = bk
-        self:RankHead(UI, bk, doneInRank[bk] or 0, inRank[bk] or 0)
-      end
-      if focus == i then UI.jumpY = max(0, UI.y - 6) end
-      ns:Safe(self.StepCard, self, UI, key, i, n, st, cur, train, rank, maxRank, b, left)
-      shown = shown + 1
-    end
-  end
-  if shown == 0 then
-    local c = UI:Card("done")
-    c:Head({ ring = ns.Icon(p.icon) }, T("Маршрут пройден"), { { T("Все шаги до 300 выполнены."), "body" } })
-    UI:End(c)
-  end
-end
-
-local STEP_ICON, NUM_ICON = 36, 20
-
--- Карточка шага: круглый значок в золотом кольце, на его нижнем крае -
--- номер шага кружком; справа от значка по его центру - название и строка
--- навыка; у правого края - метка («Выполнено», «Можно сейчас») или
--- табличка «Текущий шаг» на том же месте. Сделанный шаг - без тела.
-function C:StepCard(UI, key, i, n, st, cur, train, rank, maxRank, b, left)
-  local p = ns.Profs[key]
-  local s = p.steps[i]
-  local isCur = i == cur
-  local done = st == "done"
-  local PAD, CW = UI.PAD, UI.CARD_W
-  -- текущий - ярко, пройденный - зелёный, «можно сейчас» - обычная рамка,
-  -- до остальных ещё не дошли - рамка приглушённая
-  local c = UI:Card(isCur and "current" or (done and "done" or (st == "current" and "normal" or "future")))
-  local y0 = UI.ICON_Y
-  -- значок шага (у предмета - подсказка предмета и ссылка в чат)
-  local ip = W.RingPad(STEP_ICON)
-  local outer = STEP_ICON + ip * 2
-  local ix = UI.ICON_X
-  local ic = c:Icon(STEP_ICON, ix + ip, y0 + ip)
-  ic.gold = true
-  local item = s.id or (s.k == "gather" and s.nodes and s.nodes[1] and ns.Nodes[s.nodes[1]].item) or nil
-  if item then ic:SetItem(item) else ic:SetPlain(s.k == "quest" and QUEST_ICON or ns:StepIcon(s, p), s.spell) end
-  ic:SetAlpha(done and 0.6 or 1)
-  -- номер шага - кружком на нижнем крае значка
-  local nrp = W.RingPad(NUM_ICON)
-  local num = c:NumIcon(ix + floor((outer - NUM_ICON) / 2), y0 + outer - nrp - NUM_ICON + 6, NUM_ICON, n,
-    isCur and "current" or (done and "done" or nil))
-  num:SetFrameLevel(ic:GetFrameLevel() + 3)
-  local bottom = y0 + outer + 6 -- нижний край кружка с номером
-  local tx = ix + outer + UI.ICON_GAP
-  -- справа по центру значка: табличка «Текущий шаг» или метка словами
-  local mid = y0 + floor(outer / 2)
-  local tagW = 0
-  if isCur then
-    local plate = c:EdgeBadge(PAD, T("Текущий шаг"), { right = true, big = true, y = mid })
-    tagW = (plate:GetWidth() or 120) + 12
-  else
-    local tag
-    if done then tag = GREEN .. T("Выполнено") .. "|r"
-    elseif st == "current" then tag = YELLOW .. T("Можно сейчас") .. "|r" end
-    if tag then
-      -- по центру значка (буквы рисуются на пиксель выше середины строки)
-      local fs = c:Corner(tag, "head", 0, W.LIGHT)
-      fs:ClearAllPoints()
-      fs:SetPoint("RIGHT", c, "TOPRIGHT", -PAD, -mid - 1)
-      tagW = (fs:GetStringWidth() or 80) + 12
-      if done then
-        -- галочка перед «Выполнено», ровно по середине букв
-        local ok = c:Take("doneok", function()
-          local t = c:CreateTexture(nil, "OVERLAY")
-          t:SetSize(18, 18)
-          t:SetTexture("Interface\\RaidFrame\\ReadyCheck-Ready")
-          return t
-        end)
-        ok:SetPoint("RIGHT", fs, "LEFT", -5, 1)
-        tagW = tagW + 23
-      end
-    end
-  end
-  local nameCol = isCur and W.GOLD or (done and { 0.75, 0.85, 0.75 } or W.LIGHT)
-  c:TextBlock(tx, y0, outer, CW - tx - PAD - tagW, {
-    { ns:StepName(s) .. (s.approx and (ORANGE .. " ~|r") or ""), "title", nameCol },
-    { stepSub(key, s, st, rank, left), "small" },
-  })
-  c.y = bottom + 6
-  if done then
-    UI:End(c, 6, bottom + UI.ICON_Y)
-    return
-  end
-  c.indent = tx -- тело шага - под названием
-  if isCur then self:CurrentWarnings(UI, c, key, s, st, rank, maxRank) end
-  if isRankStep(s) then
-    self:RankBody(UI, c, s, isCur)
-  elseif s.k == "gather" then
-    self:GatherBody(UI, c, s, rank, isCur)
-  elseif s.k == "zone" then
-    self:ZoneBody(UI, c, s, isCur)
-  end
-  if isCur then self:CurrentActions(UI, c, key, i, s, st, train, rank, maxRank, left) end
-  c.indent = nil
-  UI:End(c, 6)
 end
 
 -- Текущий шаг: что мешает (отстаёшь, не тот навык, рецепта нет в игре).

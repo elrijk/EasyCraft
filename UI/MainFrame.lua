@@ -31,7 +31,6 @@ UI.VIEW_H = HEIGHT - ATTIC - 4 - 6 - 12
 
 UI.view = "home"
 UI.tab = {}
-UI.focus = {} -- профессия -> какой шаг показать при открытии (номер или "cur")
 
 local HOME_ICON = "Interface\\Icons\\INV_Misc_Book_11"
 
@@ -1684,33 +1683,6 @@ function UI:Create()
     self.topTabs[i] = b
   end
 
-  -- Шапка профессии в полосе под заголовком (на месте вкладок):
-  -- слева вкладки режима маршрута, за ними полоса навыка, справа ссылка в чат.
-  local head = CreateFrame("Frame", nil, f)
-  head:SetPoint("TOPLEFT", f, "TOPLEFT", 66, -26)
-  head:SetPoint("BOTTOMRIGHT", f, "TOPRIGHT", -10, -ATTIC + 2)
-  head.link = W.Button(head, ns.T("Ссылка в чат"), 130, 24)
-  head.link:SetWidth(max(130, floor((head.link:GetFontString():GetStringWidth() or 0) + 30))) -- longer in some languages
-  head.link:SetPoint("RIGHT", head, "RIGHT", 0, 0)
-  head.bar = W.Bar(head)
-  head.bar:SetHeight(18)
-  head.bar:SetPoint("LEFT", head, "LEFT", 6, 0)
-  head.bar:SetPoint("RIGHT", head.link, "LEFT", -16, 0)
-  head:Hide()
-  self.profHead = head
-
-  -- Вкладки справа: главная и изученные профессии
-  self.sideTabs = {}
-  for i = 1, 8 do
-    local t = W.SideTab(f)
-    t:SetPoint("TOPLEFT", f, "TOPRIGHT", 0, -40 - (i - 1) * 46)
-    t:SetScript("OnClick", function(s)
-      W.Sound("IG_ABILITY_PAGE_TURN")
-      UI:Open(s.view)
-    end)
-    t:Hide()
-    self.sideTabs[i] = t
-  end
 
   f:Hide()
   -- Мини-окно у окна профессии прячется, пока это окно показывает ту же профессию.
@@ -1720,30 +1692,6 @@ function UI:Create()
     s:SetFrameStrata("HIGH")
     if ns.Tracker then ns.Tracker:Update() end
   end)
-end
-
-function UI:UpdateSideTabs()
-  local views = { "home" }
-  for _, key in ipairs(ns:LearnedList()) do views[#views + 1] = key end
-  for i, t in ipairs(self.sideTabs) do
-    local v = views[i]
-    if v then
-      t.view = v
-      if v == "home" then
-        t.icon:SetTexture(HOME_ICON)
-        t.tip, t.tip2 = ns.T("Главная"), ns.T("Профессии, покупки, рецепты, лагерь")
-      else
-        local p = ns.Profs[v]
-        local rank, maxRank = ns:GetSkill(v)
-        t.icon:SetTexture(ns.Icon(p.icon))
-        t.tip, t.tip2 = ns:N(p), format("%d/%d", rank, maxRank)
-      end
-      t:SetChecked(v == self.view)
-      t:Show()
-    else
-      t:Hide()
-    end
-  end
 end
 
 -- Разделы: { label, icon }
@@ -1767,52 +1715,21 @@ end
 function UI:Render(keepScroll)
   local f = self.frame
   if not (f and f:IsShown()) then return end
-  if self.view ~= "home" and not ns.char.profs[self.view] then self.view = "home" end
   local pos = keepScroll and f.scroll:GetVerticalScroll() or 0
   for i = 1, self.nCards do self.cards[i]:Hide() end
   self.nCards, self.y = 0, 14
-  self:UpdateSideTabs()
 
+  -- One page with tabs along the top: every profession is a card on the first tab.
   local C = ns.Content
-  if self.view == "home" then
-    SetTitle(f, ns.T("EasyCraft: прокачка профессий"))
-    self.profHead:Hide()
-    SetPortrait(f, ns.ICON)
-    -- self.tab.home - номер страницы, а не место вкладки в ряду
-    local tabs = C:HomeTabs()
-    local sel = 1
-    for i, t in ipairs(tabs) do if t[5] == self.tab.home then sel = i end end
-    self.tab.home = tabs[sel][5]
-    self:SetTopTabs(tabs, sel)
-    ns:Safe(C.BuildHome, C, self, self.tab.home)
-  else
-    local key = self.view
-    local p = ns.Profs[key]
-    SetTitle(f, "EasyCraft: " .. ns:N(p))
-    local rank, maxRank = ns:GetSkill(key)
-    local head = self.profHead
-    -- Полоса до предела текущего ранга (как в окне профессии игры): 87 из 150.
-    local cap = (maxRank and maxRank > 0) and maxRank or 300
-    head.bar:SetMinMaxValues(0, cap)
-    head.bar:SetValue(min(rank, cap))
-    -- одной строкой по центру полосы: «Подмастерье 150/150»
-    head.bar.text:SetText(ns:RankName(maxRank) .. "  " .. format("%d/%d", rank, cap))
-    head.bar.left:SetText("")
-    head.bar.right:SetText("")
-    ns:MarkNextRank(head.bar, key, rank, cap)
-    head.link:SetScript("OnClick", function(b) W.Sound("IG_MAINMENU_OPTION_CHECKBOX_ON"); ns:LinkMenu(key, b) end)
-    head:Show()
-    SetPortrait(f, ns.ICON) -- в портрете всегда значок аддона, профессия - в шапке
-    local tabs = C:ProfTabs(key)
-    local sel = 1
-    self:SetTopTabs(tabs, sel)
-    -- полоса навыка - от последней вкладки до кнопки «Ссылка в чат»
-    head.bar:ClearAllPoints()
-    if #tabs > 0 then head.bar:SetPoint("LEFT", self.topTabs[#tabs], "RIGHT", 14, -3)
-    else head.bar:SetPoint("LEFT", head, "LEFT", 6, 0) end
-    head.bar:SetPoint("RIGHT", head.link, "LEFT", -14, 0)
-    ns:Safe(C.BuildProfession, C, self, key, sel)
-  end
+  SetTitle(f, ns.T("EasyCraft: прокачка профессий"))
+  SetPortrait(f, ns.ICON)
+  -- self.tab.home is the number of the page, not the place of the tab in the row
+  local tabs = C:HomeTabs()
+  local sel = 1
+  for i, tb in ipairs(tabs) do if tb[5] == self.tab.home then sel = i end end
+  self.tab.home = tabs[sel][5]
+  self:SetTopTabs(tabs, sel)
+  ns:Safe(C.BuildHome, C, self, self.tab.home)
 
   self.child:SetHeight(max(self.y, 10))
   if f.scroll.UpdateScrollChildRect then f.scroll:UpdateScrollChildRect() end
@@ -1822,17 +1739,12 @@ function UI:Render(keepScroll)
   f.scroll:SetVerticalScroll(max(0, min(pos, range)))
 end
 
--- Открыть страницу: "home" или профессия; sel = "step:N" - показать шаг.
-function UI:Open(view, sel)
+-- Open the window. There is one page; a profession name (from the mini
+-- window) opens the first tab, where its card is.
+function UI:Open(view)
   self:Create()
-  if view ~= "home" and not (view and ns.char.profs[view]) then view = "home" end
-  self.view = view
-  ns.char.lastView = view
-  if view ~= "home" then
-    -- страница профессии открывается на шаге: выбранном или текущем
-    local i = sel and tonumber(tostring(sel):match("^step:(%d+)$"))
-    self.focus[view] = i or "cur"
-  end
+  if view ~= "home" then self.tab.home = 1 end
+  self.view = "home"
   if not self.frame:IsShown() then self.frame:Show() else self:Render() end
 end
 
@@ -1847,8 +1759,7 @@ function ns:ToggleFrame()
     UI.tab.home = 1
     UI:Open("home")
   else
-    local last = ns.char.lastView
-    UI:Open((last and ns.char.profs[last]) and last or "home")
+    UI:Open("home")
   end
 end
 
@@ -2456,7 +2367,8 @@ function Mini:Update()
   local f, key = self.f, self.key
   if not f then return end
   local anchor = key and ProfWindow(key)
-  local mainOnIt = UI.frame and UI.frame:IsShown() and UI.view == key -- то же уже видно в окне EasyCraft
+  -- the same is already on screen: the main window open on the professions tab
+  local mainOnIt = UI.frame and UI.frame:IsShown() and (UI.tab.home or 1) == 1
   self.anchor = anchor
   if not anchor or mainOnIt or self.hidden or ns.settings.miniGuide == false or not ns:IsProfOpen(key) or BookShown() then
     f:Hide()
