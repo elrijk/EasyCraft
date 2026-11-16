@@ -2,12 +2,12 @@
 
 ## 1.3.1
 
-- The list of recipes to level on ranks them by how much skill the reagents in your bags give: the crafts they are enough for (up to green) times the chance of a skill point now. A yellow recipe with reagents for 25 crafts now comes before an orange one with reagents for 2, so yellow recipes are no longer pushed out of the list by many orange ones.
-- Tools. A recipe that needs a tool in your bags (a runed rod for enchanting, a blacksmith hammer, an engineering spanner, the philosopher's stone) says so. The addon reads the "Requires" line of every recipe while the profession window is open.
-- Without the tool, the recipe shows "no tool" in the list and the tool in its tooltip, and the advice prefers a recipe you can craft right now. The opened recipe starts with "Tool needed" and what to do about it: make it (a click makes it, and its reagents join the shopping list, the merchant and the auction house hints), learn its recipe first (where, with a map pin), take it from the bank, or buy it. The merchant and auction house hints say the tool is needed.
-- Recipes put on an item, like enchants: "Go to" instead of "Create". It opens the recipe in the profession window, where you choose the item.
-- The merchant hint lists the recipes the merchant sells for your professions that you have not learned. A recipe that gives skill now and has some of its reagents in your bags or bank (even one of them) comes first, with a check mark; one for a higher skill is dimmed and says from what skill. Each has its own "Buy" button. The hint now shows up for recipes alone too.
-- Item tooltips say which professions use a reagent, for example "Reagent for: Cooking": your own professions first, the others in grey. The addon learns the recipes when a profession window is opened. A setting turns the line off.
+- **Tools.** A recipe that needs a tool in your bags (a runed rod for enchanting, a blacksmith hammer, an engineering spanner, the philosopher's stone) now says so. The addon reads the "Requires" line of every recipe while the profession window is open.
+- Without the tool, the recipe shows "no tool" in the list and the tool in its tooltip. The opened recipe starts with "Tool needed" and what to do about it: make it (a click makes it, and its reagents join the shopping list and the merchant and auction house hints), learn its recipe first (where, with a map pin), take it from the bank, or buy it. The merchant and auction house hints say the tool is needed too.
+- **Enchants.** A recipe put on an item has one wide "Go to" button instead of minus, "Create" and plus. It opens the recipe in the profession window, where you choose the item.
+- **Better advice.** The list of recipes to level on is ranked by how much skill the reagents in your bags give: the crafts they are enough for (up to green) times the chance of a skill point now. A yellow recipe with reagents for 25 crafts comes before an orange one with reagents for 2, so many orange recipes no longer push the yellow ones out of the list. A recipe whose tool you lack is not advised as ready.
+- **Recipes at a merchant.** The merchant hint lists the recipes the merchant sells for your professions that you have not learned. A recipe that gives skill now and has some of its reagents in your bags or bank (even one of them) comes first, with a check mark; one for a higher skill is dimmed and says from what skill. Each has its own "Buy" button. The hint now shows up for recipes alone too.
+- **Reagent tooltips** say which professions use the item, for example "Reagent for: Cooking": your own professions first, the others in grey. The addon learns the recipes when a profession window is opened. A setting turns the line off.
 
 ## 1.3.0
 
