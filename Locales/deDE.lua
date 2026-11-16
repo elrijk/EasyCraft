@@ -864,4 +864,6 @@ ns.LOCALES.deDE = function() return {
   ["This recipe is put on an item: a click opens it in the profession window, choose the target there."] = "Dieses Rezept wird auf einen Gegenstand angewendet: ein Klick öffnet es im Berufsfenster, wähle dort das Ziel.",
   ["Reagent for: "] = "Reagenz für: ",
   ["Tooltips: which profession a reagent is for"] = "Tooltips: für welchen Beruf ein Reagenz ist",
+  ["You can learn it from skill %d"] = "Lernbar ab Fertigkeit %d",
+  ["already green or grey: gives almost no skill"] = "schon grün oder grau: gibt kaum Fertigkeit",
 } end

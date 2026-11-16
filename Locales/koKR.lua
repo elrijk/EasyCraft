@@ -868,4 +868,6 @@ ns.LOCALES.koKR = function() return {
   ["This recipe is put on an item: a click opens it in the profession window, choose the target there."] = "이 제조법은 아이템에 적용됩니다: 클릭하면 전문기술 창에서 열리며, 그곳에서 대상을 고르세요.",
   ["Reagent for: "] = "재료 용도: ",
   ["Tooltips: which profession a reagent is for"] = "툴팁: 재료가 쓰이는 전문기술",
+  ["You can learn it from skill %d"] = "숙련도 %d부터 배울 수 있음",
+  ["already green or grey: gives almost no skill"] = "이미 녹색 또는 회색: 숙련도가 거의 오르지 않음",
 } end

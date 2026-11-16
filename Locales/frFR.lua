@@ -856,4 +856,6 @@ ns.LOCALES.frFR = function() return {
   ["This recipe is put on an item: a click opens it in the profession window, choose the target there."] = "Cette recette s'applique à un objet : un clic l'ouvre dans la fenêtre du métier, choisis-y la cible.",
   ["Reagent for: "] = "Composant pour : ",
   ["Tooltips: which profession a reagent is for"] = "Infobulles : pour quel métier est un composant",
+  ["You can learn it from skill %d"] = "Apprenable à partir de la compétence %d",
+  ["already green or grey: gives almost no skill"] = "déjà vert ou gris : ne donne presque plus de compétence",
 } end

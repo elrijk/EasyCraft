@@ -869,4 +869,6 @@ ns.LOCALES.zhTW = function() return {
   ["This recipe is put on an item: a click opens it in the profession window, choose the target there."] = "這個配方要用在物品上：點擊會在專業視窗中打開它，在那裡選擇目標。",
   ["Reagent for: "] = "材料用於： ",
   ["Tooltips: which profession a reagent is for"] = "提示：材料用於哪個專業",
+  ["You can learn it from skill %d"] = "技能達到 %d 才能學會",
+  ["already green or grey: gives almost no skill"] = "已是綠色或灰色：幾乎不再提升技能",
 } end

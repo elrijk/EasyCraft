@@ -947,6 +947,139 @@ function ns:MerchantNeeds()
   return out
 end
 
+-------------------------------------------------------------------------------
+--  Recipes the merchant sells for the character's professions that it has
+--  not learned. The recipe item is matched to its recipe by name ("Recipe:
+--  Crispy Bat Wing" - the recipe "Crispy Bat Wing" or its product), the
+--  recipes the data lists for this vendor first.
+-------------------------------------------------------------------------------
+local RECIPE_CLASS = 9
+local PROF_BY_RECIPE_SUBCLASS = { [1] = "leatherworking", [2] = "tailoring", [3] = "engineering", [4] = "blacksmithing",
+  [5] = "cooking", [6] = "alchemy", [7] = "firstaid", [8] = "enchanting", [9] = "fishing" }
+local READY_ICON = "|TInterface\\RaidFrame\\ReadyCheck-Ready:14:14:0:-1|t"
+
+local function nameWords(s)
+  local out = {}
+  for w in ns.Lower(s or ""):gmatch("[^%s%p]+") do out[w] = true end
+  return out
+end
+
+-- The id of the creature the merchant window belongs to.
+local function merchantNpc()
+  local guid = UnitGUID and UnitGUID("npc")
+  if type(guid) ~= "string" then return nil end
+  return tonumber(guid:match("^[^-]+%-[^-]+%-[^-]+%-[^-]+%-[^-]+%-(%d+)"))
+end
+
+local function soldBy(t, npc)
+  local x = npc and t and t[6]
+  for _, list in pairs(x and x.n or {}) do
+    if tContains(list, npc) then return true end
+  end
+  return false
+end
+
+-- The recipe a recipe item teaches, or nil. Every word of the recipe's name
+-- (or of what it makes) must be in the item's name after the colon; the
+-- longest such name wins, a recipe this vendor is known to sell on a tie.
+local recipeWords = {}
+function ns:RecipeOfItem(key, id, npc)
+  local name = C_Item.GetItemNameByID and C_Item.GetItemNameByID(id)
+  if not name then self:WantItem(id) return nil end
+  local item = nameWords(name:match("^[^:]+:%s*(.+)$") or name)
+  local skill = self.RecipeSkill and self.RecipeSkill[key] or {}
+  local base = self.db and self.db.recipes and self.db.recipes[key] or {}
+  local best, bestN, bestSold = nil, 0, false
+  local function try(spell)
+    local names = recipeWords[spell]
+    if not names then
+      local r, s = base[spell], self:SpellStep(key, spell)
+      local out = (r and r.out) or (s and s.id)
+      names = {}
+      for _, n in ipairs({ self:SpellName(spell) or "", r and r.n or "", out and (C_Item.GetItemNameByID and C_Item.GetItemNameByID(out)) or "" }) do
+        if n ~= "" then names[#names + 1] = nameWords(n) end
+      end
+      recipeWords[spell] = names
+    end
+    for _, words in ipairs(names) do
+      local n = 0
+      for w in pairs(words) do
+        if not item[w] then n = -1 break end
+        n = n + 1
+      end
+      local sold = soldBy(skill[spell], npc)
+      if n > bestN or (n > 0 and n == bestN and sold and not bestSold) then best, bestN, bestSold = spell, n, sold end
+    end
+  end
+  for spell in pairs(skill) do try(spell) end
+  for spell in pairs(base) do if not skill[spell] then try(spell) end end
+  return best
+end
+
+-- { index, id, key, spell, name, color, gives, learn, can, got, total, price }:
+-- what gives skill now and has some of its reagents first (in the bags or
+-- the bank, even one of them), then what gives skill, then the rest. A
+-- recipe already bought (in the bags) is not offered again.
+function ns:MerchantRecipes()
+  local out = {}
+  if not (MerchantOpen() and GetMerchantNumItems and GetMerchantItemID and C_Item.GetItemInfoInstant) then return out end
+  local npc = merchantNpc()
+  for i = 1, GetMerchantNumItems() or 0 do
+    local id = GetMerchantItemID(i)
+    local classID, subID
+    if id then classID, subID = select(6, C_Item.GetItemInfoInstant(id)) end
+    local key = classID == RECIPE_CLASS and PROF_BY_RECIPE_SUBCLASS[subID]
+    local spell = key and self.char.profs[key] and self:ItemCount(id) == 0 and self:RecipeOfItem(key, id, npc)
+    if spell and self:RecipeKnown(key, spell) ~= true then
+      local rank = self:GetSkill(key)
+      local t = self:RecipeThresholds(key, spell)
+      local learn = t and t[1] or 0
+      local color = t and self:RecipeColor({ sk = t }, rank) or nil
+      local r = self.db.recipes and self.db.recipes[key] and self.db.recipes[key][spell]
+      local st = self:SpellStep(key, spell)
+      local rc = (r and r.rc) or (st and st.rc)
+      local got, total = 0, 0
+      for j = 1, rc and #rc - 1 or 0, 2 do
+        total = total + 1
+        if self:ItemCount(rc[j]) > 0 then got = got + 1 end
+      end
+      local info = C_MerchantFrame and C_MerchantFrame.GetItemInfo and C_MerchantFrame.GetItemInfo(i)
+      local can = rank >= learn
+      local gives = can and (color == "orange" or color == "yellow")
+      out[#out + 1] = { index = i, id = id, key = key, spell = spell, name = (r and r.n) or self:SpellName(spell) or self:ItemName(id),
+        -- below the skill it is learned at, the recipe has no colour yet: grey
+        color = can and color or "gray", gives = gives, learn = learn, can = can, got = got, total = total,
+        price = info and not info.hasExtendedCost and info.price or nil,
+        order = (gives and got > 0) and 0 or (gives and 1 or (can and 2 or 3)), d = (color and D_BY_COLOR[color]) or 3 }
+    end
+  end
+  table.sort(out, function(x, z)
+    if x.order ~= z.order then return x.order < z.order end
+    if x.d ~= z.d then return x.d < z.d end
+    if x.learn ~= z.learn then return x.learn < z.learn end
+    return x.index < z.index
+  end)
+  return out
+end
+
+-- A row of the merchant hint for a recipe: its name in the colour it has for
+-- the character's skill, a check when some of its reagents are at hand.
+function ns:MerchantRecipeRow(e)
+  local X, T = self:ChoiceText(), ns.T
+  local lines = {}
+  if e.gives then lines[#lines + 1] = "|cff33dd33" .. X.givesSkill .. "|r"
+  elseif e.can then lines[#lines + 1] = "|cff9d9d9d" .. T("уже зелёный или серый: навыка почти не даст") .. "|r"
+  else lines[#lines + 1] = "|cffff5555" .. format(T("Выучишь с навыка %d"), e.learn) .. "|r" end
+  if e.total > 0 then lines[#lines + 1] = format(X.part, e.got, e.total) end
+  local index = e.index
+  return { id = e.id, text = self:Hex(e.color) .. e.name .. "|r" .. (e.got > 0 and (" " .. READY_ICON) or ""),
+    right = e.price and self.W.Money(e.price) or nil, dim = not e.can, btn = T("Купить"), tip = table.concat(lines, "\n"),
+    onClick = function()
+      if InCombatLockdown and InCombatLockdown() then ns:Print(T("в бою покупать нельзя.")) return end
+      BuyMerchantItem(index, 1)
+    end }
+end
+
 -- only: the merchant slot of the one item to buy; nil - everything needed
 function ns:BuyFromMerchant(only)
   if not MerchantOpen() then return end
@@ -997,8 +1130,10 @@ end
 local MERCHANT_W = 400
 local merchantPanel
 function ns:UpdateMerchantButton()
-  local list = MerchantOpen() and self:MerchantNeeds() or {}
-  if #list == 0 then
+  local open = MerchantOpen()
+  local list = open and self:MerchantNeeds() or {}
+  local recipes = open and self:MerchantRecipes() or {}
+  if #list == 0 and #recipes == 0 then
     if merchantPanel then merchantPanel:Hide() end
     return
   end
@@ -1020,12 +1155,23 @@ function ns:UpdateMerchantButton()
       tip = format(T("Купить %d"), n) .. ": " .. W.Money(e.cost),
       onClick = function() ns:BuyFromMerchant(index) end }, y)
   end
+  -- recipes of the character's professions it has not learned: what gives skill first
+  if #recipes > 0 then
+    y = f:Head(self:ChoiceText().learnHead, y + (#list > 0 and 4 or 0))
+    for _, e in ipairs(recipes) do y = f:Row(self:MerchantRecipeRow(e), y) end
+  end
   y = f:EndList(y)
-  y = f:Head(T("Всего: ") .. W.Money(total), y + 3) + 2
-  f.btn:Show()
-  local h = f:Button(format(T("Купить всё (%d)"), count), true, function() ns:BuyFromMerchant() end,
-    T("Докупит только то, чего не хватает до следующего учителя."), y + 2)
-  f:SetHeight(h)
+  if #list == 0 then
+    -- only recipes: no total and no "Buy all"
+    f.btn:Hide()
+    f:SetHeight(y + 10)
+  else
+    y = f:Head(T("Всего: ") .. W.Money(total), y + 3) + 2
+    f.btn:Show()
+    local h = f:Button(format(T("Купить всё (%d)"), count), true, function() ns:BuyFromMerchant() end,
+      T("Докупит только то, чего не хватает до следующего учителя."), y + 2)
+    f:SetHeight(h)
+  end
   if not W.PlaceSaved(f, "merchant") then
     f:ClearAllPoints()
     f:SetPoint("TOPLEFT", MerchantFrame, "TOPRIGHT", 4, 0)
@@ -1034,9 +1180,9 @@ function ns:UpdateMerchantButton()
 end
 
 -------------------------------------------------------------------------------
---  Забрать из банка: при открытом банке - блок рядом с его окном: по
---  профессиям, что из банка нужно для шагов до учителя. Отмеченное
---  переносится в сумки целыми стопками, как правый щелчок.
+--  Take from the bank: with the bank open, a block beside its window lists,
+--  per profession, what the chosen recipes need from the bank. What is
+--  checked is moved to the bags in whole stacks, like a right click.
 -------------------------------------------------------------------------------
 local CT = C_Container
 local GetSlots = CT.GetContainerNumSlots
@@ -1051,11 +1197,11 @@ local function SlotInfo(bag, slot)
   end
 end
 
--- Банк: вкладки нового банка (свой и общий) или старый банк с сумками.
+-- The bank: the tabs of the new bank (own and shared) or the old bank with its bags.
 local function BankBags()
   local ids, seen = {}, {}
   local function add(id) if id and not seen[id] then seen[id] = true; tinsert(ids, id) end end
-  local own = 0 -- вкладок личного банка
+  local own = 0 -- tabs of the character's own bank
   if C_Bank and C_Bank.FetchPurchasedBankTabIDs and Enum and Enum.BankType then
     for _, t in ipairs({ Enum.BankType.Character or false, Enum.BankType.Account or false }) do
       if t then
@@ -1067,7 +1213,7 @@ local function BankBags()
       end
     end
   end
-  if own == 0 then -- личный банк старого вида: -1 и сумки банка
+  if own == 0 then -- an own bank of the old kind: -1 and the bank bags
     add(-1)
     local first = (NUM_TOTAL_EQUIPPED_BAG_SLOTS or NUM_BAG_SLOTS or 4) + 1
     for b = first, first + (7) - 1 do add(b) end
@@ -1075,8 +1221,8 @@ local function BankBags()
   return ids
 end
 
--- Свободные места: обычные сумки (сумки профессий не считаем - туда лезет не всё)
--- и отдельно сумка реагентов, куда идут только ремесленные товары.
+-- Free slots: plain bags (profession bags do not count: not everything fits there)
+-- and, apart, the reagent bag, which takes trade goods only.
 local function BagFreeSlots()
   local plain, reagent = 0, 0
   if not GetFree then return 0, 0 end
@@ -1091,10 +1237,10 @@ end
 
 local ItemInstant = C_Item.GetItemInfoInstant
 local function IsTradeGood(id)
-  return ItemInstant and select(6, ItemInstant(id)) == 7 -- 7: ремесленные товары
+  return ItemInstant and select(6, ItemInstant(id)) == 7 -- 7: trade goods
 end
 
--- Что лежит в банке: id -> штук.
+-- What lies in the bank: id -> count.
 local function BankStock()
   local stock = {}
   if not GetSlots then return stock end
@@ -1107,8 +1253,8 @@ local function BankStock()
   return stock
 end
 
--- Чего не хватает в сумках каждой профессии: key -> { id -> штук }.
--- То, что уже в сумках, достаётся профессиям по порядку списка.
+-- What the bags of each profession are short of: key -> { id -> count }.
+-- What is already in the bags goes to the professions in the order of the list.
 function ns:BankLacks()
   local lack = {}
   for id, a in pairs(self:AllNeeds()) do
@@ -1133,11 +1279,11 @@ function ns:BankLacks()
   return lack
 end
 
--- Выбор в окне у банка: снятые профессии и предметы (до перезахода).
+-- The choice in the bank block: professions and items unchecked (until relog).
 ns.bankOff = ns.bankOff or { prof = {}, item = {} }
 
--- Какие стопки забрать: чего в сумках меньше, чем нужно отмеченным
--- профессиям (и отмеченным предметам).
+-- Which stacks to take: what the bags have less of than the checked
+-- professions (and checked items) need.
 function ns:BankPlan()
   local off = self.bankOff
   local want = {}
@@ -1155,7 +1301,7 @@ function ns:BankPlan()
       local id, n, locked = SlotInfo(bag, slot)
       if id and not locked and (want[id] or 0) > 0 then
         tinsert(plan, { bag = bag, slot = slot, id = id, n = n or 1 })
-        count = count + math.min(n or 1, want[id]) -- сколько нужно, а не размер стопок
+        count = count + math.min(n or 1, want[id]) -- how many are needed, not the stack size
         want[id] = want[id] - (n or 1)
       end
     end
@@ -1168,7 +1314,7 @@ function ns:TakeFromBank()
   if InCombatLockdown and InCombatLockdown() then return end
   local plan = self:BankPlan()
   local plain, reagent = BagFreeSlots()
-  local moved, MAX_PER_CLICK = 0, 12 -- больше за раз сервер может не принять
+  local moved, MAX_PER_CLICK = 0, 12 -- the server may refuse more at once
   for _, e in ipairs(plan) do
     if moved >= MAX_PER_CLICK then break end
     if reagent > 0 and IsTradeGood(e.id) then reagent = reagent - 1

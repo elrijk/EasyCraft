@@ -1054,7 +1054,7 @@ for k, v in pairs({
     ["цена: 4з, нужна репутация с Древобрюхами"] = "price: 4g, Timbermaw Hold reputation needed",
 }) do if ns.EN[k] == nil then ns.EN[k] = v end end
 
--- 1.3.1: tools a recipe needs, recipes put on an item, the profession of a reagent
+-- 1.3.1: tools a recipe needs, recipes put on an item, the profession of a reagent, recipes at a merchant
 for k, v in pairs({
   ["Нужен инструмент: %s"] = "Tool needed: %s",
   ["нет инструмента"] = "no tool",
@@ -1065,4 +1065,6 @@ for k, v in pairs({
   ["Этот рецепт накладывается на вещь: щелчок откроет его в окне профессии, там выбери цель."] = "This recipe is put on an item: a click opens it in the profession window, choose the target there.",
   ["Реагент для: "] = "Reagent for: ",
   ["Подсказки: для какой профессии реагент"] = "Tooltips: which profession a reagent is for",
+  ["Выучишь с навыка %d"] = "You can learn it from skill %d",
+  ["уже зелёный или серый: навыка почти не даст"] = "already green or grey: gives almost no skill",
 }) do if ns.EN[k] == nil then ns.EN[k] = v end end
