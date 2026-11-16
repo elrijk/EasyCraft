@@ -244,12 +244,36 @@ function ns:KnownOptions(key, rank)
   return out
 end
 
+-- The chance that one craft raises the skill: an orange recipe always does;
+-- from yellow on it falls in a line to nothing at grey. Without the
+-- thresholds: by the colour alone.
+function ns:SkillChance(key, spell, rank, d)
+  local t = self:RecipeThresholds(key, spell)
+  if not (t and t[2] and t[4]) then return d == 0 and 1 or (d == 1 and 0.5 or 0) end
+  if rank < t[2] then return 1 end
+  if rank >= t[4] or t[4] <= t[2] then return 0 end
+  return (t[4] - rank) / (t[4] - t[2])
+end
+
+-- How much skill the reagents in the bags give with this recipe: the crafts
+-- they are enough for (no more than until the recipe turns green) times the
+-- chance of a point now.
+function ns:SkillFromBags(e, rank, maxRank)
+  if e.a <= 0 or e.tool then return 0 end
+  local crafts = e.a
+  if self:RecipeThresholds(e.key, e.spell) then crafts = min(crafts, self:CraftsToGreen(e.key, e.spell, rank, maxRank)) end
+  return crafts * self:SkillChance(e.key, e.spell, rank, e.d)
+end
+
 -- The whole list, the advice first. Order: a learned recipe the bags are
 -- enough for; a trainer or vendor recipe the bags are enough for; other
 -- learned recipes; recipes that are easy to get; the rest. Inside a group:
--- the larger share of reagents on hand, orange before yellow, the cheaper craft.
+-- the more skill the bags give with it (a yellow recipe with reagents for 25
+-- crafts before an orange one with reagents for 2), the larger share of
+-- reagents on hand, orange before yellow, the cheaper craft.
 -- A recipe whose tool the bags do not have is not "enough" whatever the reagents.
 function ns:Advice(key, rank)
+  local _, maxRank = self:GetSkill(key)
   local list = self:KnownOptions(key, rank)
   for _, e in ipairs(self:LearnableRecipes(key, nil, rank, 8)) do
     local rs = e.s
@@ -263,9 +287,12 @@ function ns:Advice(key, rank)
     if e.known then e.group = ready and 0 or 2
     else e.group = (e.easy and ready) and 1 or (e.easy and 3 or 4) end
     e.share = e.total > 0 and e.got / e.total or 0
+    -- rounded to a tenth: an exact compare keeps the sort order consistent
+    e.gain = math.floor(self:SkillFromBags(e, rank, maxRank) * 10 + 0.5) / 10
   end
   table.sort(list, function(x, y)
     if x.group ~= y.group then return x.group < y.group end
+    if x.gain ~= y.gain then return x.gain > y.gain end
     if x.share ~= y.share then return x.share > y.share end
     if x.d ~= y.d then return x.d < y.d end
     if x.cost and y.cost and x.cost ~= y.cost then return x.cost < y.cost end

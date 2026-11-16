@@ -2,6 +2,7 @@
 
 ## 1.3.1
 
+- The list of recipes to level on ranks them by how much skill the reagents in your bags give: the crafts they are enough for (up to green) times the chance of a skill point now. A yellow recipe with reagents for 25 crafts now comes before an orange one with reagents for 2, so yellow recipes are no longer pushed out of the list by many orange ones.
 - Tools. A recipe that needs a tool in your bags (a runed rod for enchanting, a blacksmith hammer, an engineering spanner, the philosopher's stone) says so. The addon reads the "Requires" line of every recipe while the profession window is open.
 - Without the tool, the recipe shows "no tool" in the list and the tool in its tooltip, and the advice prefers a recipe you can craft right now. The opened recipe starts with "Tool needed" and what to do about it: make it (a click makes it, and its reagents join the shopping list, the merchant and the auction house hints), learn its recipe first (where, with a map pin), take it from the bank, or buy it. The merchant and auction house hints say the tool is needed.
 - Recipes put on an item, like enchants: "Go to" instead of "Create". It opens the recipe in the profession window, where you choose the item.
