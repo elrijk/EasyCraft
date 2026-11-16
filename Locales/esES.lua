@@ -867,4 +867,5 @@ ns.LOCALES.esES = function() return {
   ["Tooltips: which profession a reagent is for"] = "Descripciones: para qué profesión es un componente",
   ["You can learn it from skill %d"] = "Se aprende con habilidad %d",
   ["already green or grey: gives almost no skill"] = "ya verde o gris: casi no da habilidad",
+  ["Tooltips: the item's English name"] = "Descripciones: nombre del objeto en inglés",
 } end

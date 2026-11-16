@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.3.2
+
+- Item tooltips show the item's English name as a grey line under its title on a client in any other language. The names are WoW Forever's own, for every reagent, tool and product of the recipes. A setting turns the line off.
+
 ## 1.3.1
 
 - **Tools.** A recipe that needs a tool in your bags (a runed rod for enchanting, a blacksmith hammer, an engineering spanner, the philosopher's stone) now says so. The addon reads the "Requires" line of every recipe while the profession window is open.

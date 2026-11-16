@@ -1068,3 +1068,8 @@ for k, v in pairs({
   ["Выучишь с навыка %d"] = "You can learn it from skill %d",
   ["уже зелёный или серый: навыка почти не даст"] = "already green or grey: gives almost no skill",
 }) do if ns.EN[k] == nil then ns.EN[k] = v end end
+
+-- 1.3.2: the item's English name in tooltips
+for k, v in pairs({
+  ["Подсказки: название предмета на английском"] = "Tooltips: the item's English name",
+}) do if ns.EN[k] == nil then ns.EN[k] = v end end

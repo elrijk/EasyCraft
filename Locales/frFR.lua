@@ -858,4 +858,5 @@ ns.LOCALES.frFR = function() return {
   ["Tooltips: which profession a reagent is for"] = "Infobulles : pour quel métier est un composant",
   ["You can learn it from skill %d"] = "Apprenable à partir de la compétence %d",
   ["already green or grey: gives almost no skill"] = "déjà vert ou gris : ne donne presque plus de compétence",
+  ["Tooltips: the item's English name"] = "Infobulles : nom anglais de l'objet",
 } end

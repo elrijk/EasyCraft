@@ -12,7 +12,7 @@
 ## Notes-zhCN: WoW Forever 专业升级：推荐现在能提升技能且最容易做的配方，由你来选。材料、银行和拍卖行跟随你的选择；训练师和配方、地图上的采集区域。/ec
 ## Notes-zhTW: WoW Forever 專業升級：推薦現在能提升技能且最容易做的配方，由你來選。材料、銀行和拍賣場跟隨你的選擇；訓練師和配方、地圖上的採集區域。/ec
 ## Author: DesignerGod
-## Version: 1.3.1
+## Version: 1.3.2
 ## Category: Professions
 ## Category-ruRU: Профессии
 ## IconTexture: Interface\AddOns\EasyCraft\Media\Icon
@@ -33,6 +33,7 @@ Locales\zhCN.lua
 Locales\zhTW.lua
 Data\Zones.lua
 Data\Items.lua
+Data\Names.lua
 Data\Nodes.lua
 Data\Spawns.lua
 Data\NPCs.lua

@@ -225,7 +225,7 @@ end
 ---------------------------------------------------------------------------
 local DEFAULTS = {
   mapShow = true, mapAreaAlpha = 0.5, minimap = true, miniGuide = true, itemTips = true, trainerStars = true,
-  minimapAngle = 205, scale = 1, ahScan = true, ahTip = true, ahRemind = false, askShare = false, useAlts = true, reagentTip = true,
+  minimapAngle = 205, scale = 1, ahScan = true, ahTip = true, ahRemind = false, askShare = false, useAlts = true, reagentTip = true, nameTip = true,
 }
 
 function ns:InitDB()

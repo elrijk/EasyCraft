@@ -1,12 +1,12 @@
 local ADDON, ns = ...
 
 -------------------------------------------------------------------------------
---  Страница аддона в «Настройки -> Модификации -> EasyCraft»
+--  The addon's page in "Settings -> AddOns -> EasyCraft"
 -------------------------------------------------------------------------------
 local settingsCategory, panel
 
--- Подписи галочек - по-русски, переводятся при создании страницы (на
--- ADDON_LOADED язык из настроек уже известен).
+-- The check box labels are Russian keys, translated when the page is built
+-- (by ADDON_LOADED the language from the settings is known).
 
 local OPTIONS = {
   { "minimap", "Показывать кнопку у миникарты", function(v) ns:SetMinimapHidden(not v) end },
@@ -14,6 +14,7 @@ local OPTIONS = {
   { "itemTips", "Подсказки: сколько предмета нужно до учителя, цвет жилы и травы" },
   { "ahTip", "Подсказки: цена предмета на аукционе" },
   { "reagentTip", "Подсказки: для какой профессии реагент" },
+  { "nameTip", "Подсказки: название предмета на английском" },
   { "trainerStars", "Окно учителя: звезда у рецептов, нужных маршруту" },
   { "ahScan", "Аукцион: читать цены самому при открытии" }, { "ahRemind", "Аукцион: напоминать в чате при входе о старых ценах" },
   { "askShare", "Напоминать поделиться данными о рецептах" },
@@ -224,6 +225,7 @@ function ns:BuildSettings()
   Header(ns.T("Подсказки"))
   Check("itemTips")
   Check("reagentTip")
+  Check("nameTip")
   Check("ahTip")
   Check("trainerStars")
   Check("askShare")

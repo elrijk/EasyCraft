@@ -871,4 +871,5 @@ ns.LOCALES.zhTW = function() return {
   ["Tooltips: which profession a reagent is for"] = "提示：材料用於哪個專業",
   ["You can learn it from skill %d"] = "技能達到 %d 才能學會",
   ["already green or grey: gives almost no skill"] = "已是綠色或灰色：幾乎不再提升技能",
+  ["Tooltips: the item's English name"] = "提示：物品的英文名稱",
 } end

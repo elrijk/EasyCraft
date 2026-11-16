@@ -46,6 +46,11 @@ WoW Forever profession tables on timesaver.gg (November 2026) with
 and Russian names and map positions come from pfQuest (see above). The positions
 are the classic ones and were not checked on WoW Forever.
 
+`Data/Names.lua` holds the English names of the reagents, tools and products of
+every recipe the addon knows, shown in the tooltips of a client in another
+language. They were read from the recipe tooltips of the WoW Forever database
+on wowhead.com (November 2026) with `tools/fetch-item-names.js`.
+
 No code or data was taken from other profession addons. Recipe lists, reagents
 and recipe colours come from the game client at run time.
 

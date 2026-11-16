@@ -1799,6 +1799,28 @@ local function AddUseLine(tooltip, id)
   tooltip:Show() -- fit the tooltip to the new line
 end
 
+-- The item's name in the other language, as WoW Forever has it: English on
+-- a client in any other language, nil on an English one. The game gives
+-- names only in the client's language; Data\Names.lua keeps the English ones
+-- of every reagent, tool and product of the recipes.
+function ns:SecondName(id)
+  local client = GetLocale and GetLocale() or "enUS"
+  if client == "enUS" or client == "enGB" then return nil end
+  return self.NamesEN and self.NamesEN[id] or nil
+end
+
+-- The name in the other language as a grey second line of the title (a
+-- tooltip cannot take a line between the others); not twice when the game
+-- refreshes the tooltip.
+local function AddSecondName(tooltip, id)
+  local name = ns:SecondName(id)
+  local title = name and tooltip.GetName and _G[(tooltip:GetName() or "") .. "TextLeft1"]
+  local text = title and title.GetText and title:GetText()
+  if type(text) ~= "string" or text == name or text:find(name, 1, true) then return end
+  title:SetText(text .. "\n|cff9d9d9d" .. name .. "|r")
+  tooltip:Show() -- fit the tooltip to the new line
+end
+
 local function AddNeedLine(tooltip, id, ours)
   local a = ns:AllNeeds()[id]
   if not a then return end
@@ -1884,6 +1906,7 @@ end
 -- is plain from the window itself.
 function ns:ItemTooltipLines(tooltip, id)
   local ours = OwnedByUs(tooltip)
+  if self.settings and self.settings.nameTip ~= false then AddSecondName(tooltip, id) end
   if self.settings and self.settings.reagentTip ~= false and not ours then AddUseLine(tooltip, id) end
   if self.settings and self.settings.itemTips ~= false then AddNeedLine(tooltip, id, ours) end
   self:AddPriceLine(tooltip, id)

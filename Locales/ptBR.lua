@@ -861,4 +861,5 @@ ns.LOCALES.ptBR = function() return {
   ["Tooltips: which profession a reagent is for"] = "Dicas: para qual profissão é um reagente",
   ["You can learn it from skill %d"] = "Aprende-se com perícia %d",
   ["already green or grey: gives almost no skill"] = "já verde ou cinza: quase não dá perícia",
+  ["Tooltips: the item's English name"] = "Dicas: nome do item em inglês",
 } end

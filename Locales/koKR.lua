@@ -870,4 +870,5 @@ ns.LOCALES.koKR = function() return {
   ["Tooltips: which profession a reagent is for"] = "툴팁: 재료가 쓰이는 전문기술",
   ["You can learn it from skill %d"] = "숙련도 %d부터 배울 수 있음",
   ["already green or grey: gives almost no skill"] = "이미 녹색 또는 회색: 숙련도가 거의 오르지 않음",
+  ["Tooltips: the item's English name"] = "툴팁: 아이템의 영어 이름",
 } end

@@ -866,4 +866,5 @@ ns.LOCALES.deDE = function() return {
   ["Tooltips: which profession a reagent is for"] = "Tooltips: für welchen Beruf ein Reagenz ist",
   ["You can learn it from skill %d"] = "Lernbar ab Fertigkeit %d",
   ["already green or grey: gives almost no skill"] = "schon grün oder grau: gibt kaum Fertigkeit",
+  ["Tooltips: the item's English name"] = "Tooltips: englischer Name des Gegenstands",
 } end
