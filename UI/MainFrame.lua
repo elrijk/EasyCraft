@@ -2622,6 +2622,13 @@ function Mini:ShowChoice(f, key, rank, maxRank, y)
       inRow({ text = "|cff9d9d9d" .. format(X.more, #b.items - #inputs) .. "|r" })
       extra = extra + 1
     end
+    -- the tool the recipe needs and the bags do not have, first: what to do about it, and where to learn its recipe
+    local tools = ns:ToolRows(plan, X)
+    for _, r in ipairs(tools) do
+      inRow({ icon = r.id and ns:ItemIcon(r.id) or r.tex, hot = r.hot, text = r.text, right = r.right,
+        tipTitle = r.id and ns:ItemName(r.id) or e.name, tip = r.tip, onClick = r.go })
+    end
+    extra = extra + #tools
     if not b.allHave then
       if b.bank then inRow({ icon = "Interface\\Icons\\INV_Misc_Bag_10", text = "|cffffd100" .. X.bankLine .. "|r" }); extra = extra + 1 end
       if b.mail then inRow({ icon = "Interface\\Icons\\INV_Letter_15", text = ns.MAIL_COLOR .. X.mailLine .. "|r" }); extra = extra + 1 end
@@ -2661,9 +2668,12 @@ function Mini:ShowChoice(f, key, rank, maxRank, y)
       return
     end
 
-    -- minus, "Create", plus: the number is how many crafts are planned
+    -- minus, "Create", plus: the number is how many crafts are planned; a
+    -- recipe put on an item has "Go to" instead: the target is chosen in the
+    -- profession window
     local st = ns:RecipeState(key, e.spell)
-    local can = (st and not st.unknown and st.known and not st.enchant) and min(st.count or 0, plan.n) or 0
+    local target = ns:RecipeHasTarget(key, e.spell)
+    local can = (st and not st.unknown and st.known and not target and not b.tool) and min(st.count or 0, plan.n) or 0
     if not f.cntMinus then f.cntMinus, f.cntPlus = W.Button(f, "-", 28, 22), W.Button(f, "+", 28, 22) end
     f.cntMinus:ClearAllPoints()
     f.cntMinus:SetPoint("TOPLEFT", f, "TOPLEFT", inX, -y)
@@ -2678,10 +2688,17 @@ function Mini:ShowChoice(f, key, rank, maxRank, y)
     f.create:ClearAllPoints()
     f.create:SetPoint("TOPLEFT", f, "TOPLEFT", inX + 28 + 4, -y)
     f.create:SetWidth(inW - 2 * (28 + 4))
-    f.create:SetText((can >= plan.n or can == 0) and format(X.create, plan.n) or format(X.createOf, can, plan.n))
-    f.create:SetEnabled(can > 0)
-    f.create:SetScript("OnClick", function() ns:Craft(key, e.spell, can) end)
-    tipOn(f.create, e.name, X.createTip)
+    if target then
+      f.create:SetText(X.goTo)
+      f.create:SetEnabled(true)
+      f.create:SetScript("OnClick", function() ns:OpenRecipe(key, e.spell) end)
+      tipOn(f.create, e.name, X.goToTip)
+    else
+      f.create:SetText((can >= plan.n or can == 0) and format(X.create, plan.n) or format(X.createOf, can, plan.n))
+      f.create:SetEnabled(can > 0)
+      f.create:SetScript("OnClick", function() ns:Craft(key, e.spell, can) end)
+      tipOn(f.create, e.name, X.createTip)
+    end
     f.create:Show()
     raise(f, f.create); raise(f, f.cntMinus); raise(f, f.cntPlus)
     y = y + 22 + GAP_SECTION
@@ -2705,7 +2722,7 @@ function Mini:ShowChoice(f, key, rank, maxRank, y)
         shown = shown + 1
         local where = (not known) and ns:AdviceWhere(e) or ""
         local tip = (isPick and X.unpickTip or X.pickTip) .. (where ~= "" and ("\n" .. where) or "")
-          .. (e.cost and ("\n" .. format(X.perCraft, W.Money(e.cost))) or "")
+          .. (e.cost and ("\n" .. format(X.perCraft, W.Money(e.cost))) or "") .. ns:ToolLine(e, X)
         y = SetRow(f, 0, y, { icon = e.icon or ns.Icon(nil), star = e.advice, hot = isPick,
           text = ns:Hex(e.color) .. e.name .. "|r", tipTitle = e.name, tip = tip,
           -- an arrow at the right edge: down - can be opened, up - opened

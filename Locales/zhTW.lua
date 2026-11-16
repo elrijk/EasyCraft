@@ -860,4 +860,11 @@ ns.LOCALES.zhTW = function() return {
   ["What is easiest to do now"] = "現在最容易做的",
   ["For the chosen recipes, with auction prices."] = "為所選配方，帶拍賣價格。",
   ["Profession leveling for WoW Forever: advice on which recipe to level on now, reagents for your choice, trainers and recipes, gathering zones on the map."] = "WoW Forever 專業升級：推薦現在練哪個配方、依你的選擇計算材料、訓練師和配方、地圖上的採集區域。",
+  ["Tool needed: %s"] = "需要工具：%s",
+  ["no tool"] = "沒有工具",
+  ["Without this tool in your bags the recipe cannot be crafted. It is not used up."] = "背包裡沒有這個工具就無法製作該配方。工具不會被消耗。",
+  ["You can make it: a click crafts it."] = "你會製作它：點擊即可製作。",
+  ["The recipe of the tool is not learned yet, below is where to get it. Its reagents are already on the shopping list."] = "工具的配方還沒學會，下面是取得地點。它的材料已經在採購清單裡。",
+  ["Go to"] = "打開",
+  ["This recipe is put on an item: a click opens it in the profession window, choose the target there."] = "這個配方要用在物品上：點擊會在專業視窗中打開它，在那裡選擇目標。",
 } end

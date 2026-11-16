@@ -21,6 +21,7 @@ local function adviceRow(UI, key, e, X, picked)
   local where = e.known and "" or ns:AdviceWhere(e)
   local lines = {}
   if e.cost then lines[#lines + 1] = format(X.perCraft, W.Money(e.cost)) end
+  if e.tool then lines[#lines + 1] = RED .. format(X.toolNeed, e.tool.name) .. "|r" end
   return { tex = e.icon or ns.Icon(nil), text = ns:Hex(e.color) .. e.name .. "|r", sub = where ~= "" and where or nil,
     right = ns:AdviceRight(e, X), star = e.advice, hot = isPick,
     tip = { title = e.name, lines = lines, hint = isPick and X.unpickTip or X.pickTip },
@@ -46,8 +47,16 @@ local function detail(UI, c, key, plan, X)
   out.text = "|cffffffff" .. plan.n .. "|r"
   c:Flow(inputs, out, 32, c.indent or UI.PAD, b.allHave and { GREEN .. X.allHave .. "|r" } or ns:StepBuyLines(b))
 
-  -- reagents the character is short of but can make
+  -- the tool the recipe needs and the bags do not have, first; then where to learn its recipe
   local rows = {}
+  for _, r in ipairs(ns:ToolRows(plan, X)) do
+    rows[#rows + 1] = { id = r.id, tex = r.tex, text = r.text, right = r.right, hot = r.hot,
+      tip = { title = r.id and ns:ItemName(r.id) or e.name, lines = { r.tip } }, onClick = r.go }
+  end
+  if #rows > 0 then c:Items(rows, 1, 26) end
+
+  -- reagents the character is short of but can make
+  rows = {}
   for _, it in ipairs(b.makes) do
     local mk = it.make
     rows[#rows + 1] = { id = it.id, text = format(X.make, mk.name), hot = mk.can > 0,
@@ -70,11 +79,15 @@ local function detail(UI, c, key, plan, X)
     return
   end
 
-  -- minus, "Create", plus: the number is how many crafts are planned
+  -- minus, "Create", plus: the number is how many crafts are planned; a
+  -- recipe put on an item has "Go to" instead: the target is chosen in the
+  -- profession window
   local st = ns:RecipeState(key, e.spell)
+  local target = ns:RecipeHasTarget(key, e.spell)
   local can
-  if st then can = (not st.unknown and st.known and not st.enchant) and (st.count or 0) or 0
+  if st then can = (not st.unknown and st.known) and (st.count or 0) or 0
   else can = ns:CanMake({ rc = e.rc }) or 0 end
+  if b.tool then can = 0 end
   can = min(can, plan.n)
   local function step(d)
     return function()
@@ -82,10 +95,16 @@ local function detail(UI, c, key, plan, X)
       UI:Render(true)
     end
   end
+  local main
+  if target then
+    main = { text = X.goTo, w = 220, tip = X.goToTip, onClick = function() ns:OpenRecipe(key, e.spell) end }
+  else
+    main = { text = (can >= plan.n or can == 0) and format(X.create, plan.n) or format(X.createOf, can, plan.n), w = 220, enabled = can > 0,
+      tip = X.createTip, onClick = function() ns:CraftOrOpen(key, e.spell, can) end }
+  end
   c:Buttons({
     { text = "-", w = 34, tip = X.countTip, onClick = step(-1) },
-    { text = (can >= plan.n or can == 0) and format(X.create, plan.n) or format(X.createOf, can, plan.n), w = 220, enabled = can > 0,
-      tip = X.createTip, onClick = function() ns:CraftOrOpen(key, e.spell, can) end },
+    main,
     { text = "+", w = 34, tip = X.countTip, onClick = step(1) },
   })
 end

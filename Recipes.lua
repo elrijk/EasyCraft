@@ -1,15 +1,16 @@
 local _, ns = ...
 
 -------------------------------------------------------------------------------
---  Полная база рецептов профессии. Игра сама отдаёт все рецепты открытой
---  профессии - и выученные, и нет - с реагентами, результатом и строкой
---  «где взять». EasyCraft читает их при открытии окна профессии и хранит в
---  EasyCraftDB.recipes[профессия][рецепт] = { n = название, i = значок,
---  out = предмет, q = сколько, rc = реагенты, src = где взять }.
---  База общая на учётную запись. Невыученные рецепты попадают в книгу
---  рецептов (раздел «Ещё не выучены») с ценой, выгодой и источником.
---  ns.RecipeBase (Data\Recipes.lua, если есть) - та же база, собранная
---  заранее: с ней список полон и до первого открытия окна.
+--  The full recipe base of a profession. The game gives every recipe of the
+--  open profession, learned or not, with its reagents, its result and the
+--  "where to get" line. EasyCraft reads them when the profession window opens
+--  and keeps them in EasyCraftDB.recipes[profession][recipe] = { n = name, i = icon,
+--  out = item, q = how many, rc = reagents, src = where to get it,
+--  tl = the tool it needs (a name) or false, tg = true: put on an item }.
+--  The base is shared by the account. Recipes not learned go to the recipe
+--  book (the "Not learned yet" part) with the price, the profit and the source.
+--  ns.RecipeBase (Data\Recipes.lua, if present) is the same base built
+--  beforehand: with it the list is full before the window is first opened.
 -------------------------------------------------------------------------------
 local TS = C_TradeSkillUI
 local PER_TICK = 20 -- рецептов за один шаг чтения: чтобы игра не подвисала
@@ -26,7 +27,7 @@ local function sourceText(id)
   if not TS.GetRecipeSourceText then return nil end
   local ok, s = pcall(TS.GetRecipeSourceText, id)
   if not ok or type(s) ~= "string" or s == "" then return nil end
-  -- без цветов и переносов: в одну строку
+  -- no colours and no line breaks: one line
   s = s:gsub("|c%x%x%x%x%x%x%x%x", ""):gsub("|r", ""):gsub("|n", ", "):gsub("%s*\n%s*", ", ")
   if #s > 240 then s = s:sub(1, 240) end
   return s
@@ -59,6 +60,12 @@ local function step()
         n = n + 1
       end
       if not e.src and r.learned == false then e.src = sourceText(id) end
+      -- the tool the recipe needs (a name or false) and whether it is put on an item
+      if e.tl == nil then
+        local tl = ns:ReadRecipeTool(id)
+        if tl ~= nil then e.tl = tl end
+      end
+      e.tg = r.isEnchantingRecipe and true or nil
     end
   end
   if j.i > #j.ids then
@@ -69,7 +76,7 @@ local function step()
   end
 end
 
--- Прочитать все рецепты открытой профессии (вызывает Tracking.lua).
+-- Read every recipe of the open profession (called by Tracking.lua).
 function ns:ScanAllRecipes(key)
   if not (TS and TS.GetAllRecipeIDs and TS.GetRecipeInfo and TS.GetRecipeSchematic) then return end
   if job and job.key == key then return end
@@ -79,7 +86,7 @@ function ns:ScanAllRecipes(key)
   step()
 end
 
--- Сколько рецептов профессии в базе.
+-- How many recipes of the profession the base has.
 function ns:RecipeBaseCount(key)
   local n = 0
   for _ in pairs(baseOf(self, key) or {}) do n = n + 1 end
@@ -89,7 +96,7 @@ function ns:RecipeBaseCount(key)
   return n
 end
 
--- Книга рецептов: к невыученным добавляются все рецепты из базы.
+-- The recipe book: every recipe of the base is added to the ones not learned.
 local bookList = ns.BookList
 function ns:BookList(key)
   local known, unknown, scanned = bookList(self, key)

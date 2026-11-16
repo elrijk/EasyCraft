@@ -509,8 +509,8 @@ function ns:ShoppingList(key, upTo)
   return order
 end
 
--- Все покупки по всем профессиям: id -> { need, have, alts, buy, profs = { {key, need, cap} } }.
--- Кешируется до следующего обновления (сумки, навык, окно профессии).
+-- Every purchase of every profession: id -> { need, have, alts, buy, profs = { {key, need, cap} } }.
+-- Cached until the next update (bags, skill, profession window).
 function ns:AllNeeds()
   if self.needCache then return self.needCache end
   local all = {}
@@ -541,10 +541,7 @@ function ns:AllNeeds()
       a.need = a.need + it.need
       tinsert(a.profs, { key = pp.key, need = it.need, cap = rank + pp.plan.n })
     end
-    for _, it in ipairs(pp.plan.b.items) do
-      add(it)
-      for _, sub in ipairs(it.make and it.make.b.items or {}) do add(sub) end
-    end
+    for _, it in ipairs(self:PlanItems(pp.plan.b)) do add(it) end
   end
   for _, a in pairs(all) do a.buy = max(0, a.need - a.have - a.alts - a.mail) end
   self.needCache = all

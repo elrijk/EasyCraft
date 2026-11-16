@@ -855,4 +855,11 @@ ns.LOCALES.itIT = function() return {
   ["What is easiest to do now"] = "La più facile da fare ora",
   ["For the chosen recipes, with auction prices."] = "Per le ricette scelte, con i prezzi d'asta.",
   ["Profession leveling for WoW Forever: advice on which recipe to level on now, reagents for your choice, trainers and recipes, gathering zones on the map."] = "Livellamento delle professioni per WoW Forever: consiglio sulla ricetta su cui livellare ora, reagenti per la tua scelta, istruttori e ricette, zone di raccolta sulla mappa.",
+  ["Tool needed: %s"] = "Attrezzo necessario: %s",
+  ["no tool"] = "nessun attrezzo",
+  ["Without this tool in your bags the recipe cannot be crafted. It is not used up."] = "Senza questo attrezzo nelle borse la ricetta non si può creare. Non viene consumato.",
+  ["You can make it: a click crafts it."] = "Sai crearlo: un clic lo crea.",
+  ["The recipe of the tool is not learned yet, below is where to get it. Its reagents are already on the shopping list."] = "La ricetta dell'attrezzo non è ancora appresa, qui sotto dove trovarla. I suoi reagenti sono già nella lista degli acquisti.",
+  ["Go to"] = "Apri",
+  ["This recipe is put on an item: a click opens it in the profession window, choose the target there."] = "Questa ricetta si applica a un oggetto: un clic la apre nella finestra della professione, lì scegli il bersaglio.",
 } end

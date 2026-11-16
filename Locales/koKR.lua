@@ -859,4 +859,11 @@ ns.LOCALES.koKR = function() return {
   ["What is easiest to do now"] = "지금 가장 쉽게 만들 수 있는 것",
   ["For the chosen recipes, with auction prices."] = "선택한 제조법용, 경매장 가격 포함.",
   ["Profession leveling for WoW Forever: advice on which recipe to level on now, reagents for your choice, trainers and recipes, gathering zones on the map."] = "WoW Forever 전문기술 숙련: 지금 올릴 제조법 추천, 선택에 맞춘 재료, 상급자와 제조법, 지도의 채집 지역.",
+  ["Tool needed: %s"] = "필요한 도구: %s",
+  ["no tool"] = "도구 없음",
+  ["Without this tool in your bags the recipe cannot be crafted. It is not used up."] = "이 도구가 가방에 없으면 제조법을 만들 수 없습니다. 도구는 소모되지 않습니다.",
+  ["You can make it: a click crafts it."] = "직접 만들 수 있습니다: 클릭하면 만듭니다.",
+  ["The recipe of the tool is not learned yet, below is where to get it. Its reagents are already on the shopping list."] = "도구의 제조법을 아직 배우지 않았습니다. 아래에 배울 수 있는 곳이 있습니다. 재료는 이미 구매 목록에 있습니다.",
+  ["Go to"] = "열기",
+  ["This recipe is put on an item: a click opens it in the profession window, choose the target there."] = "이 제조법은 아이템에 적용됩니다: 클릭하면 전문기술 창에서 열리며, 그곳에서 대상을 고르세요.",
 } end

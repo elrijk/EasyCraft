@@ -1053,4 +1053,14 @@ for k, v in pairs({
     ["Выкройка у торговца Qia в Круговзоре (Зимние Ключи), 1з 60с, запас ограничен."] = "Pattern from the vendor Qia in Everlook (Winterspring), 1g 60s, limited supply.",
     ["цена: 4з, нужна репутация с Древобрюхами"] = "price: 4g, Timbermaw Hold reputation needed",
 }) do if ns.EN[k] == nil then ns.EN[k] = v end end
-
+
+-- 1.3.1: tools a recipe needs, recipes put on an item
+for k, v in pairs({
+  ["Нужен инструмент: %s"] = "Tool needed: %s",
+  ["нет инструмента"] = "no tool",
+  ["Без этого инструмента в сумке рецепт не создать. Он не тратится."] = "Without this tool in your bags the recipe cannot be crafted. It is not used up.",
+  ["Ты умеешь его делать: щелчок создаст."] = "You can make it: a click crafts it.",
+  ["Рецепт инструмента ещё не выучен, ниже - где его взять. Его реагенты уже в списке покупок."] = "The recipe of the tool is not learned yet, below is where to get it. Its reagents are already on the shopping list.",
+  ["Перейти"] = "Go to",
+  ["Этот рецепт накладывается на вещь: щелчок откроет его в окне профессии, там выбери цель."] = "This recipe is put on an item: a click opens it in the profession window, choose the target there.",
+}) do if ns.EN[k] == nil then ns.EN[k] = v end end

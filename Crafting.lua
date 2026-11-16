@@ -449,8 +449,11 @@ local GetItemInfoFn = C_Item.GetItemInfo
 -- Цена старше стольких дней помечается как устаревшая.
 ns.PRICE_OLD_DAYS = 3
 
--- Продаётся у торговцев (колбы, нитки, соль): на аукционе не ищем.
+-- Sold by vendors (vials, thread, salt): not searched for at the auction house.
+-- Tools that trade supplies vendors sell: a mining pick, a blacksmith hammer, a skinning knife.
+local VENDOR_TOOLS = { [2901] = true, [5956] = true, [7005] = true }
 function ns:IsVendorItem(id)
+  if VENDOR_TOOLS[id] then return true end
   local src = self.MatSources and self.MatSources[id]
   return src and src.src == "vendor" or false
 end
@@ -573,13 +576,13 @@ function ns:RecordMerchantPrices()
   end
 end
 
--- Что нужно на оставшиеся left крафтов шага, по реагентам:
--- { id, need, have (сумки - из них создают), all (с банком), mail, alts,
---   buy (докупить), cost/age (аукцион), vendor }.
--- Итог: total (медь на аукционе), noPrice, vendor (имена), vendorCost
--- (медь у торговцев), vendorApprox (цена примерная), auction
--- ({id, buy} - что докупить на аукционе), bank/mail (часть лежит там), allHave.
--- Банк, почта и альты не докупаются - их надо забрать.
+-- What the left crafts of a step take, per reagent:
+-- { id, need, have (the bags: crafting takes from them), all (with the bank), mail, alts,
+--   buy (to buy), cost/age (auction house), vendor }.
+-- Totals: total (copper at the auction house), noPrice, vendor (names), vendorCost
+-- (copper at vendors), vendorApprox (the price is a guess), auction
+-- ({id, buy}: what to buy at the auction house), bank/mail (some lies there), allHave.
+-- What the bank, the mail and the alts have is not bought: it is to be taken.
 function ns:StepBuy(s, left, pool)
   local out = { items = {}, total = 0, noPrice = 0, vendor = {}, vendorCost = 0, auction = {}, allHave = true }
   local rc = s and (s.rc or s.m)
@@ -591,7 +594,7 @@ function ns:StepBuy(s, left, pool)
     -- per: how many one craft takes (the counts on the step are for all the crafts left)
     local e = { id = id, need = need, per = s.rc and rc[j + 1] or nil, have = self:BagCount(id), all = self:ItemCount(id),
       mail = self:MailCount(id), alts = alts[id] or 0, buy = 0 }
-    -- pool: общий запас на несколько профессий - что ушло одной, другой не достанется
+    -- pool: one stock for several professions; what one took, the next does not get
     local stock = e.all + e.alts + e.mail
     if pool then
       local used = pool[id] or 0
@@ -599,7 +602,7 @@ function ns:StepBuy(s, left, pool)
       pool[id] = used + need
     end
     e.buy = math.max(0, need - stock)
-    e.stock = stock -- что досталось этому шагу из общего запаса
+    e.stock = stock -- what this step got from the shared stock
     if e.have < need or e.buy > 0 then
       out.allHave = false
       if e.all > e.have then out.bank = true end
@@ -631,13 +634,13 @@ function ns:StepBuy(s, left, pool)
   return out
 end
 
--- Строки «где взять недостающее» для шага (без чисел - они на картинке):
--- забрать из банка, у торговца, сколько докупить на аукционе, нет цен.
+-- Lines on where to get what is missing (no counts: they are on the picture):
+-- take from the bank, at a vendor, what to buy at the auction house, no prices.
 function ns:StepBuyLines(b)
   local T, lines = ns.T, {}
   if b.bank then tinsert(lines, "|cffffd100" .. T("Часть лежит в банке: забери у банкира") .. "|r") end
   if #b.vendor > 0 then
-    -- сколько потратить у торговца и на что (сами количества - на картинке)
+    -- what to spend at a vendor and on what (the counts are on the picture)
     local money = b.vendorCost > 0 and ("|cffffffff" .. (b.vendorApprox and "~" or "") .. self.W.Money(b.vendorCost) .. "|r  ") or ""
     tinsert(lines, T("У торговца: ") .. money .. "|cff9d9d9d" .. table.concat(b.vendor, ", ") .. "|r")
   end
@@ -914,12 +917,12 @@ onMail("AUCTION_HOUSE_CLOSED", function()
 end)
 
 -------------------------------------------------------------------------------
---  Купить у торговца: при открытом торговце - кнопка под его окном, которая
---  докупает только недостающие реагенты (колбы, нитки, соль и т. п.).
+--  Buy at a vendor: with a merchant open, a hint beside its window buys
+--  only the reagents the character is short of (vials, thread, salt and so on).
 -------------------------------------------------------------------------------
 local function MerchantOpen() return MerchantFrame and MerchantFrame:IsShown() end
 
--- Что из покупок продаёт этот торговец: { index, id, buy, stack, bundles, cost }.
+-- What of the purchases this merchant sells: { index, id, buy, stack, bundles, cost }.
 function ns:MerchantNeeds()
   local out = {}
   if not (MerchantOpen() and GetMerchantNumItems and GetMerchantItemID) then return out end
@@ -935,7 +938,7 @@ function ns:MerchantNeeds()
       end
       stack = math.max(1, stack or 1)
       local bundles = math.ceil(a.buy / stack)
-      if avail and avail >= 0 then bundles = math.min(bundles, avail) end -- -1 = без ограничения
+      if avail and avail >= 0 then bundles = math.min(bundles, avail) end -- -1: no limit
       if bundles > 0 and price then
         tinsert(out, { index = i, id = id, buy = a.buy, stack = stack, bundles = bundles, cost = bundles * price })
       end
@@ -967,7 +970,7 @@ function ns:BuyFromMerchant(only)
     if can < e.bundles then short = true end
     if can > 0 then
       if e.stack > 1 then
-        for _ = 1, can do BuyMerchantItem(e.index) end -- одна пачка за раз
+        for _ = 1, can do BuyMerchantItem(e.index) end -- one bundle at a time
       else
         local maxStack = (GetMerchantItemMaxStack and GetMerchantItemMaxStack(e.index)) or 20
         local left = can
@@ -1006,6 +1009,8 @@ function ns:UpdateMerchantButton()
   local f = merchantPanel
   f:Reset()
   local y = f.top
+  -- a chosen recipe needs a tool first: said above the purchases (its reagents are among them)
+  for _, pp in ipairs((self:PickPlans())) do y = self:ToolHead(f, pp.plan, y) end
   local total, count = 0, 0
   for _, e in ipairs(list) do
     local n = e.bundles * e.stack
@@ -1416,6 +1421,7 @@ function ns:UpdateAuctionPanel()
     if #pp.plan.b.shop > 0 then
       y = f:Head(self:N(self.Profs[pp.key]), y + (chosen > 0 and 4 or 0))
       y = self:PickedRow(f, pp.key, pp.plan, y, again)
+      y = self:ToolHead(f, pp.plan, y)
       for _, it in ipairs(pp.plan.b.shop) do row(it.id, it.buy, it.cost) end
       chosen = chosen + 1
     end

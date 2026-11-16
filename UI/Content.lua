@@ -909,10 +909,7 @@ function C:ShoppingData()
         tinsert(card.rows, e)
         count = count + 1
       end
-      for _, it in ipairs(plan and plan.b.items or {}) do
-        add(it)
-        for _, sub in ipairs(it.make and it.make.b.items or {}) do add(sub) end
-      end
+      for _, it in ipairs(plan and ns:PlanItems(plan.b) or {}) do add(it) end
       grand = grand + card.total
       tinsert(cards, card)
     end
