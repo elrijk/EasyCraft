@@ -2669,25 +2669,31 @@ function Mini:ShowChoice(f, key, rank, maxRank, y)
     end
 
     -- minus, "Create", plus: the number is how many crafts are planned; a
-    -- recipe put on an item has "Go to" instead: the target is chosen in the
-    -- profession window
+    -- recipe put on an item has one wide "Go to" instead: the target is
+    -- chosen in the profession window
     local st = ns:RecipeState(key, e.spell)
     local target = ns:RecipeHasTarget(key, e.spell)
     local can = (st and not st.unknown and st.known and not target and not b.tool) and min(st.count or 0, plan.n) or 0
     if not f.cntMinus then f.cntMinus, f.cntPlus = W.Button(f, "-", 28, 22), W.Button(f, "+", 28, 22) end
-    f.cntMinus:ClearAllPoints()
-    f.cntMinus:SetPoint("TOPLEFT", f, "TOPLEFT", inX, -y)
-    f.cntPlus:ClearAllPoints()
-    f.cntPlus:SetPoint("TOPLEFT", f, "TOPLEFT", inX + inW - 28, -y)
-    local step = function(d) return function() ns:PickAdd(key, (IsShiftKeyDown and IsShiftKeyDown()) and d * 5 or d) end end
-    f.cntMinus:SetScript("OnClick", step(-1))
-    f.cntPlus:SetScript("OnClick", step(1))
-    tipOn(f.cntMinus, e.name, X.countTip)
-    tipOn(f.cntPlus, e.name, X.countTip)
-    f.cntMinus:Show(); f.cntPlus:Show()
     f.create:ClearAllPoints()
-    f.create:SetPoint("TOPLEFT", f, "TOPLEFT", inX + 28 + 4, -y)
-    f.create:SetWidth(inW - 2 * (28 + 4))
+    if target then
+      f.cntMinus:Hide(); f.cntPlus:Hide()
+      f.create:SetPoint("TOPLEFT", f, "TOPLEFT", inX, -y)
+      f.create:SetWidth(inW)
+    else
+      f.cntMinus:ClearAllPoints()
+      f.cntMinus:SetPoint("TOPLEFT", f, "TOPLEFT", inX, -y)
+      f.cntPlus:ClearAllPoints()
+      f.cntPlus:SetPoint("TOPLEFT", f, "TOPLEFT", inX + inW - 28, -y)
+      local step = function(d) return function() ns:PickAdd(key, (IsShiftKeyDown and IsShiftKeyDown()) and d * 5 or d) end end
+      f.cntMinus:SetScript("OnClick", step(-1))
+      f.cntPlus:SetScript("OnClick", step(1))
+      tipOn(f.cntMinus, e.name, X.countTip)
+      tipOn(f.cntPlus, e.name, X.countTip)
+      f.cntMinus:Show(); f.cntPlus:Show()
+      f.create:SetPoint("TOPLEFT", f, "TOPLEFT", inX + 28 + 4, -y)
+      f.create:SetWidth(inW - 2 * (28 + 4))
+    end
     if target then
       f.create:SetText(X.goTo)
       f.create:SetEnabled(true)

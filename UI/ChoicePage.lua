@@ -80,8 +80,8 @@ local function detail(UI, c, key, plan, X)
   end
 
   -- minus, "Create", plus: the number is how many crafts are planned; a
-  -- recipe put on an item has "Go to" instead: the target is chosen in the
-  -- profession window
+  -- recipe put on an item has one "Go to" instead: the target is chosen in
+  -- the profession window
   local st = ns:RecipeState(key, e.spell)
   local target = ns:RecipeHasTarget(key, e.spell)
   local can
@@ -95,16 +95,15 @@ local function detail(UI, c, key, plan, X)
       UI:Render(true)
     end
   end
-  local main
   if target then
-    main = { text = X.goTo, w = 220, tip = X.goToTip, onClick = function() ns:OpenRecipe(key, e.spell) end }
-  else
-    main = { text = (can >= plan.n or can == 0) and format(X.create, plan.n) or format(X.createOf, can, plan.n), w = 220, enabled = can > 0,
-      tip = X.createTip, onClick = function() ns:CraftOrOpen(key, e.spell, can) end }
+    -- as wide as the row of minus, "Create" and plus (6 between buttons)
+    c:Buttons({ { text = X.goTo, w = 220 + 2 * (34 + 6), tip = X.goToTip, onClick = function() ns:OpenRecipe(key, e.spell) end } })
+    return
   end
   c:Buttons({
     { text = "-", w = 34, tip = X.countTip, onClick = step(-1) },
-    main,
+    { text = (can >= plan.n or can == 0) and format(X.create, plan.n) or format(X.createOf, can, plan.n), w = 220, enabled = can > 0,
+      tip = X.createTip, onClick = function() ns:CraftOrOpen(key, e.spell, can) end },
     { text = "+", w = 34, tip = X.countTip, onClick = step(1) },
   })
 end
