@@ -116,7 +116,10 @@ function ns:ScanBook(key)
       self:NoteCooldown(key, id, b)
     end
   end
-  if n > 0 then self.char.book[key] = new end
+  if n > 0 then
+    self.char.book[key] = new
+    self.reagentUses = nil -- the item tooltips learn the new recipes
+  end
 end
 
 -------------------------------------------------------------------------------

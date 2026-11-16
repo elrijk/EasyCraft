@@ -1598,12 +1598,65 @@ function ns:SmeltNow(rank)
 end
 
 -------------------------------------------------------------------------------
---  Строка в подсказке предмета: сколько его нужно до следующего учителя.
+--  Lines in the item tooltip: which professions use the item as a reagent,
+--  and how many of it the chosen recipes need.
 -------------------------------------------------------------------------------
+-- Which professions use an item as a reagent: id -> { [profession] = true }.
+-- From every recipe the addon knows: the game's recipe base (read when a
+-- profession window opens), this character's learned recipes and the
+-- built-in steps. Built on first use, again after a profession window is read.
+function ns:ReagentUses(id)
+  local idx = self.reagentUses
+  if not idx then
+    idx = {}
+    local function add(key, rc)
+      if type(rc) ~= "table" then return end
+      for i = 1, #rc - 1, 2 do
+        local r = rc[i]
+        if type(r) == "number" then
+          idx[r] = idx[r] or {}
+          idx[r][key] = true
+        end
+      end
+    end
+    for key, p in pairs(self.Profs) do
+      for _, s in ipairs(p.steps or {}) do
+        if s.k == "craft" then add(key, s.rc or s.m) end
+      end
+    end
+    for key, list in pairs(self.db and self.db.recipes or {}) do
+      for _, r in pairs(list) do add(key, r.rc) end
+    end
+    for key, list in pairs(self.char and self.char.book or {}) do
+      for _, b in pairs(list) do add(key, b.rc) end
+    end
+    self.reagentUses = idx
+  end
+  return idx[id]
+end
+
+-- "Reagent for: Cooking, Tailoring": the character's professions first in
+-- white, the others in grey.
+local function AddUseLine(tooltip, id)
+  local uses = ns:ReagentUses(id)
+  if not uses then return end
+  local mine, other = {}, {}
+  for _, key in ipairs(ns.ProfOrder) do
+    if uses[key] and ns.Profs[key] then
+      tinsert((ns.char and ns.char.profs[key]) and mine or other, ns:N(ns.Profs[key]))
+    end
+  end
+  if #mine + #other == 0 then return end
+  local text = #mine > 0 and ("|cffffffff" .. table.concat(mine, ", ") .. "|r") or ""
+  if #other > 0 then text = text .. (#mine > 0 and ", " or "") .. "|cff9d9d9d" .. table.concat(other, ", ") .. "|r" end
+  tooltip:AddLine(ns.T("Реагент для: ") .. text, 0.9, 0.9, 0.9, true)
+  tooltip:Show() -- fit the tooltip to the new line
+end
+
 local function AddNeedLine(tooltip, id, ours)
   local a = ns:AllNeeds()[id]
   if not a then return end
-  -- в окне EasyCraft «есть X из Y» уже написано в строке - там только «Где взять»
+  -- in an EasyCraft window the row already says "have X of Y": only "where to get" there
   for _, pr in ipairs(ours and {} or a.profs) do
     local have = a.have
     local col = have + (a.mail or 0) >= pr.need and "|cff33dd33" or "|cffff5555"
@@ -1611,7 +1664,7 @@ local function AddNeedLine(tooltip, id, ours)
     if a.alts > 0 then line = line .. format(ns.T(", у альтов %d"), a.alts) end
     tooltip:AddLine("|cff33ff99Easy|rCraft: " .. line, 0.9, 0.9, 0.9)
   end
-  -- где взять - одной строкой, только для того, чего не хватает
+  -- where to get it, one line, only for what is missing
   local where = a.buy > 0 and ns:SourceLine(id)
   if where then tooltip:AddLine(ns.T("Где взять: ") .. where, 0.65, 0.65, 0.65, true) end
   tooltip:Show() -- подогнать размер под новые строки
@@ -1647,7 +1700,7 @@ function ns:AddPriceLine(tooltip, id, count)
   return true
 end
 
--- «Где взять» коротко: у торговца, трава или жила и где их больше, с кого падает.
+-- "Where to get" in short: a vendor, a herb or a vein and where they are dense, what drops it.
 function ns:SourceLine(id)
   local src = self.MatSources and self.MatSources[id]
   if not src then return nil end
@@ -1668,7 +1721,7 @@ function ns:SourceLine(id)
   return src.text
 end
 
--- Подсказка вызвана из окна EasyCraft: там «есть X из Y» уже написано в строке.
+-- The tooltip belongs to an EasyCraft window: its row already says "have X of Y".
 local function OwnedByUs(tooltip)
   local f = tooltip.GetOwner and tooltip:GetOwner()
   local main, mini = ns.UI and ns.UI.frame, ns.Tracker and ns.Tracker.f
@@ -1678,6 +1731,16 @@ local function OwnedByUs(tooltip)
     f = f.GetParent and f:GetParent()
   end
   return false
+end
+
+-- The addon's lines under an item tooltip. Every line has its own setting:
+-- one can be off while another is on. In an EasyCraft window the profession
+-- is plain from the window itself.
+function ns:ItemTooltipLines(tooltip, id)
+  local ours = OwnedByUs(tooltip)
+  if self.settings and self.settings.reagentTip ~= false and not ours then AddUseLine(tooltip, id) end
+  if self.settings and self.settings.itemTips ~= false then AddNeedLine(tooltip, id, ours) end
+  self:AddPriceLine(tooltip, id)
 end
 
 function ns:HookItemTooltips()
@@ -1691,9 +1754,7 @@ function ns:HookItemTooltips()
       id = link and tonumber(link:match("item:(%d+)"))
     end
     if type(id) ~= "number" then return end
-    -- the two lines have their own settings: one can be off while the other is on
-    if ns.settings and ns.settings.itemTips ~= false then AddNeedLine(tooltip, id, OwnedByUs(tooltip)) end
-    ns:AddPriceLine(tooltip, id)
+    ns:ItemTooltipLines(tooltip, id)
   end
   local safe = function(tooltip, data) pcall(OnItem, tooltip, data) end
   if TooltipDataProcessor and TooltipDataProcessor.AddTooltipPostCall and Enum and Enum.TooltipDataType then

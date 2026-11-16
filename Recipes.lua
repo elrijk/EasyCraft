@@ -70,6 +70,7 @@ local function step()
   end
   if j.i > #j.ids then
     job = nil
+    ns.reagentUses = nil -- the item tooltips learn the new recipes
     ns:RefreshAll()
   else
     C_Timer.After(0.05, step)

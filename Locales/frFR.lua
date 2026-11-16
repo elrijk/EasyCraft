@@ -854,4 +854,6 @@ ns.LOCALES.frFR = function() return {
   ["The recipe of the tool is not learned yet, below is where to get it. Its reagents are already on the shopping list."] = "La recette de l'outil n'est pas encore apprise, ci-dessous : où l'obtenir. Ses composants sont déjà dans la liste d'achats.",
   ["Go to"] = "Ouvrir",
   ["This recipe is put on an item: a click opens it in the profession window, choose the target there."] = "Cette recette s'applique à un objet : un clic l'ouvre dans la fenêtre du métier, choisis-y la cible.",
+  ["Reagent for: "] = "Composant pour : ",
+  ["Tooltips: which profession a reagent is for"] = "Infobulles : pour quel métier est un composant",
 } end

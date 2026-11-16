@@ -866,4 +866,6 @@ ns.LOCALES.koKR = function() return {
   ["The recipe of the tool is not learned yet, below is where to get it. Its reagents are already on the shopping list."] = "도구의 제조법을 아직 배우지 않았습니다. 아래에 배울 수 있는 곳이 있습니다. 재료는 이미 구매 목록에 있습니다.",
   ["Go to"] = "열기",
   ["This recipe is put on an item: a click opens it in the profession window, choose the target there."] = "이 제조법은 아이템에 적용됩니다: 클릭하면 전문기술 창에서 열리며, 그곳에서 대상을 고르세요.",
+  ["Reagent for: "] = "재료 용도: ",
+  ["Tooltips: which profession a reagent is for"] = "툴팁: 재료가 쓰이는 전문기술",
 } end

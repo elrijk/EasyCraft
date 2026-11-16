@@ -867,4 +867,6 @@ ns.LOCALES.zhCN = function() return {
   ["The recipe of the tool is not learned yet, below is where to get it. Its reagents are already on the shopping list."] = "工具的配方还没学会，下面是获取地点。它的材料已经在采购清单里。",
   ["Go to"] = "打开",
   ["This recipe is put on an item: a click opens it in the profession window, choose the target there."] = "这个配方要用在物品上：点击会在专业窗口中打开它，在那里选择目标。",
+  ["Reagent for: "] = "材料用于： ",
+  ["Tooltips: which profession a reagent is for"] = "提示：材料用于哪个专业",
 } end

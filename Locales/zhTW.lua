@@ -867,4 +867,6 @@ ns.LOCALES.zhTW = function() return {
   ["The recipe of the tool is not learned yet, below is where to get it. Its reagents are already on the shopping list."] = "工具的配方還沒學會，下面是取得地點。它的材料已經在採購清單裡。",
   ["Go to"] = "打開",
   ["This recipe is put on an item: a click opens it in the profession window, choose the target there."] = "這個配方要用在物品上：點擊會在專業視窗中打開它，在那裡選擇目標。",
+  ["Reagent for: "] = "材料用於： ",
+  ["Tooltips: which profession a reagent is for"] = "提示：材料用於哪個專業",
 } end

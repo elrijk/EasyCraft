@@ -862,4 +862,6 @@ ns.LOCALES.deDE = function() return {
   ["The recipe of the tool is not learned yet, below is where to get it. Its reagents are already on the shopping list."] = "Das Rezept des Werkzeugs ist noch nicht erlernt, darunter steht, wo du es bekommst. Seine Reagenzien stehen schon auf der Einkaufsliste.",
   ["Go to"] = "Öffnen",
   ["This recipe is put on an item: a click opens it in the profession window, choose the target there."] = "Dieses Rezept wird auf einen Gegenstand angewendet: ein Klick öffnet es im Berufsfenster, wähle dort das Ziel.",
+  ["Reagent for: "] = "Reagenz für: ",
+  ["Tooltips: which profession a reagent is for"] = "Tooltips: für welchen Beruf ein Reagenz ist",
 } end
